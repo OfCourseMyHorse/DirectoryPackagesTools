@@ -19,11 +19,16 @@ namespace DirectoryPackagesTools
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IProgress<int>
     {
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        public void Report(int value)
+        {
+            this.Dispatcher.Invoke( ()=> myProgressBar.Value= value);
         }
 
         private void MenuItem_Load(object sender, RoutedEventArgs e)
@@ -34,18 +39,20 @@ namespace DirectoryPackagesTools
 
             if (!dlg.ShowDialog().Value) return;
 
-            var progDlg = new Ookii.Dialogs.Wpf.ProgressDialog();
-            progDlg.WindowTitle = "Checking Package Versions...";
-            progDlg.ShowTimeRemaining = true;
+            myProgressBar.Visibility = Visibility.Visible;
 
-            progDlg.DoWork += (s, e) =>
+            void _loadDocument()
             {
-                var props = PropsMVVM.Load(dlg.FileName, progDlg).ConfigureAwait(true).GetAwaiter().GetResult();
+                var props = PropsMVVM
+                    .Load(dlg.FileName, this)
+                    .ConfigureAwait(true)
+                    .GetAwaiter()
+                    .GetResult();
 
-                this.Dispatcher.Invoke(() => { this.DataContext = props; });                
-            };
+                this.Dispatcher.Invoke(() => { this.DataContext = props; myProgressBar.Visibility = Visibility.Collapsed; });
+            }
 
-            progDlg.ShowDialog();
+            Task.Run(_loadDocument);
         }
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)

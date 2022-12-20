@@ -16,6 +16,10 @@
             </MenuItem>
         </Menu>
 
+        <StatusBar DockPanel.Dock="Bottom">
+            <ProgressBar Width="200" Name="myProgressBar" Height="20" Visibility="Collapsed"  />
+        </StatusBar>
+
         <GroupBox Header="Sources" DockPanel.Dock="Top">
             <ItemsControl ItemsSource="{Binding Repositories}" />
         </GroupBox>

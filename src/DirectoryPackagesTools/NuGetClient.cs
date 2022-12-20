@@ -20,37 +20,49 @@ namespace DirectoryPackagesTools
         // https://github.com/NuGet/Samples/blob/main/NuGetProtocolSamples/Program.cs
         // https://martinbjorkstrom.com/posts/2018-09-19-revisiting-nuget-client-libraries
 
+        #region lifecycle
+
         public NuGetClient() : this(null) { }
 
         public NuGetClient(string root)
         {
             var settings = Settings.LoadDefaultSettings(root);
-            _Repos = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+            var provider = new PackageSourceProvider(settings);
+
+            _Repos = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
             _Logger = NullLogger.Instance;
         }
 
+        #endregion
+
+        #region data
 
         private SourceRepositoryProvider _Repos;
         private ILogger _Logger;
 
+        #endregion
+
+        #region properties
+
         public IEnumerable<SourceRepository> Repositories => _Repos.GetRepositories();
 
-        public async Task ResolvePackage(PackageIdentity package, NuGetFramework framework)
+        #endregion
+
+        #region API
+
+        public async Task<SourcePackageDependencyInfo> ResolvePackage(PackageIdentity package, NuGetFramework framework)
         {
             using (var cacheContext = new SourceCacheContext())
             {
                 foreach (var sourceRepository in _Repos.GetRepositories())
                 {
                     var dependencyInfoResource = await sourceRepository.GetResourceAsync<DependencyInfoResource>();
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(
-                        package, framework, cacheContext, _Logger, CancellationToken.None);
+                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, framework, cacheContext, _Logger, CancellationToken.None);
 
-                    if (dependencyInfo != null)
-                    {
-                        Console.WriteLine(dependencyInfo);
-                        return;
-                    }
+                    if (dependencyInfo != null) return dependencyInfo;
                 }
+
+                return null;
             }
         }
 
@@ -74,5 +86,7 @@ namespace DirectoryPackagesTools
 
             return versions.ToArray();
         }
+
+        #endregion
     }
 }

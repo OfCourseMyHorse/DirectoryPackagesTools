@@ -142,12 +142,17 @@ namespace DirectoryPackagesTools
             || Name.StartsWith("Microsoft.")
             || Name.StartsWith("Azure.")
             || Name.StartsWith("Google.")
-            || Name.StartsWith("Prism.");
+            || Name.StartsWith("Prism.")
+            || Name.StartsWith("log4net")
+            || Name.StartsWith("Xamarin");
 
         public bool IsTest
             => Name.StartsWith("coverlet.")
             || Name.StartsWith("NUnit")
-            || Name.StartsWith("Microsoft.Net.Test.SDK");
+            || Name.StartsWith("Microsoft.NET.Test.SDK")
+            || Name.StartsWith("TestAttachments.")
+            || Name.StartsWith("TestImages.")
+            || Name.StartsWith("ErrorProne.");
 
         #endregion
     }

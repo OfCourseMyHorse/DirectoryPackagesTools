@@ -15,17 +15,7 @@
         <ListView.View>
             <GridView>
                 <GridViewColumn Header="Package" Width="250" DisplayMemberBinding="{Binding Name}" />
-                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />
-                <GridViewColumn Header="Status" Width="40">
-                    <GridViewColumn.CellTemplate>
-                        <DataTemplate>
-                            <WrapPanel>
-                                <TextBlock Text="✓" Foreground="Green" Visibility="{Binding IsUpToDate, Converter={StaticResource asVisible}}" />
-                                <TextBlock Text="🡅" Foreground="Red" Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}" />
-                            </WrapPanel>
-                        </DataTemplate>
-                    </GridViewColumn.CellTemplate>
-                </GridViewColumn>
+                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />                
                 <GridViewColumn Header="Available Versions" Width="350">
                     <GridViewColumn.CellTemplate>
                         <DataTemplate>

@@ -71,8 +71,18 @@ namespace DirectoryPackagesTools
 
         public string Version
         {
-            get => _Version.Version;
-            set => _Version.Version = value;
+            get => _Version.Version.Trim('[', ']');
+            set
+            {
+                if (_Version.Version.StartsWith("[") && _Version.Version.EndsWith("]"))
+                {
+                    _Version.Version = "[" + value + "]";
+                }
+                else
+                {
+                    _Version.Version = value;
+                }                
+            }
         }
     }
 
