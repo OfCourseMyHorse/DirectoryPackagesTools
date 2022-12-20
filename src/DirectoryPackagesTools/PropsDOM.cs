@@ -30,12 +30,12 @@ namespace DirectoryPackagesTools
 
         public IEnumerable<PackageReferenceVersion> GetPackageReferences()
         {
-            return _Document.Root.Descendants(XName.Get("PackageVersion")).Select(item => new PackageReferenceVersion(item, _ResolveVersion(item)));
+            return _Document.Root.Descendants(XName.Get("PackageVersion")).Select(item => new PackageReferenceVersion(item, _ResolveVersionSource(item)));
         }
 
-        private IVersion _ResolveVersion(XElement element)
+        private IVersionSource _ResolveVersionSource(XElement element)
         {
-            var version = new _AttributeVersion(element) as IVersion;
+            var version = new _AttributeVersionSource(element) as IVersionSource;
 
             while (true) // recursively resolve
             {
@@ -53,18 +53,19 @@ namespace DirectoryPackagesTools
 
                 if (property == null) throw new InvalidOperationException($"element {propName} not found");
 
-                version = new _PropertyVersion(property);
+                version = new _PropertyVersionSource(property);
             }
         }
     }
 
 
+    [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
     public sealed class PackageReferenceVersion
     {
-        internal PackageReferenceVersion(XElement e, IVersion v) { _Element = e; _Version = v; }
+        internal PackageReferenceVersion(XElement e, IVersionSource v) { _Element = e; _Version = v; }
 
         private readonly XElement _Element;
-        private readonly IVersion _Version;
+        private readonly IVersionSource _Version;
 
         public string PackageId => _Element.Attribute(XName.Get("Include")).Value;
 
@@ -76,14 +77,15 @@ namespace DirectoryPackagesTools
     }
 
 
-    interface IVersion
+    interface IVersionSource
     {
         public string Version { get; set; }
     }
 
-    struct _AttributeVersion : IVersion
+    [System.Diagnostics.DebuggerDisplay("{Version}")]
+    struct _AttributeVersionSource : IVersionSource
     {
-        public _AttributeVersion(XElement element)
+        public _AttributeVersionSource(XElement element)
         {
             _Attribute = element.Attribute(XName.Get("Version"));
         }
@@ -97,9 +99,10 @@ namespace DirectoryPackagesTools
         }
     }
 
-    struct _PropertyVersion : IVersion
+    [System.Diagnostics.DebuggerDisplay("{Version}")]
+    struct _PropertyVersionSource : IVersionSource
     {
-        public _PropertyVersion(XElement element)
+        public _PropertyVersionSource(XElement element)
         {
             _Property = element;
         }

@@ -87,8 +87,10 @@ namespace DirectoryPackagesTools
         #endregion
     }
 
+    [System.Diagnostics.DebuggerDisplay("{Name} {Version}")]
     public class PackageMVVM : Prism.Mvvm.BindableBase
     {
+        #region lifecycle
         internal PackageMVVM(PackageReferenceVersion local, IReadOnlyList<NuGet.Versioning.NuGetVersion> versions)
         {
             _LocalReference = local;
@@ -97,8 +99,18 @@ namespace DirectoryPackagesTools
             ApplyVersionCmd = new Prism.Commands.DelegateCommand<string>( ver => this.Version = ver );
         }
 
+        #endregion
+
+        #region data
+
         private readonly PackageReferenceVersion _LocalReference;
         private readonly IReadOnlyList<NuGet.Versioning.NuGetVersion> _AvailableVersions;
+
+        #endregion
+
+        #region Properties
+
+        public ICommand ApplyVersionCmd { get; }
 
         public string Name => _LocalReference.PackageId;
 
@@ -106,9 +118,7 @@ namespace DirectoryPackagesTools
 
         public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
 
-        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
-
-        public ICommand ApplyVersionCmd { get; }
+        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();        
 
         public string Version
         {
@@ -138,5 +148,7 @@ namespace DirectoryPackagesTools
             => Name.StartsWith("coverlet.")
             || Name.StartsWith("NUnit")
             || Name.StartsWith("Microsoft.Net.Test.SDK");
+
+        #endregion
     }
 }
