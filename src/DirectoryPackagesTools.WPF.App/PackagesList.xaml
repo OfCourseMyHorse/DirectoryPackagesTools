@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="DirectoryPackagesTools.PackagesList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DirectoryPackagesTools"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="asVisible" />
+    </UserControl.Resources>
+    
+    <ListView ItemsSource="{Binding}">
+        <ListView.View>
+            <GridView>
+                <GridViewColumn Header="Package" Width="250" DisplayMemberBinding="{Binding Name}" />
+                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />
+                <GridViewColumn Header="Status" Width="40">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate>
+                            <WrapPanel>
+                                <TextBlock Text="✓" Foreground="Green" Visibility="{Binding IsUpToDate, Converter={StaticResource asVisible}}" />
+                                <TextBlock Text="🡅" Foreground="Red" Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}" />
+                            </WrapPanel>
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
+                <GridViewColumn Header="Available Versions" Width="350">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate>
+                            <WrapPanel>                            
+                                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />                                
+                                <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
+                                    <TextBlock Text=" "/>
+                                    <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+                                    <TextBlock Text=" "/>
+                                    <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
+                                </WrapPanel>
+                            </WrapPanel>
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>                
+            </GridView>
+        </ListView.View>
+    </ListView>
+</UserControl>
