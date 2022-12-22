@@ -69,29 +69,43 @@ namespace DirectoryPackagesTools
 
         public string PackageId => _Element.Attribute(XName.Get("Include")).Value;
 
+        public bool HasVersionRange
+        {
+            get
+            {
+                // https://github.com/NuGet/Home/issues/6763#issuecomment-633465943
+                return _Version.Version.StartsWith("[") && _Version.Version.EndsWith("]");
+            }
+        }
+
         public string Version
         {
             get => _Version.Version.Trim('[', ']');
-            set
-            {
-                if (_Version.Version.StartsWith("[") && _Version.Version.EndsWith("]"))
-                {
-                    _Version.Version = "[" + value + "]";
-                }
-                else
-                {
-                    _Version.Version = value;
-                }                
-            }
+            set => _Version.Version = HasVersionRange ? "[" + value + "]" : value;
         }
     }
 
 
+    /// <summary>
+    /// Defines the source where the actual version is located
+    /// </summary>
+    /// <remarks>
+    /// Implemented by: <see cref="_AttributeVersionSource"/> and <see cref="_PropertyVersionSource"/>
+    /// </remarks>
     interface IVersionSource
     {
         public string Version { get; set; }
     }
 
+    /// <summary>
+    /// A SemVer string source located in an XML attribute
+    /// </summary>
+    /// <remarks>
+    /// Typical Scenario:<br/>
+    /// <c>
+    /// PackageVersion Include="package" Version="1.0.0"
+    /// </c>
+    /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
     struct _AttributeVersionSource : IVersionSource
     {
@@ -109,6 +123,16 @@ namespace DirectoryPackagesTools
         }
     }
 
+    /// <summary>
+    /// A SemVer string source located in an XML element value
+    /// </summary>
+    /// <remarks>
+    /// Typical Scenario:<br/>
+    /// <c>
+    /// &lt;PropertyVersion&gt;1.0.0&lt;/PropertyVersion&gt;<br/>
+    /// PackageVersion Include="package" Version="$(PropertyVersion)"
+    /// </c>
+    /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
     struct _PropertyVersionSource : IVersionSource
     {

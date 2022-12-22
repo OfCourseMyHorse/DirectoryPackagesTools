@@ -19,8 +19,9 @@
                 <GridViewColumn Header="Available Versions" Width="350">
                     <GridViewColumn.CellTemplate>
                         <DataTemplate>
-                            <WrapPanel>                            
-                                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />                                
+                            <WrapPanel>                                
+                                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
+                                <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
                                 <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
                                     <TextBlock Text=" "/>
                                     <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />

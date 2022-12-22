@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,18 @@ namespace DirectoryPackagesTools
         public MainWindow()
         {
             InitializeComponent();
+
+            this.Loaded += _OnLoaded;
+        }
+
+        private void _OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var path = Environment
+                .GetCommandLineArgs()
+                .Where(item => item.EndsWith("Directory.Packages.Props", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
+
+            if (!string.IsNullOrWhiteSpace(path)) _LoadDocument(path);            
         }
 
         public void Report(int value)
@@ -38,13 +51,17 @@ namespace DirectoryPackagesTools
             dlg.Filter = "Package Versions|directory.packages.props";
 
             if (!dlg.ShowDialog().Value) return;
+            _LoadDocument(dlg.FileName);
+        }
 
+        private void _LoadDocument(string documentPath)
+        {
             myProgressBar.Visibility = Visibility.Visible;
 
             void _loadDocument()
             {
                 var props = PropsMVVM
-                    .Load(dlg.FileName, this)
+                    .Load(documentPath, this)
                     .ConfigureAwait(true)
                     .GetAwaiter()
                     .GetResult();
@@ -58,6 +75,37 @@ namespace DirectoryPackagesTools
         private void MenuItem_Save(object sender, RoutedEventArgs e)
         {
             if (this.DataContext is PropsMVVM mvvm) mvvm.Save();
+        }
+
+        private void MenuItem_SaveAndCommit(object sender, RoutedEventArgs e)
+        {
+            MenuItem_Save(sender, e);
+
+            
+            if (this.DataContext is PropsMVVM mvvm)
+            {
+                var finfo = new System.IO.FileInfo(mvvm.DocumentPath);
+
+                // TODO: check whether .git or .svn are in the directory, and launch appropiate frontend
+
+                _CommitSVN(finfo.Directory);
+
+                Application.Current.Shutdown();
+            }
+        }
+
+        private static void _CommitSVN(DirectoryInfo dinfo)
+        {
+            // https://tortoisesvn.net/docs/release/TortoiseSVN_en/tsvn-automation.html
+
+            var exePath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            exePath = System.IO.Path.Combine(exePath, "TortoiseSVN\\bin\\TortoiseProc.exe");
+
+            var psi = new System.Diagnostics.ProcessStartInfo(exePath, $"/command:commit /path:\"{dinfo.FullName}\" /logmsg:\"nugets++\"");
+            psi.UseShellExecute = true;
+            psi.WorkingDirectory = dinfo.FullName;
+
+            System.Diagnostics.Process.Start(psi);
         }
     }
 }

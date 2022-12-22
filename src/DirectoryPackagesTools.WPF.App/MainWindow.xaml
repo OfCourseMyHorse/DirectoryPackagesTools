@@ -13,6 +13,7 @@
             <MenuItem Header="File">
                 <MenuItem Header="Open..." Click="MenuItem_Load" />
                 <MenuItem Header="Save" Click="MenuItem_Save" />
+                <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" />
             </MenuItem>
         </Menu>
 

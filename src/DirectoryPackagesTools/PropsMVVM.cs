@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 
 namespace DirectoryPackagesTools
 {
@@ -31,15 +32,16 @@ namespace DirectoryPackagesTools
 
             var mvvms = new List<PackageMVVM>();
 
-            int count = 0;
+            var dict = locals.ToDictionary(kvp => kvp.PackageId, kvp => new System.Collections.Concurrent.ConcurrentBag<NuGetVersion>());
 
-            foreach (var local in locals)
+            await client.GetVersions(dict, progress);            
+
+            foreach (var local in dict)
             {
-                progress?.Report((count++ * 100) / locals.Count);
+                var package = locals.FirstOrDefault(item => item.PackageId == local.Key);
+                var versions = local.Value.Distinct().OrderBy(item =>item).ToList();
 
-                var versions = await client.GetVersions(local.PackageId);
-
-                var mvvm = new PackageMVVM(local, versions);
+                var mvvm = new PackageMVVM(package, null, versions);
 
                 mvvms.Add(mvvm);
             }
@@ -74,6 +76,8 @@ namespace DirectoryPackagesTools
 
         #region API
 
+        public string DocumentPath => _Path.FullName;
+
         public IEnumerable<SourceRepository> Repositories => _Client.Repositories;
 
         public IReadOnlyList<PackageMVVM> AllPackages => _Packages;
@@ -91,10 +95,11 @@ namespace DirectoryPackagesTools
     public class PackageMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
-        internal PackageMVVM(PackageReferenceVersion local, IReadOnlyList<NuGet.Versioning.NuGetVersion> versions)
+        internal PackageMVVM(PackageReferenceVersion local, string source, IReadOnlyList<NuGet.Versioning.NuGetVersion> versions)
         {
             _LocalReference = local;
             _AvailableVersions = versions;
+            _Source = source;
 
             ApplyVersionCmd = new Prism.Commands.DelegateCommand<string>( ver => this.Version = ver );
         }
@@ -104,6 +109,7 @@ namespace DirectoryPackagesTools
         #region data
 
         private readonly PackageReferenceVersion _LocalReference;
+        private readonly string _Source;
         private readonly IReadOnlyList<NuGet.Versioning.NuGetVersion> _AvailableVersions;
 
         #endregion
@@ -133,26 +139,16 @@ namespace DirectoryPackagesTools
         }
 
         public bool IsUpToDate => Version == AvailableVersions.FirstOrDefault();
-        public bool NeedsUpdate => !IsUpToDate;
+
+        public bool HasVersionRange => _LocalReference.HasVersionRange;
+
+        public bool NeedsUpdate => !IsUpToDate && !HasVersionRange;        
 
         public bool IsUser => !IsSystem && !IsTest;
 
-        public bool IsSystem
-            => Name.StartsWith("System.")
-            || Name.StartsWith("Microsoft.")
-            || Name.StartsWith("Azure.")
-            || Name.StartsWith("Google.")
-            || Name.StartsWith("Prism.")
-            || Name.StartsWith("log4net")
-            || Name.StartsWith("Xamarin");
+        public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p+".")));
 
-        public bool IsTest
-            => Name.StartsWith("coverlet.")
-            || Name.StartsWith("NUnit")
-            || Name.StartsWith("Microsoft.NET.Test.SDK")
-            || Name.StartsWith("TestAttachments.")
-            || Name.StartsWith("TestImages.")
-            || Name.StartsWith("ErrorProne.");
+        public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
 
         #endregion
     }

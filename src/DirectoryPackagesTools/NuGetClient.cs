@@ -9,12 +9,11 @@ using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-
 using NuGet.Versioning;
 
 namespace DirectoryPackagesTools
 {
-    public class NuGetClient
+    public class NuGetClient : Prism.Mvvm.BindableBase
     {
         // https://learn.microsoft.com/en-us/nuget/reference/nuget-client-sdk
         // https://github.com/NuGet/Samples/blob/main/NuGetProtocolSamples/Program.cs
@@ -45,6 +44,8 @@ namespace DirectoryPackagesTools
         #region properties
 
         public IEnumerable<SourceRepository> Repositories => _Repos.GetRepositories();
+
+        public TimeSpan LastOperationTime { get; private set; }
 
         #endregion
 
@@ -85,6 +86,51 @@ namespace DirectoryPackagesTools
             }
 
             return versions.ToArray();
+        }
+
+        public async Task GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, IProgress<int> progress, CancellationToken? token = null)
+        {
+            token ??= CancellationToken.None;
+
+            var percent = new _ProgressCounter(progress, packages.Count * _Repos.GetRepositories().Count());
+
+            using (var cacheContext = new SourceCacheContext())
+            {
+                // it doesn't work, dunno why
+                // Parallel.ForEach(_Repos.GetRepositories(), async repo => await _GetVersions(packages, prog, token, cacheContext, repo));                
+
+                /* it's pretty much as slow as the plain loop below, so the API must have some bottleneck under the hood
+                var tasks = _Repos.GetRepositories()
+                    .Select(item => _GetVersions(packages, item, cacheContext, percent, token))
+                    .ToArray();
+
+                Task.WaitAll(tasks);
+                */
+                
+                foreach (var sourceRepository in _Repos.GetRepositories())
+                {
+                    System.Diagnostics.Debug.WriteLine(sourceRepository.PackageSource.Source);                    
+
+                    await _GetVersions(packages, sourceRepository, cacheContext, percent, token);
+                }
+            }
+
+            LastOperationTime = percent.Elapsed;
+            RaisePropertyChanged(nameof(LastOperationTime));
+        }
+        
+        private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken? token)
+        {
+            var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
+
+            foreach (var package in packages)
+            {
+                progress.Report(package.Key);
+
+                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token.Value);                
+
+                foreach(var v in vvv) package.Value.Add(v);                
+            }            
         }
 
         #endregion
