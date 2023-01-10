@@ -107,5 +107,24 @@ namespace DirectoryPackagesTools
 
             System.Diagnostics.Process.Start(psi);
         }
+
+        private void MenuItem_OpenCommandLine(object sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is PropsMVVM mvvm)
+            {
+                var finfo = new System.IO.FileInfo(mvvm.DocumentPath);                
+
+                _OpenCommandLine(finfo.Directory);
+            }
+        }
+
+        private static void _OpenCommandLine(DirectoryInfo dinfo)
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe");
+            psi.UseShellExecute = true;
+            psi.WorkingDirectory = dinfo.FullName;
+
+            System.Diagnostics.Process.Start(psi);
+        }
     }
 }
