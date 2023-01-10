@@ -29,18 +29,13 @@
         </GroupBox>
 
         <GroupBox Header="Packages">
-            <TabControl>
-                <TabItem Header="System Packages">
-                    <local:PackagesList DataContext="{Binding SystemPackages}" />
-                </TabItem>
-                <TabItem Header="Test Packages">
-                    <local:PackagesList DataContext="{Binding TestPackages}" />
-                </TabItem>
-                <TabItem Header="User Packages">
-                    <local:PackagesList DataContext="{Binding UserPackages}" />
-                </TabItem>
+            <TabControl ItemsSource="{Binding GroupedPackages}" DisplayMemberPath="Key" >
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <local:PackagesList DataContext="{Binding Value}" />
+                    </DataTemplate>
+                </TabControl.ContentTemplate>                
             </TabControl>
-            
         </GroupBox>
         
     </DockPanel>

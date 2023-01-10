@@ -82,11 +82,32 @@ namespace DirectoryPackagesTools
 
         public IReadOnlyList<PackageMVVM> AllPackages => _Packages;
 
-        public IEnumerable<PackageMVVM> SystemPackages => AllPackages.Where(item => item.IsSystem);
+        public IEnumerable<KeyValuePair<string, PackageMVVM[]>> GroupedPackages
+        {
+            get
+            {
+                // find package prefixes shared between at least 3 packages
+                var commonPrefixes = AllPackages
+                    .GroupBy(item => item.Prefix).Where(item => item.Count() >= 3)
+                    .Select(item => item.Key)
+                    .ToArray();
 
-        public IEnumerable<PackageMVVM> TestPackages => AllPackages.Where(item => item.IsTest);
+                // group key evaluator
+                string getGroupKey(PackageMVVM mvvm)
+                {
+                    if (mvvm.IsSystem) return "System";
+                    if (mvvm.IsTest) return "Test";
 
-        public IEnumerable<PackageMVVM> UserPackages => AllPackages.Where(item => item.IsUser);
+                    if (commonPrefixes.Contains(mvvm.Prefix)) return mvvm.Prefix;
+
+                    return "User";
+                }
+
+                return AllPackages
+                    .GroupBy(getGroupKey)
+                    .ToDictionary(item => item.Key, item => item.ToArray());
+            }
+        }
 
         #endregion
     }
@@ -119,6 +140,8 @@ namespace DirectoryPackagesTools
         public ICommand ApplyVersionCmd { get; }
 
         public string Name => _LocalReference.PackageId;
+
+        public string Prefix => _LocalReference.PackagePrefix;
 
         public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToString()).Reverse().ToArray();
 

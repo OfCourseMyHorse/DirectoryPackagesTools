@@ -69,6 +69,8 @@ namespace DirectoryPackagesTools
 
         public string PackageId => _Element.Attribute(XName.Get("Include")).Value;
 
+        public string PackagePrefix => new string(PackageId.TakeWhile(c => c != '.').ToArray());
+
         public bool HasVersionRange
         {
             get
