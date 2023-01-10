@@ -20,6 +20,17 @@ namespace DirectoryPackagesTools
             var path = new FileInfo(filePath);
             var dom = PropsDOM.Load(path.FullName);
 
+            var err = dom.VerifyDocument();
+            if (err != null)
+            {
+                if (progress is IProgress<Exception> exrep)
+                {
+                    exrep.Report(new InvalidOperationException(err));
+                }
+
+                return null;
+            }
+
             var client = new NuGetClient(path.Directory.FullName);
             var packages = await _GetPackagesAsync(dom, client, progress);
 

@@ -21,6 +21,25 @@ namespace DirectoryPackagesTools
             return dom;
         }
 
+        public string VerifyDocument()
+        {
+            var locals = this.GetPackageReferences().ToList();
+
+            var duplicated = locals
+                .GroupBy(item => item.PackageId)
+                .Where(item => item.Count() > 1)
+                .Select(item => item.Key)
+                .ToList();
+
+            if (duplicated.Any())
+            {
+                var msg = string.Join(" ", duplicated);
+                return $"Duplicated: {msg}";
+            }
+
+            return null;
+        }
+
 
         public void Save(string path)
         {
@@ -56,6 +75,9 @@ namespace DirectoryPackagesTools
                 version = new _PropertyVersionSource(property);
             }
         }
+
+
+
     }
 
 

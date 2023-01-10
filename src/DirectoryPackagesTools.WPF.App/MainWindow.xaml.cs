@@ -20,7 +20,7 @@ namespace DirectoryPackagesTools
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IProgress<int>
+    public partial class MainWindow : Window, IProgress<int>, IProgress<Exception>
     {
         public MainWindow()
         {
@@ -44,6 +44,11 @@ namespace DirectoryPackagesTools
             this.Dispatcher.Invoke( ()=> myProgressBar.Value= value);
         }
 
+        public void Report(Exception value)
+        {
+            this.Dispatcher.Invoke(() => MessageBox.Show(value.Message,"Error"));
+        }
+
         private void MenuItem_Load(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog();
@@ -65,6 +70,8 @@ namespace DirectoryPackagesTools
                     .ConfigureAwait(true)
                     .GetAwaiter()
                     .GetResult();
+
+                if (props == null) return;
 
                 this.Dispatcher.Invoke(() => { this.DataContext = props; myProgressBar.Visibility = Visibility.Collapsed; });
             }
@@ -126,5 +133,7 @@ namespace DirectoryPackagesTools
 
             System.Diagnostics.Process.Start(psi);
         }
+
+        
     }
 }
