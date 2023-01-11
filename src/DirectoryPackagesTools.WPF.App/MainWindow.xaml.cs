@@ -134,6 +134,67 @@ namespace DirectoryPackagesTools
             System.Diagnostics.Process.Start(psi);
         }
 
-        
+        private void MenuItem_New(object sender, RoutedEventArgs e)
+        {
+            var dir = _SelectDirectoryDialog();
+            if (dir == null) return;
+
+            var finfo = new System.IO.FileInfo(System.IO.Path.Combine(dir, "Directory.Packages.props"));
+            if (finfo.Exists)
+            {
+                if (MessageBox.Show("Overwrite?", "File already exists", MessageBoxButton.OKCancel) != MessageBoxResult.OK) return;
+            }
+
+            var packages = ProjectPackagesDOM
+                .FromDirectory(finfo.Directory)
+                .SelectMany(item => item.GetPackageReferences())
+                .GroupBy(item => item.PackageId)
+                .OrderBy(item => item.Key);
+
+            string getVersionFrom(IEnumerable<PackageReferenceVersion> references)
+            {
+                references = references.Where(item => item.Version != null);
+                if (!references.Any()) return "0";
+
+                return references.First().Version;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            sb.AppendLine("<Project>");
+
+            sb.AppendLine(" <PropertyGroup>");
+            sb.AppendLine("     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>");
+            sb.AppendLine("     <EnablePackageVersionOverride>true</EnablePackageVersionOverride>");
+            sb.AppendLine(" </PropertyGroup>");
+
+            sb.AppendLine(" <ItemGroup>");
+            foreach(var package in packages)
+            {
+                sb.AppendLine($"     <PackageVersion Include=\"{package.Key}\" Version=\"{getVersionFrom(package)}\" />");
+            }
+            sb.AppendLine(" </ItemGroup>");
+
+            sb.AppendLine("</Project>");
+
+            System.IO.File.WriteAllText(finfo.FullName, sb.ToString());
+
+            _LoadDocument(finfo.FullName);
+        }
+
+
+        private static string _SelectDirectoryDialog()
+        {
+            using(var dlg = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                dlg.AddToRecent = true;
+                dlg.ShowNewFolderButton = false;
+                // dlg.ClientGuid =
+
+                if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
+
+                return dlg.SelectedPath;
+            }
+        }
     }
 }

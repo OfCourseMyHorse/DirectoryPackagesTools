@@ -49,32 +49,10 @@ namespace DirectoryPackagesTools
 
         public IEnumerable<PackageReferenceVersion> GetPackageReferences()
         {
-            return _Document.Root.Descendants(XName.Get("PackageVersion")).Select(item => new PackageReferenceVersion(item, _ResolveVersionSource(item)));
+            return _Document.Root.Descendants(XName.Get("PackageVersion")).Select(item => new PackageReferenceVersion(item));
         }
 
-        private IVersionSource _ResolveVersionSource(XElement element)
-        {
-            var version = new _AttributeVersionSource(element) as IVersionSource;
-
-            while (true) // recursively resolve
-            {
-                if (!version.Version.Contains("$")) return version;
-
-                var propName = version.Version;
-                propName = propName.TrimStart('$', '(');
-                propName = propName.TrimEnd(')');                
-
-                var properties = _Document.Root
-                    .Descendants(XName.Get("PropertyGroup")).SelectMany(item => item.Descendants())
-                    .ToList();
-
-                var property = properties.FirstOrDefault(item => item.Name.LocalName == propName);
-
-                if (property == null) throw new InvalidOperationException($"element {propName} not found");
-
-                version = new _PropertyVersionSource(property);
-            }
-        }
+        
 
 
 
@@ -84,7 +62,11 @@ namespace DirectoryPackagesTools
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
     public sealed class PackageReferenceVersion
     {
-        internal PackageReferenceVersion(XElement e, IVersionSource v) { _Element = e; _Version = v; }
+        internal PackageReferenceVersion(XElement e)
+        {
+            _Element = e;
+            _Version = e._ResolveVersionSource();
+        }
 
         private readonly XElement _Element;
         private readonly IVersionSource _Version;
@@ -104,7 +86,7 @@ namespace DirectoryPackagesTools
 
         public string Version
         {
-            get => _Version.Version.Trim('[', ']');
+            get => _Version?.Version?.Trim('[', ']') ?? null;
             set => _Version.Version = HasVersionRange ? "[" + value + "]" : value;
         }
     }
@@ -133,9 +115,18 @@ namespace DirectoryPackagesTools
     [System.Diagnostics.DebuggerDisplay("{Version}")]
     struct _AttributeVersionSource : IVersionSource
     {
-        public _AttributeVersionSource(XElement element)
+        public static IVersionSource CreateFrom(XElement element)
         {
-            _Attribute = element.Attribute(XName.Get("Version"));
+            if (element == null) return null;
+            var attr = element.Attribute(XName.Get("Version"));
+            if (attr == null) return null;
+
+            return new _AttributeVersionSource(attr);
+        }
+
+        private _AttributeVersionSource(XAttribute attr)
+        {
+            _Attribute = attr;
         }
 
         XAttribute _Attribute;

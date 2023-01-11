@@ -11,12 +11,13 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
+                <MenuItem Header="New..." Click="MenuItem_New" Icon="✨"/>
                 <MenuItem Header="Open..." Click="MenuItem_Load" Icon="📂"/>
                 <MenuItem Header="Save" Click="MenuItem_Save" Icon="💾" />
                 <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" Icon="📤" />
             </MenuItem>
             <MenuItem Header="Tools">
-                <MenuItem Header="Open Command Line..." Click="MenuItem_OpenCommandLine" Icon="🖥" />
+                <MenuItem Header="Open Command Line..." Click="MenuItem_OpenCommandLine" Icon="🖥" />                
             </MenuItem>
         </Menu>
 
