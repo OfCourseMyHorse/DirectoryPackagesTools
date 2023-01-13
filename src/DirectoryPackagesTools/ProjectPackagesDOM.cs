@@ -37,7 +37,9 @@ namespace DirectoryPackagesTools
         {
             return _Document.Root
                 .Descendants(XName.Get("PackageReference"))
-                .Select(item => new PackageReferenceVersion(item));
+                .Select(item => new PackageReferenceVersion(item))
+                .Where(item => item.PackageId != null);
+                
         }
     }
 }

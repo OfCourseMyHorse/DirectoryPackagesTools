@@ -71,7 +71,17 @@ namespace DirectoryPackagesTools
         private readonly XElement _Element;
         private readonly IVersionSource _Version;
 
-        public string PackageId => _Element.Attribute(XName.Get("Include")).Value;
+        public string PackageId
+        {
+            get
+            {
+                var attr
+                    = _Element.Attribute(XName.Get("Include"))
+                    ?? _Element.Attribute(XName.Get("Update"));
+
+                return attr?.Value ?? null;
+            }
+        }
 
         public string PackagePrefix => new string(PackageId.TakeWhile(c => c != '.').ToArray());
 
