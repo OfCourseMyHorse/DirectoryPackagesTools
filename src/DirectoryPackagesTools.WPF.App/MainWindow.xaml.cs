@@ -65,7 +65,7 @@ namespace DirectoryPackagesTools
 
             void _loadDocument()
             {
-                var props = PropsMVVM
+                var props = PropsProjectMVVM
                     .Load(documentPath, this)
                     .ConfigureAwait(true)
                     .GetAwaiter()
@@ -81,7 +81,7 @@ namespace DirectoryPackagesTools
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PropsMVVM mvvm) mvvm.Save();
+            if (this.DataContext is PropsProjectMVVM mvvm) mvvm.Save();
         }
 
         private void MenuItem_SaveAndCommit(object sender, RoutedEventArgs e)
@@ -89,7 +89,7 @@ namespace DirectoryPackagesTools
             MenuItem_Save(sender, e);
 
             
-            if (this.DataContext is PropsMVVM mvvm)
+            if (this.DataContext is PropsProjectMVVM mvvm)
             {
                 var finfo = new System.IO.FileInfo(mvvm.DocumentPath);
 
@@ -117,7 +117,7 @@ namespace DirectoryPackagesTools
 
         private void MenuItem_OpenCommandLine(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PropsMVVM mvvm)
+            if (this.DataContext is PropsProjectMVVM mvvm)
             {
                 var finfo = new System.IO.FileInfo(mvvm.DocumentPath);                
 
@@ -145,13 +145,13 @@ namespace DirectoryPackagesTools
                 if (MessageBox.Show("Overwrite?", "File already exists", MessageBoxButton.OKCancel) != MessageBoxResult.OK) return;
             }
 
-            var packages = ProjectPackagesDOM
+            var packages = XmlProjectDOM
                 .FromDirectory(finfo.Directory)
                 .SelectMany(item => item.GetPackageReferences())
                 .GroupBy(item => item.PackageId)
                 .OrderBy(item => item.Key);
 
-            string getVersionFrom(IEnumerable<PackageReferenceVersion> references)
+            string getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
             {
                 references = references.Where(item => item.Version != null);
                 if (!references.Any()) return "0";

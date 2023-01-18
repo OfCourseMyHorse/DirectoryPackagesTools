@@ -8,13 +8,13 @@ using System.Xml.Linq;
 namespace DirectoryPackagesTools
 {
     /// <summary>
-    /// Represents a .csproj file and exposes an API to retrieve all the PackageReferences
+    /// Wraps a .csproj general project file and exposes an API to retrieve all the PackageReference entries
     /// </summary>
-    public class ProjectPackagesDOM
+    public class XmlProjectDOM
     {
         private System.Xml.Linq.XDocument _Document;
 
-        public static IEnumerable<ProjectPackagesDOM> FromDirectory(System.IO.DirectoryInfo dinfo)
+        public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo)
         {
             var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
 
@@ -24,20 +24,20 @@ namespace DirectoryPackagesTools
                 .Select(f => Load(f.FullName));            
         }
 
-        public static ProjectPackagesDOM Load(string path)
+        public static XmlProjectDOM Load(string path)
         {
             var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);
 
-            var dom = new ProjectPackagesDOM();
+            var dom = new XmlProjectDOM();
             dom._Document = doc;
             return dom;
         }
 
-        public IEnumerable<PackageReferenceVersion> GetPackageReferences()
+        public IEnumerable<XmlPackageReferenceVersion> GetPackageReferences()
         {
             return _Document.Root
                 .Descendants(XName.Get("PackageReference"))
-                .Select(item => new PackageReferenceVersion(item))
+                .Select(item => new XmlPackageReferenceVersion(item))
                 .Where(item => item.PackageId != null);
                 
         }

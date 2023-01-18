@@ -11,14 +11,14 @@ using NuGet.Versioning;
 
 namespace DirectoryPackagesTools
 {
-    public class PropsMVVM : Prism.Mvvm.BindableBase
+    public class PropsProjectMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
 
-        public static async Task<PropsMVVM> Load(string filePath, IProgress<int> progress)
+        public static async Task<PropsProjectMVVM> Load(string filePath, IProgress<int> progress)
         {
             var path = new FileInfo(filePath);
-            var dom = PropsDOM.Load(path.FullName);
+            var dom = XmlPropsProjectDOM.Load(path.FullName);
 
             var err = dom.VerifyDocument();
             if (err != null)
@@ -34,10 +34,10 @@ namespace DirectoryPackagesTools
             var client = new NuGetClient(path.Directory.FullName);
             var packages = await _GetPackagesAsync(dom, client, progress);
 
-            return new PropsMVVM(path, dom, client, packages);
+            return new PropsProjectMVVM(path, dom, client, packages);
         }
 
-        private static async Task<PackageMVVM[]> _GetPackagesAsync(PropsDOM dom, NuGetClient client, IProgress<int> progress)
+        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPropsProjectDOM dom, NuGetClient client, IProgress<int> progress)
         {
             var locals = dom.GetPackageReferences().ToList();
 
@@ -65,7 +65,7 @@ namespace DirectoryPackagesTools
             _Dom.Save(_Path.FullName);
         }
 
-        private PropsMVVM(System.IO.FileInfo finfo, PropsDOM dom, NuGetClient client, PackageMVVM[] packages)
+        private PropsProjectMVVM(System.IO.FileInfo finfo, XmlPropsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
         {
             _Path =finfo;
             _Dom = dom;
@@ -78,7 +78,7 @@ namespace DirectoryPackagesTools
         #region data
 
         private readonly System.IO.FileInfo _Path;
-        private readonly PropsDOM _Dom;
+        private readonly XmlPropsProjectDOM _Dom;
         private readonly NuGetClient _Client;
 
         private readonly PackageMVVM[] _Packages;
@@ -121,69 +121,5 @@ namespace DirectoryPackagesTools
         }
 
         #endregion
-    }
-
-    [System.Diagnostics.DebuggerDisplay("{Name} {Version}")]
-    public class PackageMVVM : Prism.Mvvm.BindableBase
-    {
-        #region lifecycle
-        internal PackageMVVM(PackageReferenceVersion local, string source, IReadOnlyList<NuGet.Versioning.NuGetVersion> versions)
-        {
-            _LocalReference = local;
-            _AvailableVersions = versions;
-            _Source = source;
-
-            ApplyVersionCmd = new Prism.Commands.DelegateCommand<string>( ver => this.Version = ver );
-        }
-
-        #endregion
-
-        #region data
-
-        private readonly PackageReferenceVersion _LocalReference;
-        private readonly string _Source;
-        private readonly IReadOnlyList<NuGet.Versioning.NuGetVersion> _AvailableVersions;
-
-        #endregion
-
-        #region Properties
-
-        public ICommand ApplyVersionCmd { get; }
-
-        public string Name => _LocalReference.PackageId;
-
-        public string Prefix => _LocalReference.PackagePrefix;
-
-        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToString()).Reverse().ToArray();
-
-        public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
-
-        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();        
-
-        public string Version
-        {
-            get { return _LocalReference.Version; }
-            set
-            {
-                _LocalReference.Version = value;
-                RaisePropertyChanged(nameof(Version));
-                RaisePropertyChanged(nameof(IsUpToDate));
-                RaisePropertyChanged(nameof(NeedsUpdate));
-            }
-        }
-
-        public bool IsUpToDate => Version == AvailableVersions.FirstOrDefault();
-
-        public bool HasVersionRange => _LocalReference.HasVersionRange;
-
-        public bool NeedsUpdate => !IsUpToDate && !HasVersionRange;        
-
-        public bool IsUser => !IsSystem && !IsTest;
-
-        public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p+".")));
-
-        public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
-
-        #endregion
-    }
+    }    
 }

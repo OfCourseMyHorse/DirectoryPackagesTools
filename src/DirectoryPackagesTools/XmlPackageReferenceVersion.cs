@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,68 +7,31 @@ using System.Xml.Linq;
 
 namespace DirectoryPackagesTools
 {
-    public class PropsDOM
-    {
-        private System.Xml.Linq.XDocument _Document;
-
-        public static PropsDOM Load(string path)
-        {
-            var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);
-
-            var dom = new PropsDOM();
-            dom._Document = doc;
-            return dom;
-        }
-
-        public string VerifyDocument()
-        {
-            var locals = this.GetPackageReferences().ToList();
-
-            var duplicated = locals
-                .GroupBy(item => item.PackageId)
-                .Where(item => item.Count() > 1)
-                .Select(item => item.Key)
-                .ToList();
-
-            if (duplicated.Any())
-            {
-                var msg = string.Join(" ", duplicated);
-                return $"Duplicated: {msg}";
-            }
-
-            return null;
-        }
-
-
-        public void Save(string path)
-        {
-            _Document.Save(path);
-        }
-
-
-        public IEnumerable<PackageReferenceVersion> GetPackageReferences()
-        {
-            return _Document.Root.Descendants(XName.Get("PackageVersion")).Select(item => new PackageReferenceVersion(item));
-        }
-
-        
-
-
-
-    }
-
+    /// <summary>
+    /// Wraps an <see cref="XElement"/> object representing a PackageReference or PackageVersion object
+    /// </summary>
 
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
-    public sealed class PackageReferenceVersion
+    public sealed class XmlPackageReferenceVersion
     {
-        internal PackageReferenceVersion(XElement e)
+        #region lifecycle
+
+        internal XmlPackageReferenceVersion(XElement e)
         {
             _Element = e;
             _Version = e._ResolveVersionSource();
         }
 
+        #endregion
+
+        #region data
+
         private readonly XElement _Element;
         private readonly IVersionSource _Version;
+
+        #endregion
+
+        #region properties
 
         public string PackageId
         {
@@ -99,6 +61,8 @@ namespace DirectoryPackagesTools
             get => _Version?.Version?.Trim('[', ']') ?? null;
             set => _Version.Version = HasVersionRange ? "[" + value + "]" : value;
         }
+
+        #endregion
     }
 
 

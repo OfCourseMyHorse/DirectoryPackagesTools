@@ -121,7 +121,7 @@ namespace DirectoryPackagesTools
         
         private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken? token)
         {
-            var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
+            var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();            
 
             foreach (var package in packages)
             {
