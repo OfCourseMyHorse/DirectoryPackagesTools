@@ -13,6 +13,45 @@ namespace DirectoryPackagesTools
     /// </summary>
     public class XmlPackagesVersionsProjectDOM : XmlProjectDOM
     {
+        public static void CreateVersionFileFromExistingProjects(System.IO.FileInfo finfo)
+        {
+            var packages = XmlProjectDOM
+                .FromDirectory(finfo.Directory)
+                .Where(prj => prj.ManagePackageVersionsCentrally)
+                .SelectMany(item => item.GetPackageReferences())
+                .GroupBy(item => item.PackageId)
+                .OrderBy(item => item.Key);
+
+            string getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
+            {
+                references = references.Where(item => item.Version != null);
+                if (!references.Any()) return "0";
+
+                return references.First().Version;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            sb.AppendLine("<Project>");
+
+            sb.AppendLine(" <PropertyGroup>");
+            sb.AppendLine("     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>");
+            sb.AppendLine("     <EnablePackageVersionOverride>true</EnablePackageVersionOverride>");
+            sb.AppendLine(" </PropertyGroup>");
+
+            sb.AppendLine(" <ItemGroup>");
+            foreach (var package in packages)
+            {
+                sb.AppendLine($"     <PackageVersion Include=\"{package.Key}\" Version=\"{getVersionFrom(package)}\" />");
+            }
+            sb.AppendLine(" </ItemGroup>");
+
+            sb.AppendLine("</Project>");            
+            
+            System.IO.File.WriteAllText(finfo.FullName, sb.ToString());
+        }
+
+
         public static XmlPackagesVersionsProjectDOM Load(string path)            
         {
             return Load<XmlPackagesVersionsProjectDOM>(path);

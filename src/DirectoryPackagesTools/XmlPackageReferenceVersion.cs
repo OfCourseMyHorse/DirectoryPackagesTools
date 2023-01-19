@@ -34,7 +34,10 @@ namespace DirectoryPackagesTools
 
         #region data
 
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private readonly XElement _Element;
+
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private readonly IVersionSource _Version;
 
         #endregion
@@ -71,8 +74,17 @@ namespace DirectoryPackagesTools
         }
 
         #endregion
+
+        #region API
+
+        public void RemoveVersion()
+        {
+            IVersionSource._RemoveVersion(_Element);
+        }
+
+        #endregion
     }
 
 
-    
+
 }

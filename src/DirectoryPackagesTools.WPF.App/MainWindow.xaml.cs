@@ -145,39 +145,15 @@ namespace DirectoryPackagesTools
                 if (MessageBox.Show("Overwrite?", "File already exists", MessageBoxButton.OKCancel) != MessageBoxResult.OK) return;
             }
 
-            var packages = XmlProjectDOM
-                .FromDirectory(finfo.Directory)
-                .SelectMany(item => item.GetPackageReferences())
-                .GroupBy(item => item.PackageId)
-                .OrderBy(item => item.Key);
+            var r = MessageBox.Show("Remove Version='xxx' from csproj files?", "Action", MessageBoxButton.YesNoCancel);
+            if (r == MessageBoxResult.Cancel) return;
 
-            string getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
+            XmlPackagesVersionsProjectDOM.CreateVersionFileFromExistingProjects(finfo);
+
+            if (r == MessageBoxResult.Yes)
             {
-                references = references.Where(item => item.Version != null);
-                if (!references.Any()) return "0";
-
-                return references.First().Version;
+                XmlProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);                
             }
-
-            var sb = new StringBuilder();
-            sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            sb.AppendLine("<Project>");
-
-            sb.AppendLine(" <PropertyGroup>");
-            sb.AppendLine("     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>");
-            sb.AppendLine("     <EnablePackageVersionOverride>true</EnablePackageVersionOverride>");
-            sb.AppendLine(" </PropertyGroup>");
-
-            sb.AppendLine(" <ItemGroup>");
-            foreach(var package in packages)
-            {
-                sb.AppendLine($"     <PackageVersion Include=\"{package.Key}\" Version=\"{getVersionFrom(package)}\" />");
-            }
-            sb.AppendLine(" </ItemGroup>");
-
-            sb.AppendLine("</Project>");
-
-            System.IO.File.WriteAllText(finfo.FullName, sb.ToString());
 
             _LoadDocument(finfo.FullName);
         }

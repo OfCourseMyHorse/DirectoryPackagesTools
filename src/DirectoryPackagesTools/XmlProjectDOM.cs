@@ -15,15 +15,48 @@ namespace DirectoryPackagesTools
     {
         #region factory
 
-        public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
             var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
 
             return dinfo
                 .EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
                 .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
-                .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props")
-                .Select(f => Load<XmlProjectDOM>(f.FullName));
+                .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
+        }
+
+        public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        {
+            return _EnumerateProjects(dinfo,excludeDirPackProps).Select(f => Load<XmlProjectDOM>(f.FullName));
+        }
+
+        /// <summary>
+        /// Iterates over all the csproj, targets and props of a directory and removes all the Version entries of PackageReference items.
+        /// </summary>
+        /// <remarks>
+        /// This method is quite destructive, it should be called only AFTER executing <see cref="XmlPackagesVersionsProjectDOM.CreateVersionFileFromExistingProjects(System.IO.FileInfo)"/>
+        /// </remarks>
+        /// <param name="dinfo">the target directory</param>
+        public static void RemoveVersionsFromProjectsFiles(System.IO.DirectoryInfo dinfo)
+        {
+            var prjs = _EnumerateProjects(dinfo, true)
+                .Select(f => Load<XmlProjectDOM>(f.FullName))
+                .Where(prj => prj.ManagePackageVersionsCentrally);
+
+            foreach(var prj in prjs)
+            {
+                bool modified = false;
+
+                foreach(var pkg in prj.GetPackageReferences())
+                {
+                    pkg.RemoveVersion();
+
+                    modified = true;
+                }
+
+                if (modified) prj.Save();
+            }
+
         }
 
         public static T Load<T>(string path)
