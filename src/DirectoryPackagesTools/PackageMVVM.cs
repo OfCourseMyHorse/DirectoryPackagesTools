@@ -28,6 +28,8 @@ namespace DirectoryPackagesTools
         private readonly string _Source;
         private readonly IReadOnlyList<NuGet.Versioning.NuGetVersion> _AvailableVersions;
 
+        private readonly HashSet<XmlProjectDOM> _ProjectsUsingThis = new HashSet<XmlProjectDOM>();
+
         #endregion
 
         #region Properties
@@ -67,6 +69,17 @@ namespace DirectoryPackagesTools
         public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p + ".")));
 
         public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
+
+        public int NumProjectsInUse => _ProjectsUsingThis.Count;
+
+        #endregion
+
+        #region API
+
+        internal void _AddDependent(XmlProjectDOM prj)
+        {
+            _ProjectsUsingThis.Add(prj);
+        }
 
         #endregion
     }

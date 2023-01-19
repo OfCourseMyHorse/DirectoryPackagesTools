@@ -11,15 +11,15 @@
         <BooleanToVisibilityConverter x:Key="asVisible" />
     </UserControl.Resources>
     
-    <ListView ItemsSource="{Binding}">
+    <ListView ItemsSource="{Binding}" >
         <ListView.View>
             <GridView>
                 <GridViewColumn Header="Package" Width="250" DisplayMemberBinding="{Binding Name}" />
-                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />                
+                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />
                 <GridViewColumn Header="Available Versions" Width="350">
                     <GridViewColumn.CellTemplate>
                         <DataTemplate>
-                            <WrapPanel>                                
+                            <WrapPanel>
                                 <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
                                 <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
                                 <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
@@ -31,7 +31,8 @@
                             </WrapPanel>
                         </DataTemplate>
                     </GridViewColumn.CellTemplate>
-                </GridViewColumn>                
+                </GridViewColumn>
+                <GridViewColumn Header="In Use By" Width="50" DisplayMemberBinding="{Binding NumProjectsInUse}" />
             </GridView>
         </ListView.View>
     </ListView>

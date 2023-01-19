@@ -11,24 +11,14 @@ namespace DirectoryPackagesTools
     /// <summary>
     /// Wraps a Directory.Packages.Props project file and exposes an API to retrieve all the PackageVersion entries
     /// </summary>
-    public class XmlPackagesVersionsProjectDOM
+    public class XmlPackagesVersionsProjectDOM : XmlProjectDOM
     {
-        private System.IO.FileInfo _Source;
-        private System.Xml.Linq.XDocument _Document;
-        
-
-        public static XmlPackagesVersionsProjectDOM Load(string path)
+        public static XmlPackagesVersionsProjectDOM Load(string path)            
         {
-            var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);            
-
-            var dom = new XmlPackagesVersionsProjectDOM();
-
-            dom._Source = new System.IO.FileInfo(path);
-            dom._Document = doc;
-            return dom;
+            return Load<XmlPackagesVersionsProjectDOM>(path);
         }
 
-        public string VerifyDocument()
+        public string VerifyDocument(IReadOnlyList<XmlProjectDOM> csprojs)
         {
             var locals = this.GetPackageReferences().ToList();
 
@@ -46,55 +36,44 @@ namespace DirectoryPackagesTools
                 return $"Duplicated: {msg}";
             }
 
-            // check cross references with projects:
-
-            var csprojs = XmlProjectDOM.FromDirectory(_Source.Directory);
+            // check cross references with projects:            
 
             foreach(var csproj in csprojs)
             {
+                var csprojPackages = csproj.GetPackageReferences().ToList();
+                if (csprojPackages.Count == 0) continue;
+
                 // check if a csprojs PackageReference still have Version="xxx"
 
-                var withVersion = csproj
-                    .GetPackageReferences()
+                var withVersion = csprojPackages
                     .Where(item => !string.IsNullOrEmpty(item.Version))
                     .ToList();
 
                 if (withVersion.Count > 0)
                 {
                     var msg = string.Join("\r\n", withVersion.Select(item => item.PackageId));
-                    return $"Version conflicts at {csproj.File.Name}: {msg}";
+                    return $"Version conflicts at {csproj.File.Name}:\r\n {msg}";
                 }
 
                 // check if a PackageReference is not in PackageVersion
 
-                var missing = csproj
-                    .GetPackageReferences()
+                var missing = csprojPackages
                     .Where(item => !locals.Any(x => x.PackageId == item.PackageId))
                     .ToList();
 
                 if (missing.Count > 0)
                 {
                     var msg = string.Join("\r\n", missing.Select(item => item.PackageId));
-                    return $"Version not set for: {msg}";
+                    return $"Version not set for {csproj.File.Name}:\r\n {msg}";
                 }
             }
 
             return null;
         }
 
-
-        public void Save(string path)
+        public override IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(string itemName = "PackageReference")
         {
-            _Document.Save(path);
-        }
-
-
-        public IEnumerable<XmlPackageReferenceVersion> GetPackageReferences()
-        {
-            return _Document.Root
-                .Descendants(XName.Get("PackageVersion"))
-                .Select(item => XmlPackageReferenceVersion.From(item))
-                .Where(item => item != null);
+            return base.GetPackageReferences("PackageVersion");
         }
     }
     

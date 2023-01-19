@@ -20,10 +20,19 @@ namespace DirectoryPackagesTools
 
         public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress)
         {
-            var path = new FileInfo(filePath);
-            var dom = XmlPackagesVersionsProjectDOM.Load(path.FullName);
+            // Load Directory.Packages.Props
+            var dom = XmlPackagesVersionsProjectDOM.Load(filePath);            
 
-            var err = dom.VerifyDocument();
+            // Load all *.csproj within the directory
+            var csprojs = XmlProjectDOM
+                .FromDirectory(dom.File.Directory, true)
+                .Where(item => item.ManagePackageVersionsCentrally)
+                .ToList();
+
+            // verify
+
+            var err = dom.VerifyDocument(csprojs);
+
             if (err != null)
             {
                 if (progress is IProgress<Exception> exrep)
@@ -34,10 +43,23 @@ namespace DirectoryPackagesTools
                 return null;
             }
 
-            var client = new NuGetClient(path.Directory.FullName);
-            var packages = await _GetPackagesAsync(dom, client, progress);
+            // retrieve versions from nuget repositories.
 
-            return new PackagesVersionsProjectMVVM(path, dom, client, packages);
+            var client = new NuGetClient(dom.File.Directory.FullName);
+            var packages = await _GetPackagesAsync(dom, client, progress);
+            
+            // add dependencies
+
+            foreach(var csproj in csprojs)
+            {
+                foreach(var pkg in csproj.GetPackageReferences())
+                {
+                    var dst = packages.FirstOrDefault(item => item.Name == pkg.PackageId);
+                    dst._AddDependent(csproj);
+                }
+            }
+
+            return new PackagesVersionsProjectMVVM(dom, client, packages);
         }
 
         private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPackagesVersionsProjectDOM dom, NuGetClient client, IProgress<int> progress)
@@ -65,12 +87,11 @@ namespace DirectoryPackagesTools
 
         public void Save()
         {
-            _Dom.Save(_Path.FullName);
+            _Dom.Save(null);
         }
 
-        private PackagesVersionsProjectMVVM(System.IO.FileInfo finfo, XmlPackagesVersionsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
-        {
-            _Path =finfo;
+        private PackagesVersionsProjectMVVM(XmlPackagesVersionsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
+        {            
             _Dom = dom;
             _Client = client;
             _Packages = packages;
@@ -79,8 +100,7 @@ namespace DirectoryPackagesTools
         #endregion
 
         #region data
-
-        private readonly System.IO.FileInfo _Path;
+        
         private readonly XmlPackagesVersionsProjectDOM _Dom;
         private readonly NuGetClient _Client;
 
@@ -90,7 +110,7 @@ namespace DirectoryPackagesTools
 
         #region API
 
-        public string DocumentPath => _Path.FullName;
+        public string DocumentPath => _Dom.File.FullName;
 
         public IEnumerable<SourceRepository> Repositories => _Client.Repositories;
 
