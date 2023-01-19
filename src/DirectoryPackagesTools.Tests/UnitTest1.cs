@@ -28,7 +28,7 @@ namespace DirectoryPackagesTools
         [Test]
         public void Test1()
         {
-            var props = XmlPropsProjectDOM.Load("dp.props");
+            var props = XmlPackagesVersionsProjectDOM.Load("dp.props");
 
             AttachmentInfo.From("xdp.xml").WriteObject(f => props.Save(f));
 
@@ -52,7 +52,7 @@ namespace DirectoryPackagesTools
         [Test]
         public async System.Threading.Tasks.Task Test3()
         {
-            var mvvm = await PropsProjectMVVM.Load("", null);
+            var mvvm = await PackagesVersionsProjectMVVM.Load("", null);
 
             
         }

@@ -11,14 +11,17 @@ using NuGet.Versioning;
 
 namespace DirectoryPackagesTools
 {
-    public class PropsProjectMVVM : Prism.Mvvm.BindableBase
+    /// <summary>
+    /// MVVM view over a <see cref="XmlPackagesVersionsProjectDOM"/>
+    /// </summary>
+    public class PackagesVersionsProjectMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
 
-        public static async Task<PropsProjectMVVM> Load(string filePath, IProgress<int> progress)
+        public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress)
         {
             var path = new FileInfo(filePath);
-            var dom = XmlPropsProjectDOM.Load(path.FullName);
+            var dom = XmlPackagesVersionsProjectDOM.Load(path.FullName);
 
             var err = dom.VerifyDocument();
             if (err != null)
@@ -34,10 +37,10 @@ namespace DirectoryPackagesTools
             var client = new NuGetClient(path.Directory.FullName);
             var packages = await _GetPackagesAsync(dom, client, progress);
 
-            return new PropsProjectMVVM(path, dom, client, packages);
+            return new PackagesVersionsProjectMVVM(path, dom, client, packages);
         }
 
-        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPropsProjectDOM dom, NuGetClient client, IProgress<int> progress)
+        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPackagesVersionsProjectDOM dom, NuGetClient client, IProgress<int> progress)
         {
             var locals = dom.GetPackageReferences().ToList();
 
@@ -65,7 +68,7 @@ namespace DirectoryPackagesTools
             _Dom.Save(_Path.FullName);
         }
 
-        private PropsProjectMVVM(System.IO.FileInfo finfo, XmlPropsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
+        private PackagesVersionsProjectMVVM(System.IO.FileInfo finfo, XmlPackagesVersionsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
         {
             _Path =finfo;
             _Dom = dom;
@@ -78,7 +81,7 @@ namespace DirectoryPackagesTools
         #region data
 
         private readonly System.IO.FileInfo _Path;
-        private readonly XmlPropsProjectDOM _Dom;
+        private readonly XmlPackagesVersionsProjectDOM _Dom;
         private readonly NuGetClient _Client;
 
         private readonly PackageMVVM[] _Packages;

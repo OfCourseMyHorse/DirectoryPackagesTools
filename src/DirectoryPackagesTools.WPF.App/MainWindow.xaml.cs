@@ -65,7 +65,7 @@ namespace DirectoryPackagesTools
 
             void _loadDocument()
             {
-                var props = PropsProjectMVVM
+                var props = PackagesVersionsProjectMVVM
                     .Load(documentPath, this)
                     .ConfigureAwait(true)
                     .GetAwaiter()
@@ -81,7 +81,7 @@ namespace DirectoryPackagesTools
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PropsProjectMVVM mvvm) mvvm.Save();
+            if (this.DataContext is PackagesVersionsProjectMVVM mvvm) mvvm.Save();
         }
 
         private void MenuItem_SaveAndCommit(object sender, RoutedEventArgs e)
@@ -89,7 +89,7 @@ namespace DirectoryPackagesTools
             MenuItem_Save(sender, e);
 
             
-            if (this.DataContext is PropsProjectMVVM mvvm)
+            if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
             {
                 var finfo = new System.IO.FileInfo(mvvm.DocumentPath);
 
@@ -117,7 +117,7 @@ namespace DirectoryPackagesTools
 
         private void MenuItem_OpenCommandLine(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PropsProjectMVVM mvvm)
+            if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
             {
                 var finfo = new System.IO.FileInfo(mvvm.DocumentPath);                
 

@@ -16,10 +16,18 @@ namespace DirectoryPackagesTools
     {
         #region lifecycle
 
-        internal XmlPackageReferenceVersion(XElement e)
+        public static XmlPackageReferenceVersion From(XElement e)
+        {
+            if (e == null) return null;
+            var p = new XmlPackageReferenceVersion(e);
+            if (string.IsNullOrWhiteSpace(p.PackageId)) return null;
+            return p;
+        }
+
+        private XmlPackageReferenceVersion(XElement e)
         {
             _Element = e;
-            _Version = e._ResolveVersionSource();
+            _Version = IVersionSource._ResolveVersionSource(e);
         }
 
         #endregion
@@ -66,76 +74,5 @@ namespace DirectoryPackagesTools
     }
 
 
-    /// <summary>
-    /// Defines the source where the actual version is located
-    /// </summary>
-    /// <remarks>
-    /// Implemented by: <see cref="_AttributeVersionSource"/> and <see cref="_PropertyVersionSource"/>
-    /// </remarks>
-    interface IVersionSource
-    {
-        public string Version { get; set; }
-    }
-
-    /// <summary>
-    /// A SemVer string source located in an XML attribute
-    /// </summary>
-    /// <remarks>
-    /// Typical Scenario:<br/>
-    /// <c>
-    /// PackageVersion Include="package" Version="1.0.0"
-    /// </c>
-    /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _AttributeVersionSource : IVersionSource
-    {
-        public static IVersionSource CreateFrom(XElement element)
-        {
-            if (element == null) return null;
-            var attr = element.Attribute(XName.Get("Version"));
-            if (attr == null) return null;
-
-            return new _AttributeVersionSource(attr);
-        }
-
-        private _AttributeVersionSource(XAttribute attr)
-        {
-            _Attribute = attr;
-        }
-
-        XAttribute _Attribute;
-
-        public string Version
-        {
-            get => _Attribute.Value.Trim();
-            set => _Attribute.Value = value;
-        }
-    }
-
-    /// <summary>
-    /// A SemVer string source located in an XML element value
-    /// </summary>
-    /// <remarks>
-    /// Typical Scenario:<br/>
-    /// <c>
-    /// &lt;PropertyVersion&gt;1.0.0&lt;/PropertyVersion&gt;<br/>
-    /// PackageVersion Include="package" Version="$(PropertyVersion)"
-    /// </c>
-    /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _PropertyVersionSource : IVersionSource
-    {
-        public _PropertyVersionSource(XElement element)
-        {
-            _Property = element;
-        }
-
-        XElement _Property;
-
-        public string Version
-        {
-            get => _Property.Value.Trim();
-            set => _Property.Value = value;
-        }
-    }
+    
 }
