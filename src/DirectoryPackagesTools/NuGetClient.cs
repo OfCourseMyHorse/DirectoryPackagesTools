@@ -127,6 +127,8 @@ namespace DirectoryPackagesTools
             {
                 progress.Report(package.Key);
 
+                if (package.Value.Count > 0) continue; // already got versions from a previous repository
+
                 var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token.Value);                
 
                 foreach(var v in vvv) package.Value.Add(v);                
