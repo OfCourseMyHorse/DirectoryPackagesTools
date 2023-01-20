@@ -15,8 +15,6 @@ namespace DirectoryPackagesTools
     /// </remarks>
     interface IVersionSource
     {
-        
-
         internal static void _RemoveVersion(XElement element)
         {
             if (element == null) return;
@@ -112,6 +110,11 @@ namespace DirectoryPackagesTools
     {
         public static IVersionSource FromVersionElement(XElement element)
         {
+            if (element == null) return null;
+
+            System.Diagnostics.Debug.Assert(element.Name.LocalName.StartsWith("Package")); // PackageReference | PackageVersion
+
+            element = element.Element(XName.Get("Version"));
             if (element == null) return null;
             if (element.Name.LocalName != "Version") return null;
             if (string.IsNullOrWhiteSpace(element.Value)) return null;

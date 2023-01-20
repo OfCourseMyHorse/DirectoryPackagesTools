@@ -2,33 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
-using NuGet.Common;
-using NuGet.Configuration;
-using NuGet.Frameworks;
-using NuGet.Packaging.Core;
-using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
-
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
 namespace DirectoryPackagesTools
 {
     [AttachmentPathFormat("*/?")]
+    [ResourcePathFormat("*")]
     public class Tests
     {
         [SetUp]
         public void Setup()
         {
+            
+            
         }
 
         [Test]
         public void Test1()
         {
-            var props = XmlPackagesVersionsProjectDOM.Load("dp.props");
+            var path = ResourceInfo.From("versions.props");
+
+            var props = XmlPackagesVersionsProjectDOM.Load(path);
 
             AttachmentInfo.From("xdp.xml").WriteObject(f => props.Save(f));
 
@@ -48,16 +43,6 @@ namespace DirectoryPackagesTools
 
             foreach(var v in versions) TestContext.WriteLine(v.ToString());
         }
-
-        [Test]
-        public async System.Threading.Tasks.Task Test3()
-        {
-            var mvvm = await PackagesVersionsProjectMVVM.Load("", null);
-
-            
-        }
-
-
 
     }
 }

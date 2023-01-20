@@ -1,0 +1,38 @@
+<Project>
+
+  <!-- REQUIRES VISUAL STUDIO 2022 v17.2+ -->
+
+  <!-- https://devblogs.microsoft.com/nuget/introducing-central-package-management/ -->
+  <!-- https://github.com/HeikeHofmann/TestPropsFile -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+  </PropertyGroup>
+
+
+
+  <PropertyGroup>
+    <CustomVersion>8.1.97</CustomVersion>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+
+    <PackageVersion Include="System.Memory" Version="4.5.5" />
+
+    <PackageVersion Include="System.Management" Version="4.5.5"></PackageVersion>
+
+    <PackageVersion Include="System.Text.Encoding.CodePages">
+      <Version>6.0.0</Version>
+    </PackageVersion>
+
+    <PackageVersion Include="Prism.Core" Version="$(CustomVersion)" />
+
+    <PackageVersion Include="Prism.Wpf">
+      <Version>$(CustomVersion)</Version>
+    </PackageVersion>
+
+  </ItemGroup>
+
+</Project>
