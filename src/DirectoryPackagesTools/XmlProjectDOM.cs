@@ -121,10 +121,7 @@ namespace DirectoryPackagesTools
 
         public virtual IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(string itemName = "PackageReference")
         {
-            return _Document.Root
-                .Descendants(XName.Get(itemName))
-                .Select(item => XmlPackageReferenceVersion.From(item))
-                .Where(item => item != null);                
+            return XmlPackageReferenceVersion.GetPackageReferences(_Document, itemName);
         }
 
         #endregion
