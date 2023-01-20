@@ -6,10 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using KVPMACRO = System.Collections.Generic.KeyValuePair<string, string>;
+
 namespace DirectoryPackagesTools
 {
     /// <summary>
-    /// Wraps an <see cref="XElement"/> object representing a PackageReference or PackageVersion object
+    /// Wraps an <see cref="XElement"/> representing a PackageReference or a PackageVersion item.
     /// </summary>
 
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
@@ -19,25 +21,46 @@ namespace DirectoryPackagesTools
 
         public static IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(XDocument doc, string itemName)
         {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+            if (string.IsNullOrWhiteSpace(itemName)) throw new ArgumentNullException(nameof(itemName));
+
+            if (itemName != "PackageVersion" && itemName != "PackageReference") throw new ArgumentException("Must be a valid element name", nameof(itemName));
+
             return doc.Root
                 .Descendants(XName.Get(itemName))
-                .Select(item => From(item))
+                .SelectMany(item => _From(item))
                 .Where(item => item != null)
                 .ToList();
         }
 
-        public static XmlPackageReferenceVersion From(XElement e)
+        private static IEnumerable<XmlPackageReferenceVersion> _From(XElement e)
         {
-            if (e == null) return null;
+            if (e == null) yield break;
             var p = new XmlPackageReferenceVersion(e);
-            if (string.IsNullOrWhiteSpace(p.PackageId)) return null;
-            return p;
+            if (string.IsNullOrWhiteSpace(p.PackageId)) yield break;
+
+            if (!p.PackageId.Contains("$("))
+            {
+                yield return p;
+                yield break;
+            }
+            
+            if (p.PackageId.Contains("$(Configuration)"))
+            {
+                yield return new XmlPackageReferenceVersion(e, new KVPMACRO("$(Configuration)", "Debug"));
+                yield return new XmlPackageReferenceVersion(e, new KVPMACRO("$(Configuration)", "Release"));
+            }
         }
 
-        private XmlPackageReferenceVersion(XElement e)
+        private XmlPackageReferenceVersion(XElement e, params KVPMACRO[] macros)
         {
             _Element = e;
             _Version = IVersionSource._ResolveVersionSource(e);
+
+            if (macros.Length > 0)
+            {
+                _NameMacros = new Dictionary<string, string>(macros);
+            }
         }
 
         #endregion
@@ -49,6 +72,8 @@ namespace DirectoryPackagesTools
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private readonly IVersionSource _Version;
+
+        private readonly Dictionary<string, string> _NameMacros;
 
         #endregion
 
@@ -62,7 +87,17 @@ namespace DirectoryPackagesTools
                     = _Element.Attribute(XName.Get("Include"))
                     ?? _Element.Attribute(XName.Get("Update"));
 
-                return attr?.Value ?? null;
+                var name = attr?.Value ?? null;
+
+                if (_NameMacros != null)
+                {
+                    foreach(var kvp in _NameMacros)
+                    {
+                        name = name.Replace(kvp.Key, kvp.Value);
+                    }
+                }
+
+                return name;
             }
         }
 
