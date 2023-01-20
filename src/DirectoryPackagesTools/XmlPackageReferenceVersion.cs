@@ -19,19 +19,11 @@ namespace DirectoryPackagesTools
 
         public static IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(XDocument doc, string itemName)
         {
-            #if !DEBUG
-            try {
-            #endif            
-
             return doc.Root
                 .Descendants(XName.Get(itemName))
                 .Select(item => From(item))
                 .Where(item => item != null)
                 .ToList();
-
-            #if !DEBUG
-            } catch(Exception ex) { throw new InvalidOperationException($"{_Source.Name}", ex); }
-            #endif
         }
 
         public static XmlPackageReferenceVersion From(XElement e)
