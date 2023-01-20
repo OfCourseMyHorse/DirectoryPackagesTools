@@ -127,7 +127,7 @@ namespace DirectoryPackagesTools
             {
                 progress.Report(package.Key);
 
-                if (package.Value.Count > 0) continue; // already got versions from a previous repository
+                // if (package.Value.Count > 0) continue; // already got versions from a previous repository, so no need to look in others (NOT true, we can have overrides in local sources)
 
                 var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token.Value);                
 
