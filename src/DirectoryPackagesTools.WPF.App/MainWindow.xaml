@@ -6,38 +6,48 @@
         xmlns:local="clr-namespace:DirectoryPackagesTools"
         xmlns:data="clr-namespace:DirectoryPackagesTools;assembly=DirectoryPackagesTools"
         mc:Ignorable="d"
-        Title="Directory Packages Manager" Height="450" Width="800">    
-    
+        Title="Directory Packages Manager" Height="450" Width="800">
+
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="File">
-                <MenuItem Header="New..." Click="MenuItem_New" Icon="✨" ToolTip="Creates a new Directory.Build.props and optionally fixes all csproj files."/>
-                <MenuItem Header="Open..." Click="MenuItem_Load" Icon="📂" ToolTip="Opens an existing Directory.Build.props."/>
-                <MenuItem Header="Save" Click="MenuItem_Save" Icon="💾" ToolTip="Saves an existing Directory.Build.props." />
-                <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" Icon="📤" ToolTip="Saves an existing Directory.Build.props and opens a Commit dialog."/>
-            </MenuItem>
-            <MenuItem Header="Tools">
-                <MenuItem Header="Open Command Line..." Click="MenuItem_OpenCommandLine" Icon="🖥" />                
-            </MenuItem>
-        </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">
-            <ProgressBar Width="200" Name="myProgressBar" Height="20" Visibility="Collapsed"  />
+            <WrapPanel Orientation="Horizontal">
+                <ProgressBar Width="200" Name="myProgressBar" Height="20" Visibility="Collapsed"  />
+                <Button Content="Cancel" Name="myCancelBtn" />
+            </WrapPanel>
+
         </StatusBar>
 
-        <GroupBox Header="Sources" DockPanel.Dock="Top">
-            <ItemsControl ItemsSource="{Binding Repositories}" />
-        </GroupBox>
+        <DockPanel x:Name="myClientArea">
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="File">
+                    <MenuItem Header="New..." Click="MenuItem_New" Icon="✨" ToolTip="Creates a new Directory.Build.props and optionally fixes all csproj files."/>
+                    <MenuItem Header="Open..." Click="MenuItem_Load" Icon="📂" ToolTip="Opens an existing Directory.Build.props."/>
+                    <MenuItem Header="Save" Click="MenuItem_Save" Icon="💾" ToolTip="Saves an existing Directory.Build.props." />
+                    <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" Icon="📤" ToolTip="Saves an existing Directory.Build.props and opens a Commit dialog."/>
+                </MenuItem>
+                <MenuItem Header="Tools">
+                    <MenuItem Header="Open Command Line..." Click="MenuItem_OpenCommandLine" Icon="🖥" />
+                </MenuItem>
+            </Menu>
 
-        <GroupBox Header="Packages">
-            <TabControl ItemsSource="{Binding GroupedPackages}" DisplayMemberPath="Key" >
-                <TabControl.ContentTemplate>
-                    <DataTemplate>
-                        <local:PackagesList DataContext="{Binding Value}" />
-                    </DataTemplate>
-                </TabControl.ContentTemplate>                
-            </TabControl>
-        </GroupBox>
-        
+            <GroupBox Header="Sources" DockPanel.Dock="Top">
+                <ItemsControl ItemsSource="{Binding Repositories}" />
+            </GroupBox>
+
+            <GroupBox Header="Packages">
+                <TabControl ItemsSource="{Binding GroupedPackages}" DisplayMemberPath="Key" >
+                    <TabControl.ContentTemplate>
+                        <DataTemplate>
+                            <local:PackagesList DataContext="{Binding Value}" />
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+            </GroupBox>
+
+        </DockPanel>
+
     </DockPanel>
+
+    
 </Window>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -18,7 +19,7 @@ namespace DirectoryPackagesTools
     {
         #region lifecycle
 
-        public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress)
+        public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress, CancellationToken ctoken)
         {
             // Load Directory.Packages.Props
             var dom = XmlPackagesVersionsProjectDOM.Load(filePath);            
@@ -46,7 +47,7 @@ namespace DirectoryPackagesTools
             // retrieve versions from nuget repositories.
 
             var client = new NuGetClient(dom.File.Directory.FullName);
-            var packages = await _GetPackagesAsync(dom, client, progress);
+            var packages = await _GetPackagesAsync(dom, client, progress, ctoken);
             
             // add dependencies
 
@@ -62,7 +63,7 @@ namespace DirectoryPackagesTools
             return new PackagesVersionsProjectMVVM(dom, client, packages);
         }
 
-        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPackagesVersionsProjectDOM dom, NuGetClient client, IProgress<int> progress)
+        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPackagesVersionsProjectDOM dom, NuGetClient client, IProgress<int> progress, CancellationToken ctoken)
         {
             var locals = dom.GetPackageReferences().ToList();
 
@@ -70,7 +71,7 @@ namespace DirectoryPackagesTools
 
             var dict = locals.ToDictionary(kvp => kvp.PackageId, kvp => new System.Collections.Concurrent.ConcurrentBag<NuGetVersion>());
 
-            await client.GetVersions(dict, progress);            
+            await client.GetVersions(dict, progress, ctoken);            
 
             foreach (var local in dict)
             {

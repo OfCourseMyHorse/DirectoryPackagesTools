@@ -109,9 +109,11 @@ namespace DirectoryPackagesTools
                 
                 foreach (var sourceRepository in _Repos.GetRepositories())
                 {
+                    if (token.Value.IsCancellationRequested == true) break;
+
                     System.Diagnostics.Debug.WriteLine(sourceRepository.PackageSource.Source);                    
 
-                    await _GetVersions(packages, sourceRepository, cacheContext, percent, token);
+                    await _GetVersions(packages, sourceRepository, cacheContext, percent, token.Value);
                 }
             }
 
@@ -119,17 +121,19 @@ namespace DirectoryPackagesTools
             RaisePropertyChanged(nameof(LastOperationTime));
         }
         
-        private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken? token)
+        private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken token)
         {
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();            
 
             foreach (var package in packages)
             {
+                if (token.IsCancellationRequested == true) break;
+
                 progress.Report(package.Key);
 
                 // if (package.Value.Count > 0) continue; // already got versions from a previous repository, so no need to look in others (NOT true, we can have overrides in local sources)
 
-                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token.Value);                
+                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token);                
 
                 foreach(var v in vvv) package.Value.Add(v);                
             }            

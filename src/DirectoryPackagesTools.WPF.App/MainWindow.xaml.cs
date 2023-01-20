@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,22 +62,56 @@ namespace DirectoryPackagesTools
 
         private void _LoadDocument(string documentPath)
         {
-            myProgressBar.Visibility = Visibility.Visible;
+            myClientArea.IsEnabled = false;
+            myProgressBar.Visibility = Visibility.Visible;            
+
+            var cts = new CancellationTokenSource();
+
+            void _cancelBtn(object sender, RoutedEventArgs e) { cts.Cancel(); }
+
+            myCancelBtn.Click += _cancelBtn;            
+            myCancelBtn.Visibility = Visibility.Visible;
+
+            void _restoreWindow()
+            {
+                myClientArea.IsEnabled = true;
+                myProgressBar.Visibility = Visibility.Collapsed;
+
+                myCancelBtn.Click -= _cancelBtn;
+                myCancelBtn.Visibility = Visibility.Collapsed;
+
+                cts.Dispose();
+            }
 
             void _loadDocument()
             {
-                var props = PackagesVersionsProjectMVVM
-                    .Load(documentPath, this)
-                    .ConfigureAwait(true)
-                    .GetAwaiter()
-                    .GetResult();
+                PackagesVersionsProjectMVVM versions = null;
 
-                if (props == null) return;
+                try
+                {
+                    versions = PackagesVersionsProjectMVVM
+                        .Load(documentPath, this, cts.Token)
+                        .ConfigureAwait(true)
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                catch (OperationCanceledException ex)
+                {
+                    MessageBox.Show("Load cancelled.");
+                }
+                finally
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        if (versions != null) this.DataContext = versions;
 
-                this.Dispatcher.Invoke(() => { this.DataContext = props; myProgressBar.Visibility = Visibility.Collapsed; });
+                        _restoreWindow();
+                    });
+                }                
             }
 
             Task.Run(_loadDocument);
+
         }
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)
