@@ -15,19 +15,34 @@ namespace DirectoryPackagesTools
     {
         #region factory
 
+        private static bool IsWorkDir(System.IO.DirectoryInfo dinfo)
+        {
+            while(dinfo != null)
+            {
+                var name = dinfo.Name.ToLower();
+                if (name == "bin" || name == "obj") return true;
+                dinfo = dinfo.Parent;
+            }
+
+            return false;
+        }
+
         private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
+            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };            
 
             return dinfo
                 .EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
+                .Where(item => !IsWorkDir(item.Directory))
                 .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
                 .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
         }
 
         public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            return _EnumerateProjects(dinfo,excludeDirPackProps).Select(f => Load<XmlProjectDOM>(f.FullName));
+            return _EnumerateProjects(dinfo,excludeDirPackProps)
+                .Select(f => Load<XmlProjectDOM>(f.FullName))
+                .ToList();
         }
 
         /// <summary>
@@ -62,12 +77,19 @@ namespace DirectoryPackagesTools
         public static T Load<T>(string path)
             where T: XmlProjectDOM, new()
         {
-            var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);
+            try
+            {
+                var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);
 
-            var dom = new T();
-            dom._Source = new System.IO.FileInfo(path);
-            dom._Document = doc;
-            return dom;
+                var dom = new T();
+                dom._Source = new System.IO.FileInfo(path);
+                dom._Document = doc;
+                return dom;
+            }
+            catch(Exception ex)
+            {
+                throw new System.IO.FileLoadException($"Failed to load {path}", ex);
+            }            
         }
 
         public void Save(string path = null)
