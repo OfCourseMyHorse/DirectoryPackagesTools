@@ -6,34 +6,41 @@
              xmlns:local="clr-namespace:DirectoryPackagesTools"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
+    
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="asVisible" />
-    </UserControl.Resources>
+    </UserControl.Resources>    
     
-    <ListView ItemsSource="{Binding}" >
-        <ListView.View>
-            <GridView>
-                <GridViewColumn Header="Package" Width="250" DisplayMemberBinding="{Binding Name}" />
-                <GridViewColumn Header="Version" Width="180" DisplayMemberBinding="{Binding Version}" />
-                <GridViewColumn Header="Available Versions" Width="350">
-                    <GridViewColumn.CellTemplate>
-                        <DataTemplate>
-                            <WrapPanel>
-                                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
-                                <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
-                                <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
-                                    <TextBlock Text=" "/>
-                                    <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
-                                    <TextBlock Text=" "/>
-                                    <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
-                                </WrapPanel>
+    <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single">
+        
+        <!--
+        generally speaking, DataGrid is more powerful than ListView, but it
+        has the drawback of not being able to disable the selection mode.
+        -->        
+        
+        <DataGrid.Columns>
+            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" />
+            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version}" />
+            <DataGridTemplateColumn Header="Available Versions" Width="350">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <WrapPanel>
+                            <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
+                            <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
+                            <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
+                                <TextBlock Text=" "/>
+                                <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+                                <TextBlock Text=" "/>
+                                <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
                             </WrapPanel>
-                        </DataTemplate>
-                    </GridViewColumn.CellTemplate>
-                </GridViewColumn>
-                <GridViewColumn Header="In Use By" Width="50" DisplayMemberBinding="{Binding NumProjectsInUse}" />
-            </GridView>
-        </ListView.View>
-    </ListView>
+                        </WrapPanel>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="In Use By" Width="50" Binding="{Binding NumProjectsInUse}" />
+        </DataGrid.Columns>
+    </DataGrid>
+    
 </UserControl>
