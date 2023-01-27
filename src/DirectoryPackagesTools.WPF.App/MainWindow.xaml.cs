@@ -13,7 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-
+using DirectoryPackagesTools.DOM;
 using Microsoft.Win32;
 
 namespace DirectoryPackagesTools
@@ -183,12 +183,7 @@ namespace DirectoryPackagesTools
             var r = MessageBox.Show("Remove Version='xxx' from csproj files?", "Action", MessageBoxButton.YesNoCancel);
             if (r == MessageBoxResult.Cancel) return;
 
-            XmlPackagesVersionsProjectDOM.CreateVersionFileFromExistingProjects(finfo);
-
-            if (r == MessageBoxResult.Yes)
-            {
-                XmlProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);                
-            }
+            PackagesVersionsProjectMVVM.WriteNewVersionsProject(finfo, r == MessageBoxResult.Yes);
 
             _LoadDocument(finfo.FullName);
         }

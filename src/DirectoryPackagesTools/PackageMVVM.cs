@@ -5,8 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using DirectoryPackagesTools.DOM;
+
 namespace DirectoryPackagesTools
 {
+    /// <summary>
+    /// MVVM view over <see cref="XmlPackageReferenceVersion"/>
+    /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Name} {Version}")]
     public class PackageMVVM : Prism.Mvvm.BindableBase
     {
@@ -32,37 +37,19 @@ namespace DirectoryPackagesTools
 
         #endregion
 
-        #region Properties
+        #region Properties - name
 
         public ICommand ApplyVersionCmd { get; }
 
+        /// <summary>
+        /// Gets the name of the package. Ex: "System.Numerics.Vectors"
+        /// </summary>
         public string Name => _LocalReference.PackageId;
 
-        public string Prefix => _LocalReference.PackagePrefix;
-
-        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToString()).Reverse().ToArray();
-
-        public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
-
-        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
-
-        public string Version
-        {
-            get { return _LocalReference.Version; }
-            set
-            {
-                _LocalReference.Version = value;
-                RaisePropertyChanged(nameof(Version));
-                RaisePropertyChanged(nameof(IsUpToDate));
-                RaisePropertyChanged(nameof(NeedsUpdate));
-            }
-        }
-
-        public bool IsUpToDate => Version == AvailableVersions.FirstOrDefault();
-
-        public bool HasVersionRange => _LocalReference.HasVersionRange;
-
-        public bool NeedsUpdate => !IsUpToDate && !HasVersionRange;
+        /// <summary>
+        /// Gets the first name of the package. Ex: 'Microsoft', 'System'
+        /// </summary>
+        public string Prefix => _LocalReference.PackagePrefix;       
 
         public bool IsUser => !IsSystem && !IsTest;
 
@@ -71,6 +58,34 @@ namespace DirectoryPackagesTools
         public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
 
         public int NumProjectsInUse => _ProjectsUsingThis.Count;
+
+        #endregion
+
+        #region Properties - version
+
+        public string Version
+        {
+            get { return _LocalReference.Version; }
+            set
+            {
+                _LocalReference.Version = value;
+                RaisePropertyChanged(nameof(Version));
+                RaisePropertyChanged(nameof(VersionIsUpToDate));
+                RaisePropertyChanged(nameof(NeedsUpdate));
+            }
+        }
+
+        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToString()).Reverse().ToList();
+
+        public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
+
+        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();        
+
+        public bool VersionIsUpToDate => Version == AvailableVersions.FirstOrDefault();
+
+        public bool HasVersionRange => _LocalReference.HasVersionRange;
+
+        public bool NeedsUpdate => !VersionIsUpToDate && !HasVersionRange;
 
         #endregion
 

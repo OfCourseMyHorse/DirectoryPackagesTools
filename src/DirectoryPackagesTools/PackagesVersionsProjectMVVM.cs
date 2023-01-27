@@ -10,14 +10,30 @@ using System.Windows.Input;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
+using DirectoryPackagesTools.Client;
+using DirectoryPackagesTools.DOM;
+
 namespace DirectoryPackagesTools
 {
     /// <summary>
     /// MVVM view over a <see cref="XmlPackagesVersionsProjectDOM"/>
     /// </summary>
+    /// <remarks>
+    /// This is the MVVM of a Directory.Packages.props project
+    /// </remarks>
     public class PackagesVersionsProjectMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
+
+        public static void WriteNewVersionsProject(System.IO.FileInfo finfo, bool updateProjects)
+        {
+            XmlPackagesVersionsProjectDOM.CreateVersionFileFromExistingProjects(finfo);
+
+            if (updateProjects)
+            {
+                XmlProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);
+            }
+        }
 
         public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress, CancellationToken ctoken)
         {

@@ -6,17 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace DirectoryPackagesTools
+namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
     /// Wraps a Directory.Packages.Props project file and exposes an API to retrieve all the PackageVersion entries
     /// </summary>
-    public class XmlPackagesVersionsProjectDOM : XmlProjectDOM
+    class XmlPackagesVersionsProjectDOM : XmlProjectDOM
     {
         public static void CreateVersionFileFromExistingProjects(System.IO.FileInfo finfo)
         {
-            var packages = XmlProjectDOM
-                .FromDirectory(finfo.Directory)
+            var packages =
+                FromDirectory(finfo.Directory)
                 .Where(prj => prj.ManagePackageVersionsCentrally)
                 .SelectMany(item => item.GetPackageReferences())
                 .GroupBy(item => item.PackageId)
@@ -46,13 +46,13 @@ namespace DirectoryPackagesTools
             }
             sb.AppendLine(" </ItemGroup>");
 
-            sb.AppendLine("</Project>");            
-            
+            sb.AppendLine("</Project>");
+
             System.IO.File.WriteAllText(finfo.FullName, sb.ToString());
         }
 
 
-        public static XmlPackagesVersionsProjectDOM Load(string path)            
+        public static XmlPackagesVersionsProjectDOM Load(string path)
         {
             return Load<XmlPackagesVersionsProjectDOM>(path);
         }
@@ -62,7 +62,7 @@ namespace DirectoryPackagesTools
             try
             {
 
-                var locals = this.GetPackageReferences().ToList();
+                var locals = GetPackageReferences().ToList();
 
                 // check for duplicated entries
 
@@ -82,7 +82,7 @@ namespace DirectoryPackagesTools
 
                 foreach (var csproj in csprojs)
                 {
-                     var csprojRelPath = csproj.File.FullName.Substring(this.File.Directory.FullName.Length);
+                    var csprojRelPath = csproj.File.FullName.Substring(File.Directory.FullName.Length);
 
                     var csprojPackages = csproj.GetPackageReferences().ToList();
                     if (csprojPackages.Count == 0) continue;
@@ -114,7 +114,8 @@ namespace DirectoryPackagesTools
 
                 return null;
 
-            } catch(Exception ex) { return ex.Message; }
+            }
+            catch (Exception ex) { return ex.Message; }
         }
 
         public override IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(string itemName = "PackageReference")
@@ -122,5 +123,5 @@ namespace DirectoryPackagesTools
             return base.GetPackageReferences("PackageVersion");
         }
     }
-    
+
 }

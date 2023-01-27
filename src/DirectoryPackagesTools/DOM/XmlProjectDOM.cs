@@ -5,19 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace DirectoryPackagesTools
+namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
     /// Wraps a .csproj general project file and exposes an API to retrieve all the PackageReference entries
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{File.Name}")]
-    public class XmlProjectDOM
+    class XmlProjectDOM
     {
         #region factory
 
         private static bool IsWorkDir(System.IO.DirectoryInfo dinfo)
         {
-            while(dinfo != null)
+            while (dinfo != null)
             {
                 var name = dinfo.Name.ToLower();
                 if (name == "bin" || name == "obj") return true;
@@ -29,7 +29,7 @@ namespace DirectoryPackagesTools
 
         private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };            
+            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
 
             return dinfo
                 .EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
@@ -40,7 +40,7 @@ namespace DirectoryPackagesTools
 
         public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            return _EnumerateProjects(dinfo,excludeDirPackProps)
+            return _EnumerateProjects(dinfo, excludeDirPackProps)
                 .Select(f => Load<XmlProjectDOM>(f.FullName))
                 .ToList();
         }
@@ -58,11 +58,11 @@ namespace DirectoryPackagesTools
                 .Select(f => Load<XmlProjectDOM>(f.FullName))
                 .Where(prj => prj.ManagePackageVersionsCentrally);
 
-            foreach(var prj in prjs)
+            foreach (var prj in prjs)
             {
                 bool modified = false;
 
-                foreach(var pkg in prj.GetPackageReferences())
+                foreach (var pkg in prj.GetPackageReferences())
                 {
                     pkg.RemoveVersion();
 
@@ -75,21 +75,21 @@ namespace DirectoryPackagesTools
         }
 
         public static T Load<T>(string path)
-            where T: XmlProjectDOM, new()
+            where T : XmlProjectDOM, new()
         {
             try
             {
-                var doc = System.Xml.Linq.XDocument.Load(path, System.Xml.Linq.LoadOptions.PreserveWhitespace);
+                var doc = XDocument.Load(path, LoadOptions.PreserveWhitespace);
 
                 var dom = new T();
                 dom._Source = new System.IO.FileInfo(path);
                 dom._Document = doc;
                 return dom;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new System.IO.FileLoadException($"Failed to load {path}", ex);
-            }            
+            }
         }
 
         public void Save(string path = null)
@@ -104,7 +104,7 @@ namespace DirectoryPackagesTools
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private System.IO.FileInfo _Source;
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        private System.Xml.Linq.XDocument _Document;
+        private XDocument _Document;
 
         #endregion
 
@@ -112,12 +112,12 @@ namespace DirectoryPackagesTools
 
         public System.IO.FileInfo File => _Source;
 
-        #if DEBUG
+#if DEBUG
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
         private XmlPackageReferenceVersion[] _Packages => GetPackageReferences().ToArray();
 
-        #endif
+#endif
 
         #endregion
 

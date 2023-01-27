@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-
+using DirectoryPackagesTools.DOM;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
@@ -53,7 +53,7 @@ namespace DirectoryPackagesTools
         [Test]
         public async System.Threading.Tasks.Task Test2()
         {
-            var nuClient = new NuGetClient();
+            var nuClient = new Client.NuGetClient();
 
             var versions = await nuClient.GetVersions("System.Numerics.Vectors");
 

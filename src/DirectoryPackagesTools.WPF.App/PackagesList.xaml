@@ -11,6 +11,18 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="asVisible" />
+        <DataTemplate x:Key="myPackageVersionsSelector">
+            <WrapPanel>
+                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
+                <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
+                <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
+                    <TextBlock Text=" "/>
+                    <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+                    <TextBlock Text=" "/>
+                    <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
+                </WrapPanel>
+            </WrapPanel>
+        </DataTemplate>
     </UserControl.Resources>    
     
     <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single">
@@ -21,25 +33,10 @@
         -->        
         
         <DataGrid.Columns>
-            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" />
-            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version}" />
-            <DataGridTemplateColumn Header="Available Versions" Width="350">
-                <DataGridTemplateColumn.CellTemplate>
-                    <DataTemplate>
-                        <WrapPanel>
-                            <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
-                            <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
-                            <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
-                                <TextBlock Text=" "/>
-                                <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
-                                <TextBlock Text=" "/>
-                                <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
-                            </WrapPanel>
-                        </WrapPanel>
-                    </DataTemplate>
-                </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-            <DataGridTextColumn Header="In Use By" Width="50" Binding="{Binding NumProjectsInUse}" />
+            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" />
+            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version}" IsReadOnly="True" />
+            <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
+            <DataGridTextColumn Header="In Use By" Width="50" Binding="{Binding NumProjectsInUse}" IsReadOnly="True" />
         </DataGrid.Columns>
     </DataGrid>
     

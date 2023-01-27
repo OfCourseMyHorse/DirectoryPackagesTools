@@ -8,14 +8,14 @@ using System.Xml.Linq;
 
 using KVPMACRO = System.Collections.Generic.KeyValuePair<string, string>;
 
-namespace DirectoryPackagesTools
+namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
     /// Wraps an <see cref="XElement"/> representing a PackageReference or a PackageVersion item.
     /// </summary>
 
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
-    public sealed class XmlPackageReferenceVersion
+    sealed class XmlPackageReferenceVersion
     {
         #region lifecycle
 
@@ -44,7 +44,7 @@ namespace DirectoryPackagesTools
                 yield return p;
                 yield break;
             }
-            
+
             if (p.PackageId.Contains("$(Configuration)"))
             {
                 yield return new XmlPackageReferenceVersion(e, new KVPMACRO("$(Configuration)", "Debug"));
@@ -55,7 +55,7 @@ namespace DirectoryPackagesTools
         private XmlPackageReferenceVersion(XElement e, params KVPMACRO[] macros)
         {
             _Element = e;
-            _Version = IVersionSource._ResolveVersionSource(e);
+            _Version = IVersionXmlSource._ResolveVersionSource(e);
 
             if (macros.Length > 0)
             {
@@ -71,7 +71,7 @@ namespace DirectoryPackagesTools
         private readonly XElement _Element;
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        private readonly IVersionSource _Version;
+        private readonly IVersionXmlSource _Version;
 
         private readonly Dictionary<string, string> _NameMacros;
 
@@ -91,7 +91,7 @@ namespace DirectoryPackagesTools
 
                 if (_NameMacros != null)
                 {
-                    foreach(var kvp in _NameMacros)
+                    foreach (var kvp in _NameMacros)
                     {
                         name = name.Replace(kvp.Key, kvp.Value);
                     }
@@ -124,7 +124,7 @@ namespace DirectoryPackagesTools
 
         public void RemoveVersion()
         {
-            IVersionSource._RemoveVersion(_Element);
+            IVersionXmlSource._RemoveVersion(_Element);
         }
 
         #endregion

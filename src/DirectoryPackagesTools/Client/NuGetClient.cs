@@ -8,10 +8,11 @@ using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
+using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace DirectoryPackagesTools
+namespace DirectoryPackagesTools.Client
 {
     public class NuGetClient : Prism.Mvvm.BindableBase
     {
@@ -49,7 +50,7 @@ namespace DirectoryPackagesTools
 
         #endregion
 
-        #region API
+        #region API        
 
         public async Task<SourcePackageDependencyInfo> ResolvePackage(PackageIdentity package, NuGetFramework framework)
         {
@@ -106,12 +107,12 @@ namespace DirectoryPackagesTools
 
                 Task.WaitAll(tasks);
                 */
-                
+
                 foreach (var sourceRepository in _Repos.GetRepositories())
                 {
                     if (token.Value.IsCancellationRequested == true) break;
 
-                    System.Diagnostics.Debug.WriteLine(sourceRepository.PackageSource.Source);                    
+                    System.Diagnostics.Debug.WriteLine(sourceRepository.PackageSource.Source);
 
                     await _GetVersions(packages, sourceRepository, cacheContext, percent, token.Value);
                 }
@@ -120,10 +121,10 @@ namespace DirectoryPackagesTools
             LastOperationTime = percent.Elapsed;
             RaisePropertyChanged(nameof(LastOperationTime));
         }
-        
+
         private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken token)
         {
-            var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();            
+            var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
 
             foreach (var package in packages)
             {
@@ -133,10 +134,10 @@ namespace DirectoryPackagesTools
 
                 // if (package.Value.Count > 0) continue; // already got versions from a previous repository, so no need to look in others (NOT true, we can have overrides in local sources)
 
-                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token);                
+                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token);
 
-                foreach(var v in vvv) package.Value.Add(v);                
-            }            
+                foreach (var v in vvv) package.Value.Add(v);
+            }
         }
 
         #endregion

@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace DirectoryPackagesTools
+namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
-    /// Defines the source where the actual semantic version is located
+    /// Defines the source where the actual semantic version is located, within an XML document.
     /// </summary>
     /// <remarks>
-    /// Implemented by: <see cref="_AttributeVersionSource"/> and <see cref="_PropertyVersionSource"/>
+    /// Implemented by: <see cref="_AttributeVersionXmlSource"/> and <see cref="_PropertyVersionXmlSource"/>
     /// </remarks>
-    interface IVersionSource
+    interface IVersionXmlSource
     {
         internal static void _RemoveVersion(XElement element)
         {
@@ -22,18 +22,18 @@ namespace DirectoryPackagesTools
             var vName = XName.Get("Version");
 
             element.Attribute(vName)?.Remove();
-            element.Element(vName)?.Remove();            
+            element.Element(vName)?.Remove();
         }
 
-        internal static IVersionSource _ResolveVersionSource(XElement element)
+        internal static IVersionXmlSource _ResolveVersionSource(XElement element)
         {
-            if (element == null) return null;            
+            if (element == null) return null;
 
             var root = element;
             while (root.Parent != null) root = root.Parent;
 
-            var version = _AttributeVersionSource.FromVersionAttribute(element)
-                ?? _PropertyVersionSource.FromVersionElement(element);
+            var version = _AttributeVersionXmlSource.FromVersionAttribute(element)
+                ?? _PropertyVersionXmlSource.FromVersionElement(element);
 
             if (version == null) return null;
 
@@ -53,7 +53,7 @@ namespace DirectoryPackagesTools
 
                 if (property == null) throw new InvalidOperationException($"element {propName} not found");
 
-                version = _PropertyVersionSource.FromPropertyElement(property);
+                version = _PropertyVersionXmlSource.FromPropertyElement(property);
             }
         }
         public string Version { get; set; }
@@ -69,19 +69,19 @@ namespace DirectoryPackagesTools
     /// </c>
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _AttributeVersionSource : IVersionSource
+    struct _AttributeVersionXmlSource : IVersionXmlSource
     {
-        public static IVersionSource FromVersionAttribute(XElement element)
+        public static IVersionXmlSource FromVersionAttribute(XElement element)
         {
             if (element == null) return null;
-            var attr = element.Attribute(XName.Get("Version"));            
+            var attr = element.Attribute(XName.Get("Version"));
             if (attr == null) return null;
             if (string.IsNullOrWhiteSpace(attr.Value)) return null;
 
-            return new _AttributeVersionSource(attr);
+            return new _AttributeVersionXmlSource(attr);
         }
 
-        private _AttributeVersionSource(XAttribute attr)
+        private _AttributeVersionXmlSource(XAttribute attr)
         {
             _Attribute = attr;
         }
@@ -106,9 +106,9 @@ namespace DirectoryPackagesTools
     /// </c>
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _PropertyVersionSource : IVersionSource
+    struct _PropertyVersionXmlSource : IVersionXmlSource
     {
-        public static IVersionSource FromVersionElement(XElement element)
+        public static IVersionXmlSource FromVersionElement(XElement element)
         {
             if (element == null) return null;
 
@@ -118,17 +118,17 @@ namespace DirectoryPackagesTools
             if (element == null) return null;
             if (element.Name.LocalName != "Version") return null;
             if (string.IsNullOrWhiteSpace(element.Value)) return null;
-            return new _PropertyVersionSource(element);
+            return new _PropertyVersionXmlSource(element);
         }
 
-        public static IVersionSource FromPropertyElement(XElement element)
+        public static IVersionXmlSource FromPropertyElement(XElement element)
         {
-            if (element == null) return null;            
+            if (element == null) return null;
             if (string.IsNullOrWhiteSpace(element.Value)) return null;
-            return new _PropertyVersionSource(element);
+            return new _PropertyVersionXmlSource(element);
         }
 
-        private _PropertyVersionSource(XElement element)
+        private _PropertyVersionXmlSource(XElement element)
         {
             _Property = element;
         }
