@@ -7,6 +7,9 @@ using System.Windows.Input;
 
 using DirectoryPackagesTools.DOM;
 
+using NuGet.Protocol;
+using NuGet.Versioning;
+
 namespace DirectoryPackagesTools
 {
     /// <summary>
@@ -59,6 +62,8 @@ namespace DirectoryPackagesTools
 
         public int NumProjectsInUse => _ProjectsUsingThis.Count;
 
+        public IEnumerable<System.IO.FileInfo> DependantProjects => _ProjectsUsingThis.Select(item => item.File);
+
         #endregion
 
         #region Properties - version
@@ -72,10 +77,13 @@ namespace DirectoryPackagesTools
                 RaisePropertyChanged(nameof(Version));
                 RaisePropertyChanged(nameof(VersionIsUpToDate));
                 RaisePropertyChanged(nameof(NeedsUpdate));
+                RaisePropertyChanged(nameof(ExistingVersion));
             }
         }
 
-        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToString()).Reverse().ToList();
+        public NuGetVersion ExistingVersion => _AvailableVersions.FirstOrDefault(item => item.ToNormalizedString() == this.Version);
+
+        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToNormalizedString()).Reverse().ToList();
 
         public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
 

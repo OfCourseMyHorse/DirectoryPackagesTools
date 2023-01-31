@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -14,6 +15,8 @@ using NuGet.Versioning;
 
 namespace DirectoryPackagesTools.Client
 {
+    using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;
+
     public class NuGetClient : Prism.Mvvm.BindableBase
     {
         // https://learn.microsoft.com/en-us/nuget/reference/nuget-client-sdk
@@ -89,7 +92,7 @@ namespace DirectoryPackagesTools.Client
             return versions.ToArray();
         }
 
-        public async Task GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, IProgress<int> progress, CancellationToken? token = null)
+        public async Task GetVersions(IReadOnlyDictionary<string, NUGETVERSIONSBAG> packages, IProgress<int> progress, CancellationToken? token = null)
         {
             token ??= CancellationToken.None;
 
@@ -122,7 +125,7 @@ namespace DirectoryPackagesTools.Client
             RaisePropertyChanged(nameof(LastOperationTime));
         }
 
-        private async Task _GetVersions(IReadOnlyDictionary<string, System.Collections.Concurrent.ConcurrentBag<NuGetVersion>> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken token)
+        private async Task _GetVersions(IReadOnlyDictionary<string, NUGETVERSIONSBAG> packages, SourceRepository sourceRepository, SourceCacheContext cacheContext, IProgress<string> progress, CancellationToken token)
         {
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
 
@@ -134,7 +137,7 @@ namespace DirectoryPackagesTools.Client
 
                 // if (package.Value.Count > 0) continue; // already got versions from a previous repository, so no need to look in others (NOT true, we can have overrides in local sources)
 
-                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token);
+                var vvv = await resource.GetAllVersionsAsync(package.Key, cacheContext, _Logger, token);                
 
                 foreach (var v in vvv) package.Value.Add(v);
             }

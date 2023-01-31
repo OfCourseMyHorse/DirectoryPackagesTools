@@ -11,6 +11,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="asVisible" />
+        
         <DataTemplate x:Key="myPackageVersionsSelector">
             <WrapPanel>
                 <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
@@ -23,6 +24,30 @@
                 </WrapPanel>
             </WrapPanel>
         </DataTemplate>
+
+        <DataTemplate x:Key="myDependantProjects">
+            <ItemsControl ItemsSource="{Binding DependantProjects}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="📁" ToolTip="{Binding Name}" >
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{Binding Name}" />
+                                    <Separator />
+                                    <MenuItem Header="Open containing folder" />
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                        </TextBlock>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DataTemplate>        
+        
     </UserControl.Resources>    
     
     <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single">
@@ -30,13 +55,17 @@
         <!--
         generally speaking, DataGrid is more powerful than ListView, but it
         has the drawback of not being able to disable the selection mode.
+        
+        also, although DataGrid has a DataGridComboBoxColumn, its ItemsSource can only
+        be bound to a static collection, or through a complex redirection.
         -->        
         
         <DataGrid.Columns>
             <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" />
             <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version}" IsReadOnly="True" />
             <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
-            <DataGridTextColumn Header="In Use By" Width="50" Binding="{Binding NumProjectsInUse}" IsReadOnly="True" />
+            <DataGridTemplateColumn Header="In Use By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+            <DataGridTextColumn Header="Metadata" Width="180" Binding="{Binding ExistingVersion.Metadata}" IsReadOnly="True" />            
         </DataGrid.Columns>
     </DataGrid>
     

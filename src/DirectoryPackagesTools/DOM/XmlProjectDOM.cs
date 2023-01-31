@@ -112,12 +112,12 @@ namespace DirectoryPackagesTools.DOM
 
         public System.IO.FileInfo File => _Source;
 
-#if DEBUG
+        #if DEBUG
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
         private XmlPackageReferenceVersion[] _Packages => GetPackageReferences().ToArray();
 
-#endif
+        #endif
 
         #endregion
 
