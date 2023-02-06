@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using NuGet.Versioning;
+
 namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
@@ -23,6 +25,15 @@ namespace DirectoryPackagesTools.DOM
 
             element.Attribute(vName)?.Remove();
             element.Element(vName)?.Remove();
+        }
+
+        internal static void _SetVersion(XElement element, string semver)
+        {
+            if (element == null) return;
+
+            var vName = XName.Get("Version");
+
+            element.SetAttributeValue(vName, semver);
         }
 
         internal static IVersionXmlSource _ResolveVersionSource(XElement element)

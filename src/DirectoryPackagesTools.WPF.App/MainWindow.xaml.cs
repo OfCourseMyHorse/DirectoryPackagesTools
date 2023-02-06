@@ -40,6 +40,9 @@ namespace DirectoryPackagesTools
             if (!string.IsNullOrWhiteSpace(path)) _LoadDocument(path);            
         }
 
+
+        private PackagesVersionsProjectMVVM MVVMContext => this.DataContext as PackagesVersionsProjectMVVM;
+
         public void Report(int value)
         {
             this.Dispatcher.Invoke( ()=> myProgressBar.Value= value);
@@ -201,6 +204,11 @@ namespace DirectoryPackagesTools
 
                 return dlg.SelectedPath;
             }
+        }
+
+        private void _MenuItem_RestoreVersionsToProjects(object sender, RoutedEventArgs e)
+        {
+            MVVMContext?.RestoreVersionsToProjects();
         }
     }
 }

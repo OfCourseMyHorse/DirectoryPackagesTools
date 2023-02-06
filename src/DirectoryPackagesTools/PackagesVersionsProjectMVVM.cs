@@ -127,6 +127,8 @@ namespace DirectoryPackagesTools
 
         #region API
 
+        public System.IO.FileInfo File => _Dom.File;
+
         public string DocumentPath => _Dom.File.FullName;
 
         public IEnumerable<SourceRepository> Repositories => _Client.Repositories;
@@ -161,5 +163,16 @@ namespace DirectoryPackagesTools
         }
 
         #endregion
-    }    
+
+        #region extras
+
+        public void RestoreVersionsToProjects()
+        {
+            var packages = AllPackages.ToDictionary(item => item.Name, item => item.Version);
+
+            XmlProjectDOM.RestoreVersionsToProjectsFiles(File.Directory, packages);
+        }
+
+        #endregion
+    }
 }

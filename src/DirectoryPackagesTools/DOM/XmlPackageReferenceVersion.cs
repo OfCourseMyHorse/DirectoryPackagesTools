@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using NuGet.Versioning;
+
 using KVPMACRO = System.Collections.Generic.KeyValuePair<string, string>;
 
 namespace DirectoryPackagesTools.DOM
@@ -125,6 +127,14 @@ namespace DirectoryPackagesTools.DOM
         public void RemoveVersion()
         {
             IVersionXmlSource._RemoveVersion(_Element);
+        }
+
+        public void SetVersion(IReadOnlyDictionary<string, string> packageVersions)
+        {
+            if (packageVersions.TryGetValue(this.PackageId, out var semver))
+            {
+                IVersionXmlSource._SetVersion(_Element, semver);
+            }            
         }
 
         #endregion

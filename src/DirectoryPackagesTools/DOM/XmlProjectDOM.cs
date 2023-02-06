@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using NuGet.Versioning;
+
 namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
@@ -71,8 +73,30 @@ namespace DirectoryPackagesTools.DOM
 
                 if (modified) prj.Save();
             }
-
         }
+
+
+        public static void RestoreVersionsToProjectsFiles(System.IO.DirectoryInfo dinfo, IReadOnlyDictionary<string, string> packageVersions)
+        {
+            var prjs = _EnumerateProjects(dinfo, true)
+                .Select(f => Load<XmlProjectDOM>(f.FullName))
+                .Where(prj => prj.ManagePackageVersionsCentrally);
+
+            foreach (var prj in prjs)
+            {
+                bool modified = false;
+
+                foreach (var pkg in prj.GetPackageReferences())
+                {
+                    pkg.SetVersion(packageVersions);
+
+                    modified = true;
+                }
+
+                if (modified) prj.Save();
+            }
+        }
+
 
         public static T Load<T>(string path)
             where T : XmlProjectDOM, new()
