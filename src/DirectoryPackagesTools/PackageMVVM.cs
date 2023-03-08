@@ -5,10 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
 
-using NuGet.Protocol;
-using NuGet.Versioning;
+using NuGet.Packaging.Core;
+
+using NUGETVERSION = NuGet.Versioning.NuGetVersion;
+using NUGETDEPENDENCYINFO = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
 
 namespace DirectoryPackagesTools
 {
@@ -19,10 +22,10 @@ namespace DirectoryPackagesTools
     public class PackageMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
-        internal PackageMVVM(XmlPackageReferenceVersion local, string source, IReadOnlyList<NuGet.Versioning.NuGetVersion> versions)
+        internal PackageMVVM(XmlPackageReferenceVersion local, string source, NuGetPackageInfo pinfo)
         {
             _LocalReference = local;
-            _AvailableVersions = versions;
+            _AvailableVersions = pinfo.GetVersions();
             _Source = source;
 
             ApplyVersionCmd = new Prism.Commands.DelegateCommand<string>(ver => this.Version = ver);
@@ -34,9 +37,11 @@ namespace DirectoryPackagesTools
 
         private readonly XmlPackageReferenceVersion _LocalReference;
         private readonly string _Source;
-        private readonly IReadOnlyList<NuGet.Versioning.NuGetVersion> _AvailableVersions;
+        private readonly IReadOnlyList<NUGETVERSION> _AvailableVersions;
 
         private readonly HashSet<XmlProjectDOM> _ProjectsUsingThis = new HashSet<XmlProjectDOM>();
+
+        private NUGETDEPENDENCYINFO _Dependencies;
 
         #endregion
 
@@ -62,6 +67,8 @@ namespace DirectoryPackagesTools
 
         public IEnumerable<System.IO.FileInfo> DependantProjects => _ProjectsUsingThis.Select(item => item.File);
 
+        public NUGETDEPENDENCYINFO DependencyInfo => _Dependencies;        
+
         #endregion
 
         #region Properties - version
@@ -76,10 +83,13 @@ namespace DirectoryPackagesTools
                 RaisePropertyChanged(nameof(VersionIsUpToDate));
                 RaisePropertyChanged(nameof(NeedsUpdate));
                 RaisePropertyChanged(nameof(ExistingVersion));
+
+                _Dependencies = null;
+                RaisePropertyChanged(nameof(DependencyInfo));
             }
         }
 
-        public NuGetVersion ExistingVersion => _AvailableVersions.FirstOrDefault(item => item.ToNormalizedString() == this.Version);
+        public NUGETVERSION ExistingVersion => _AvailableVersions.FirstOrDefault(item => item.ToNormalizedString() == this.Version);
 
         public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToNormalizedString()).Reverse().ToList();
 
@@ -97,9 +107,24 @@ namespace DirectoryPackagesTools
 
         #region API
 
+        public PackageIdentity GetCurrentIdentity()
+        {
+            var version = new NUGETVERSION(Version);
+
+            return new PackageIdentity(Name, version);
+        }
+
         internal void _AddDependent(XmlProjectDOM prj)
         {
             _ProjectsUsingThis.Add(prj);
+        }
+
+        internal async Task UpdateDependencyInfoAsync(NuGetClientContext context)
+        {
+            var pid = GetCurrentIdentity();
+
+            _Dependencies = await context.GetDependencyInfoAsync(pid).ConfigureAwait(true);
+            RaisePropertyChanged(nameof(DependencyInfo));
         }
 
         #endregion

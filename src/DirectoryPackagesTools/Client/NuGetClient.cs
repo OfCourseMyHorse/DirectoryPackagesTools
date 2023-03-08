@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using NuGet.Commands;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -63,36 +64,6 @@ namespace DirectoryPackagesTools.Client
             return new NuGetClientContext(this._Repos, this.Logger, token.Value);
         }        
 
-        public async Task<SourcePackageDependencyInfo> ResolvePackage(PackageIdentity package, NuGetFramework framework)
-        {
-            using (var cacheContext = new SourceCacheContext())
-            {
-                foreach (var sourceRepository in _Repos.GetRepositories())
-                {
-                    var dependencyInfoResource = await sourceRepository.GetResourceAsync<DependencyInfoResource>();
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, framework, cacheContext, Logger, CancellationToken.None);
-
-                    if (dependencyInfo != null) return dependencyInfo;
-                }
-
-                return null;
-            }
-        }
-
-
-        public async Task<Dictionary<NuGetFramework,SourcePackageDependencyInfo>> ResolvePackage(PackageIdentity package)
-        {
-            using (var cacheContext = new SourceCacheContext())
-            {
-                foreach (var sourceRepository in _Repos.GetRepositories())
-                {
-                    var resDIR = await sourceRepository.GetResourceAsync<DependencyInfoResource>();                    
-                }
-
-                return null;
-            }
-        }
-
         #endregion
     }
 
@@ -134,7 +105,7 @@ namespace DirectoryPackagesTools.Client
 
         #endregion
 
-        #region properties
+        #region properties        
 
         public ILogger Logger { get; }
         
@@ -170,10 +141,42 @@ namespace DirectoryPackagesTools.Client
 
             foreach (var package in packages)
             {
-                await package.UpdateVersionsAsync(this);
+                await package.UpdateAsync(this);
 
                 percent.Report(package.Id);
             }
+        }
+
+
+        public async Task<IReadOnlyList<IPackageSearchMetadata>> GetMetadataAsync(params PackageIdentity[] packages)
+        {
+            var result = new List<IPackageSearchMetadata>();
+
+            foreach(var package in packages)
+            {
+                foreach (var api in Repositories)
+                {
+                    var data = await api.GetMetadataAsync(package);
+                    if (data != null)
+                    {
+                        result.Add(data);
+                        break;
+                    }                        
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package)
+        {
+            foreach (var api in Repositories)
+            {
+                var dinfo = await api.GetDependencyInfoAsync(package);
+                if (dinfo != null) return dinfo;
+            }
+
+            return null;
         }
 
         #endregion
@@ -182,54 +185,81 @@ namespace DirectoryPackagesTools.Client
     [System.Diagnostics.DebuggerDisplay("{_Repo.PackageSource}")]
     public class SourceRepositoryAPI
     {
+        #region lifecycle
+
         internal SourceRepositoryAPI(NuGetClientContext context, SourceRepository repo)
         {
             _Context = context;
             _Repo = repo;
         }
 
+        #endregion
+
+        #region data
+
         private readonly NuGetClientContext _Context;
         private readonly SourceRepository _Repo;
-        private readonly Dictionary<Type, INuGetResource> _APIs = new Dictionary<Type, INuGetResource>();
+        private readonly Dictionary<Type, INuGetResource> _APIsCache = new Dictionary<Type, INuGetResource>();
 
         public SourceRepository Source => _Repo;
 
-        private async Task<T> GetAPIAsync<T>()
+        #endregion
+
+        #region API
+
+        private async Task<T> _GetAPIAsync<T>()
             where T : class, INuGetResource
         {
-            if (_APIs.TryGetValue(typeof(T), out var api)) return await Task.FromResult(api as T);
+            if (_Context._Cache == null) throw new ObjectDisposedException("Context");
+
+            if (_APIsCache.TryGetValue(typeof(T), out var api)) return await Task.FromResult(api as T);
 
             api = await _Repo.GetResourceAsync<T>(_Context._Token).ConfigureAwait(false);
             if (api == null) return null;
 
-            _APIs[typeof(T)] = api;
+            _APIsCache[typeof(T)] = api;
 
             return api as T;
         }
 
+        public async Task<bool?> ExistLocally(PackageIdentity package)
+        {
+            var resFLP = await _GetAPIAsync<FindLocalPackagesResource>().ConfigureAwait(false); // only local repos implement this API
+            if (resFLP != null) return resFLP.Exists(package, _Context.Logger, _Context._Token);            
+
+            return null;
+        }
+
+
+        public async Task<NuGetVersion[]> GetVersionsAsync(string packageId, bool includePrerelease, bool includeUnlisted)
+        {
+            var resM = await _GetAPIAsync<MetadataResource>().ConfigureAwait(false);            
+
+            var vvv = await resM.GetVersions(packageId, includePrerelease, includeUnlisted, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
+
+            return vvv.ToArray();
+        }
+
+
         public async Task<NuGetVersion[]> GetVersionsAsync(string packageId)
         {
-            var resPID = await GetAPIAsync<FindPackageByIdResource>().ConfigureAwait(false);
+            var resPID = await _GetAPIAsync<FindPackageByIdResource>().ConfigureAwait(false);
 
             var vvv = await resPID.GetAllVersionsAsync(packageId, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
 
             return vvv.ToArray();
         }
 
-        public async Task<bool?> ExistLocally(PackageIdentity package)
+        public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package)
         {
-            var resFLP = await GetAPIAsync<FindLocalPackagesResource>().ConfigureAwait(false);
-            if (resFLP != null) return resFLP.Exists(package, _Context.Logger, _Context._Token);
+            var resPID = await _GetAPIAsync<FindPackageByIdResource>().ConfigureAwait(false);
 
-            var resM = await GetAPIAsync<MetadataResource>().ConfigureAwait(false);
-            if (resM != null) return await resM.Exists(package, _Context._Cache, _Context.Logger, _Context._Token);
-
-            return null;
-        }       
+            return await resPID.GetDependencyInfoAsync(package.Id, package.Version, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
+        }
 
         public async Task<IPackageSearchMetadata[]> GetMetadataAsync(string packageId, bool includePrerelease = true, bool includeUnlisted = true)
         {
-            var resPM = await GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>().ConfigureAwait(false);
+            var resPM = await _GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>().ConfigureAwait(false);
 
             var psm = await resPM.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
 
@@ -238,47 +268,25 @@ namespace DirectoryPackagesTools.Client
 
         public async Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity package)
         {
-            var resPM = await GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>().ConfigureAwait(false);
+            var resPM = await _GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>().ConfigureAwait(false);
 
             return await resPM.GetMetadataAsync(package, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);            
-        }        
-    }
-
-
-    [System.Diagnostics.DebuggerDisplay("{Id}")]
-    public class NuGetPackageInfo
-    {
-        public NuGetPackageInfo(string id) { Id = id; }
-
-        public string Id { get; }
-
-        private readonly NUGETVERSIONSBAG _Versions = new NUGETVERSIONSBAG();
-
-        public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();        
-        
-        internal void AddVersions(IEnumerable<NuGetVersion> versions)
-        {
-            foreach(var v in versions)
-            {
-                if (_Versions.Contains(v)) return;
-                _Versions.Add(v);
-            }
         }
 
-        /// <summary>
-        /// Gets all the versions available for a given package.
-        /// </summary>
-        /// <param name="packageName">The package name; 'System.Numerics.Vectors'</param>
-        /// <param name="token"></param>
-        /// <returns>A list of available versions</returns>
-        public async Task UpdateVersionsAsync(NuGetClientContext client)
+        public async Task<SourcePackageDependencyInfo> GetPackageDependenciesAsync(PackageIdentity package, NuGetFramework framework)
         {
-            foreach (var api in client.Repositories)
-            {
-                var vvv = await api.GetVersionsAsync(this.Id);
+            var dependencyInfoResource = await _GetAPIAsync<DependencyInfoResource>().ConfigureAwait(false);
 
-                AddVersions(vvv);
-            }
+            return await dependencyInfoResource.ResolvePackage(package, framework, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
         }
-    }
+
+        public async Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(string searchTerm, SearchFilter filter, int skip, int take)
+        {
+            var api = await _GetAPIAsync<PackageSearchResource>().ConfigureAwait(false);
+
+            return await api.SearchAsync(searchTerm, filter, skip, take, _Context.Logger, _Context._Token);
+        }
+
+        #endregion
+    }    
 }

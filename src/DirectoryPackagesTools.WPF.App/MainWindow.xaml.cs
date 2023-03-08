@@ -21,8 +21,10 @@ namespace DirectoryPackagesTools
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IProgress<int>, IProgress<Exception>
+    public partial class MainWindow : Window
     {
+        #region lifecycle
+
         public MainWindow()
         {
             InitializeComponent();
@@ -30,113 +32,130 @@ namespace DirectoryPackagesTools
             this.Loaded += _OnLoaded;
         }
 
-        private void _OnLoaded(object sender, RoutedEventArgs e)
+        private async void _OnLoaded(object sender, RoutedEventArgs e)
         {
             var path = Environment
                 .GetCommandLineArgs()
                 .Where(item => item.EndsWith("Directory.Packages.Props", StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault();
 
-            if (!string.IsNullOrWhiteSpace(path)) _LoadDocument(path);            
+            if (!string.IsNullOrWhiteSpace(path)) await _LoadDocumentAsync(path);            
         }
 
+        #endregion
+
+        #region data
 
         private PackagesVersionsProjectMVVM MVVMContext => this.DataContext as PackagesVersionsProjectMVVM;
 
-        public void Report(int value)
+        #endregion
+
+        #region background tasks
+
+        private _BackgroundTaskMonitor BeginTask()
         {
-            this.Dispatcher.Invoke( ()=> myProgressBar.Value= value);
+            return new _BackgroundTaskMonitor(this);
+        }       
+
+        private readonly struct _BackgroundTaskMonitor : IDisposable, IProgress<int>, IProgress<Exception>
+        {
+            public _BackgroundTaskMonitor(MainWindow window)
+            {
+                _Window = window;
+                _TokenSource = new CancellationTokenSource();
+
+                _Window.myClientArea.IsEnabled = false;
+                _Window.myProgressBar.Visibility = Visibility.Visible;
+
+                _Window.myCancelBtn.Click += MyCancelBtn_Click;
+                _Window.myCancelBtn.Visibility = Visibility.Visible;
+            }
+
+            public void Dispose()
+            {
+                _Window.Dispatcher.Invoke(_RestoreWindow);
+
+                _TokenSource.Dispose();
+            }
+
+            private void _RestoreWindow()
+            {
+                _Window.myClientArea.IsEnabled = true;
+                _Window.myProgressBar.Visibility = Visibility.Collapsed;
+
+                _Window.myCancelBtn.Click -= MyCancelBtn_Click;
+                _Window.myCancelBtn.Visibility = Visibility.Collapsed;
+            }
+
+            private readonly MainWindow _Window;
+            private readonly CancellationTokenSource _TokenSource;
+
+            public CancellationToken Token => _TokenSource.Token;
+
+            public void Report(int value)
+            {
+                var wnd = _Window;
+                _Window.Dispatcher.Invoke(() => wnd.myProgressBar.Value = value);
+            }
+
+            public void Report(Exception value)
+            {
+                _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));
+            }
+
+            private void MyCancelBtn_Click(object sender, RoutedEventArgs e)
+            {
+                _TokenSource.Cancel();
+            }            
         }
 
-        public void Report(Exception value)
-        {
-            this.Dispatcher.Invoke(() => MessageBox.Show(value.Message,"Error"));
-        }
+        #endregion
 
-        private void MenuItem_Load(object sender, RoutedEventArgs e)
+        #region API
+
+        private async void MenuItem_Load(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog();
             dlg.RestoreDirectory = true;
             dlg.Filter = "Package Versions|directory.packages.props";
 
             if (!dlg.ShowDialog().Value) return;
-            _LoadDocument(dlg.FileName);
+            await _LoadDocumentAsync(dlg.FileName);
         }
 
-        private void _LoadDocument(string documentPath)
+        private async Task _LoadDocumentAsync(string documentPath)
         {
-            myClientArea.IsEnabled = false;
-            myProgressBar.Visibility = Visibility.Visible;            
+            using var ctx = BeginTask();
 
-            var cts = new CancellationTokenSource();
-
-            void _cancelBtn(object sender, RoutedEventArgs e) { cts.Cancel(); }
-
-            myCancelBtn.Click += _cancelBtn;            
-            myCancelBtn.Visibility = Visibility.Visible;
-
-            void _restoreWindow()
+            try
             {
-                myClientArea.IsEnabled = true;
-                myProgressBar.Visibility = Visibility.Collapsed;
-
-                myCancelBtn.Click -= _cancelBtn;
-                myCancelBtn.Visibility = Visibility.Collapsed;
-
-                cts.Dispose();
+                this.DataContext = await PackagesVersionsProjectMVVM
+                    .Load(documentPath, ctx, ctx.Token)
+                    .ConfigureAwait(true);
             }
-
-            void _loadDocument()
+            catch (OperationCanceledException ex)
             {
-                PackagesVersionsProjectMVVM versions = null;
-
-                try
-                {
-                    versions = PackagesVersionsProjectMVVM
-                        .Load(documentPath, this, cts.Token)
-                        .ConfigureAwait(true)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                catch (OperationCanceledException ex)
-                {
-                    MessageBox.Show("Load cancelled.");
-                }
-                finally
-                {
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        if (versions != null) this.DataContext = versions;
-
-                        _restoreWindow();
-                    });
-                }                
+                MessageBox.Show("Load cancelled.");
             }
-
-            Task.Run(_loadDocument);
-
         }
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PackagesVersionsProjectMVVM mvvm) mvvm.Save();
+            MVVMContext?.Save();
         }
 
         private void MenuItem_SaveAndCommit(object sender, RoutedEventArgs e)
         {
             MenuItem_Save(sender, e);
 
-            
-            if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
-            {
-                var finfo = new System.IO.FileInfo(mvvm.DocumentPath);
+            var finfo = MVVMContext?.File;
+            if (finfo == null) return;
 
-                // TODO: check whether .git or .svn are in the directory, and launch appropiate frontend
+            // TODO: check whether .git or .svn are in the directory, and launch appropiate frontend
 
-                _CommitSVN(finfo.Directory);
+            _CommitSVN(finfo.Directory);
 
-                Application.Current.Shutdown();
-            }
+            Application.Current.Shutdown();
         }
 
         private static void _CommitSVN(DirectoryInfo dinfo)
@@ -155,12 +174,10 @@ namespace DirectoryPackagesTools
 
         private void MenuItem_OpenCommandLine(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
-            {
-                var finfo = new System.IO.FileInfo(mvvm.DocumentPath);                
+            var finfo = MVVMContext?.File;
+            if (finfo == null) return;
 
-                _OpenCommandLine(finfo.Directory);
-            }
+            _OpenCommandLine(finfo.Directory);
         }
 
         private static void _OpenCommandLine(DirectoryInfo dinfo)
@@ -172,7 +189,7 @@ namespace DirectoryPackagesTools
             System.Diagnostics.Process.Start(psi);
         }
 
-        private void MenuItem_New(object sender, RoutedEventArgs e)
+        private async void MenuItem_New(object sender, RoutedEventArgs e)
         {
             var dir = _SelectDirectoryDialog();
             if (dir == null) return;
@@ -188,7 +205,7 @@ namespace DirectoryPackagesTools
 
             PackagesVersionsProjectMVVM.WriteNewVersionsProject(finfo, r == MessageBoxResult.Yes);
 
-            _LoadDocument(finfo.FullName);
+            await _LoadDocumentAsync(finfo.FullName);
         }
 
 
@@ -210,5 +227,18 @@ namespace DirectoryPackagesTools
         {
             MVVMContext?.RestoreVersionsToProjects();
         }
-    }
+
+        private async void _MenuItem_QueryPackageDependencies(object sender, RoutedEventArgs e)
+        {
+            if (MVVMContext == null) return;
+
+            using var ctx = BeginTask();
+
+            await MVVMContext
+                .RefreshPackageDependenciesAsync(ctx, ctx.Token)
+                .ConfigureAwait(true);
+        }
+
+        #endregion
+    }    
 }

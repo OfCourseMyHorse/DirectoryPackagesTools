@@ -74,8 +74,19 @@ namespace DirectoryPackagesTools
                         var pid = new PackageIdentity(name, v);
 
                         var isLocal = await r.ExistLocally(pid);
+                        var depInfo = await r.GetDependencyInfoAsync(pid);
 
                         TestContext.WriteLine($"{v} {isLocal}");
+
+                        foreach(var kk in depInfo.DependencyGroups)
+                        {
+                            TestContext.WriteLine($"       {kk.TargetFramework}");
+
+                            foreach(var jj in kk.Packages)
+                            {
+                                TestContext.WriteLine($"           {jj}");
+                            }
+                        }
                     }
                 }                
             }            
