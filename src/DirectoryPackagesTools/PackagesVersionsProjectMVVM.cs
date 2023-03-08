@@ -85,16 +85,18 @@ namespace DirectoryPackagesTools
 
             var mvvms = new List<PackageMVVM>();
 
-            var dict = locals.ToDictionary(kvp => kvp.PackageId, kvp => new System.Collections.Concurrent.ConcurrentBag<NuGetVersion>());
+            var dict = locals.Select(kvp => new NuGetPackageInfo(kvp.PackageId)).ToArray();
 
-            await client.GetVersions(dict, progress, ctoken);            
+            using(var ctx = client.CreateContext(ctoken))
+            {
+                await ctx.FillVersionsAsync(dict, progress);
+            }            
 
             foreach (var local in dict)
             {
-                var package = locals.FirstOrDefault(item => item.PackageId == local.Key);
-                var versions = local.Value.Distinct().OrderBy(item =>item).ToList();
+                var package = locals.First(item => item.PackageId == local.Id);                
 
-                var mvvm = new PackageMVVM(package, null, versions);
+                var mvvm = new PackageMVVM(package, null, local.GetVersions());
 
                 mvvms.Add(mvvm);
             }

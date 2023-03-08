@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using DirectoryPackagesTools.DOM;
+
+using NuGet.Packaging.Core;
+
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
@@ -53,11 +56,29 @@ namespace DirectoryPackagesTools
         [Test]
         public async System.Threading.Tasks.Task Test2()
         {
+            var name = "System.Numerics.Vectors";
+
             var nuClient = new Client.NuGetClient();
 
-            var versions = await nuClient.GetVersions("System.Numerics.Vectors");
+            using(var context = nuClient.CreateContext(CancellationToken.None))
+            {
+                foreach(var r in context.Repositories)
+                {
+                    TestContext.WriteLine();
+                    TestContext.WriteLine(r.Source.PackageSource);
 
-            foreach(var v in versions) TestContext.WriteLine(v.ToString());
+                    var versions = await r.GetVersionsAsync("System.Numerics.Vectors");
+
+                    foreach (var v in versions)
+                    {
+                        var pid = new PackageIdentity(name, v);
+
+                        var isLocal = await r.ExistLocally(pid);
+
+                        TestContext.WriteLine($"{v} {isLocal}");
+                    }
+                }                
+            }            
         }
 
     }
