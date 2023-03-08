@@ -40,7 +40,7 @@ namespace DirectoryPackagesTools
             }
         }
 
-        public static async Task<PackagesVersionsProjectMVVM> Load(string filePath, IProgress<int> progress, CancellationToken ctoken)
+        public static async Task<PackagesVersionsProjectMVVM> LoadAsync(string filePath, IProgress<int> progress, CancellationToken ctoken)
         {
             // Load Directory.Packages.Props
             var dom = XmlPackagesVersionsProjectDOM.Load(filePath);
@@ -49,9 +49,9 @@ namespace DirectoryPackagesTools
 
             // Load all *.csproj within the directory
             var csprojs = XmlProjectDOM
-                .FromDirectory(dom.File.Directory, true)
+                .EnumerateProjects(dom.File.Directory, true)
                 .Where(item => item.ManagePackageVersionsCentrally)
-                .ToList();
+                .ToList();            
 
             // verify
 
@@ -181,7 +181,8 @@ namespace DirectoryPackagesTools
 
         public void RestoreVersionsToProjects()
         {
-            var packages = AllPackages.ToDictionary(item => item.Name, item => item.Version);
+            var packages = AllPackages
+                .ToDictionary(item => item.Name, item => item.Version.ToString());
 
             XmlProjectDOM.RestoreVersionsToProjectsFiles(File.Directory, packages);
         }

@@ -16,16 +16,16 @@ namespace DirectoryPackagesTools.DOM
         public static void CreateVersionFileFromExistingProjects(System.IO.FileInfo finfo)
         {
             var packages =
-                FromDirectory(finfo.Directory)
+                EnumerateProjects(finfo.Directory)
                 .Where(prj => prj.ManagePackageVersionsCentrally)
                 .SelectMany(item => item.GetPackageReferences())
                 .GroupBy(item => item.PackageId)
                 .OrderBy(item => item.Key);
 
-            string getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
+            NuGet.Versioning.VersionRange getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
             {
                 references = references.Where(item => item.Version != null);
-                if (!references.Any()) return "0";
+                if (!references.Any()) return NuGet.Versioning.VersionRange.None;
 
                 return references.First().Version;
             }
@@ -90,7 +90,7 @@ namespace DirectoryPackagesTools.DOM
                     // check if a csprojs PackageReference still have Version="xxx"
 
                     var withVersion = csprojPackages
-                        .Where(item => !string.IsNullOrEmpty(item.Version))
+                        .Where(item => item.Version != null)
                         .ToList();
 
                     if (withVersion.Count > 0)

@@ -40,11 +40,9 @@ namespace DirectoryPackagesTools.DOM
                 .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
         }
 
-        public static IEnumerable<XmlProjectDOM> FromDirectory(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            return _EnumerateProjects(dinfo, excludeDirPackProps)
-                .Select(f => Load<XmlProjectDOM>(f.FullName))
-                .ToList();
+            return _EnumerateProjects(dinfo, excludeDirPackProps).Select(f => Load<XmlProjectDOM>(f.FullName));
         }
 
         /// <summary>

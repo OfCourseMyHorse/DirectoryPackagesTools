@@ -4,6 +4,7 @@ using System.Threading;
 using DirectoryPackagesTools.DOM;
 
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -17,8 +18,11 @@ namespace DirectoryPackagesTools
         [SetUp]
         public void Setup()
         {
-            
-            
+            var v1 = VersionRange.Parse("1.0.0");
+            var v2 = VersionRange.Parse("1.0.0-preview3");
+            var v3 = VersionRange.Parse("[1.0.0-preview3]");
+
+
         }
 
         [TestCase("tests.props")]

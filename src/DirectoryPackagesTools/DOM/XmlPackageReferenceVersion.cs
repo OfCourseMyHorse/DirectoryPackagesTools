@@ -103,21 +103,12 @@ namespace DirectoryPackagesTools.DOM
             }
         }
 
-        public string PackagePrefix => new string(PackageId.TakeWhile(c => c != '.').ToArray());
+        public string PackagePrefix => new string(PackageId.TakeWhile(c => c != '.').ToArray());       
 
-        public bool HasVersionRange
+        public VersionRange Version
         {
-            get
-            {
-                // https://github.com/NuGet/Home/issues/6763#issuecomment-633465943
-                return _Version.Version.StartsWith("[") && _Version.Version.EndsWith("]");
-            }
-        }
-
-        public string Version
-        {
-            get => _Version?.Version?.Trim('[', ']') ?? null;
-            set => _Version.Version = HasVersionRange ? "[" + value + "]" : value;
+            get => _Version?.Version == null ? null : VersionRange.Parse(_Version.Version);
+            set => _Version.Version = value.ToShortString();
         }
 
         #endregion

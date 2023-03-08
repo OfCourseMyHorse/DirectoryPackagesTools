@@ -11,25 +11,27 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="asVisible" />
-        
+
+        <local:VersionRangeShortTextConverter x:Key="asShortText" />
+
         <DataTemplate x:Key="myPackageVersionsSelector">
-            <WrapPanel>
-                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version}" />
-                <TextBlock Text=" 🔒" Visibility="{Binding HasVersionRange, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
-                <WrapPanel Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
+            <StackPanel Orientation="Horizontal">
+                <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text=" 🔒" Visibility="{Binding Version.HasUpperBound, Converter={StaticResource asVisible}}" ToolTip="Version is locked, removed '[' - ']' from SemVer to unlock" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding NeedsUpdate, Converter={StaticResource asVisible}}">
                     <TextBlock Text=" "/>
-                    <Button Content="{Binding NewestRelease}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+                    <Button Content="{Binding NewestRelease, Converter={StaticResource asShortText}}" Background="LightYellow" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
                     <TextBlock Text=" "/>
-                    <Button Content="{Binding NewestPrerelease}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
-                </WrapPanel>
-            </WrapPanel>
+                    <Button Content="{Binding NewestPrerelease, Converter={StaticResource asShortText}}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
+                </StackPanel>
+            </StackPanel>
         </DataTemplate>
 
         <DataTemplate x:Key="myDependantProjects">
             <ItemsControl ItemsSource="{Binding DependantProjects}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
+                        <StackPanel Orientation="Horizontal"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -50,7 +52,7 @@
         
     </UserControl.Resources>    
     
-    <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single">
+    <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single" HorizontalGridLinesBrush="LightGray" >
         
         <!--
         generally speaking, DataGrid is more powerful than ListView, but it
@@ -62,10 +64,12 @@
         
         <DataGrid.Columns>
             <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" />
-            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version}" IsReadOnly="True" />
+            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" IsReadOnly="True" />
             <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
-            <DataGridTemplateColumn Header="In Use By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+            <DataGridTemplateColumn Header="Used By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+            <!--
             <DataGridTextColumn Header="Metadata" Width="180" Binding="{Binding ExistingVersion.Metadata}" IsReadOnly="True" />            
+            -->
         </DataGrid.Columns>
     </DataGrid>
     

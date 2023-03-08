@@ -13,40 +13,29 @@ namespace DirectoryPackagesTools.Client
     [System.Diagnostics.DebuggerDisplay("{Id}")]
     public class NuGetPackageInfo
     {
-        public NuGetPackageInfo(string id, string version)
+        public NuGetPackageInfo(string id, VersionRange version)
         {
-            Id = id;
-            CurrentVersion = new NuGetVersion(version);
+            Id = id;            
         }
 
-        public string Id { get; }
-
-        public NuGetVersion CurrentVersion { get; }
+        public string Id { get; }        
 
         private readonly NUGETVERSIONSBAG _Versions = new NUGETVERSIONSBAG();
 
         public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();
 
-        public NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo CurrentDependencies { get; private set; }
+        
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
             foreach (var api in client.Repositories)
             {
-                var vvv = await api.GetVersionsAsync(this.Id);
+                var vvv = await api.GetVersionsAsync(this.Id).ConfigureAwait(false);
 
                 foreach (var v in vvv)
                 {
-                    if (_Versions.Contains(v)) return;
-                    _Versions.Add(v);
-                }
-
-                if (CurrentVersion != null)
-                {
-                    var pid = new NuGet.Packaging.Core.PackageIdentity(Id, CurrentVersion);
-
-                    CurrentDependencies = await api.GetDependencyInfoAsync(pid);
-                }
+                    if (!_Versions.Contains(v)) _Versions.Add(v);
+                }                
             }
         }
     }

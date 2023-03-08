@@ -130,7 +130,7 @@ namespace DirectoryPackagesTools
             try
             {
                 this.DataContext = await PackagesVersionsProjectMVVM
-                    .Load(documentPath, ctx, ctx.Token)
+                    .LoadAsync(documentPath, ctx, ctx.Token)
                     .ConfigureAwait(true);
             }
             catch (OperationCanceledException ex)

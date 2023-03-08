@@ -8,9 +8,9 @@ using System.Windows.Input;
 using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
 
-using NuGet.Packaging.Core;
-
 using NUGETVERSION = NuGet.Versioning.NuGetVersion;
+using NUGETVERSIONRANGE = NuGet.Versioning.VersionRange;
+using NUGETPACKIDENTITY = NuGet.Packaging.Core.PackageIdentity;
 using NUGETDEPENDENCYINFO = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
 
 namespace DirectoryPackagesTools
@@ -25,18 +25,22 @@ namespace DirectoryPackagesTools
         internal PackageMVVM(XmlPackageReferenceVersion local, string source, NuGetPackageInfo pinfo)
         {
             _LocalReference = local;
-            _AvailableVersions = pinfo.GetVersions();
-            _Source = source;
 
-            ApplyVersionCmd = new Prism.Commands.DelegateCommand<string>(ver => this.Version = ver);
+            _AvailableVersions = pinfo.GetVersions().OrderByDescending(item => item).ToArray();         
+            
+            AvailableVersions = _AvailableVersions.Select(item => new NUGETVERSIONRANGE(item)).ToList();
+            NewestRelease = _GetNewestVersionAvailable(false);
+            NewestPrerelease = _GetNewestVersionAvailable(true);
+
+            ApplyVersionCmd = new Prism.Commands.DelegateCommand<NUGETVERSIONRANGE>(ver => this.Version = ver);
         }
 
         #endregion
 
-        #region data
+        #region data        
 
         private readonly XmlPackageReferenceVersion _LocalReference;
-        private readonly string _Source;
+        
         private readonly IReadOnlyList<NUGETVERSION> _AvailableVersions;
 
         private readonly HashSet<XmlProjectDOM> _ProjectsUsingThis = new HashSet<XmlProjectDOM>();
@@ -63,17 +67,24 @@ namespace DirectoryPackagesTools
 
         public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p + ".")));
 
-        public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));        
+        public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
+
+        #endregion
+
+        #region properties - dependent projects
 
         public IEnumerable<System.IO.FileInfo> DependantProjects => _ProjectsUsingThis.Select(item => item.File);
 
-        public NUGETDEPENDENCYINFO DependencyInfo => _Dependencies;        
+        public NUGETDEPENDENCYINFO DependencyInfo => _Dependencies;
 
         #endregion
 
         #region Properties - version
 
-        public string Version
+        public IReadOnlyList<NUGETVERSIONRANGE> AvailableVersions { get; }
+        public NUGETVERSIONRANGE NewestRelease { get; }
+        public NUGETVERSIONRANGE NewestPrerelease { get; }
+        public NUGETVERSIONRANGE Version
         {
             get { return _LocalReference.Version; }
             set
@@ -81,39 +92,40 @@ namespace DirectoryPackagesTools
                 _LocalReference.Version = value;
                 RaisePropertyChanged(nameof(Version));
                 RaisePropertyChanged(nameof(VersionIsUpToDate));
-                RaisePropertyChanged(nameof(NeedsUpdate));
-                RaisePropertyChanged(nameof(ExistingVersion));
+                RaisePropertyChanged(nameof(NeedsUpdate));        
 
                 _Dependencies = null;
                 RaisePropertyChanged(nameof(DependencyInfo));
             }
-        }
+        }        
 
-        public NUGETVERSION ExistingVersion => _AvailableVersions.FirstOrDefault(item => item.ToNormalizedString() == this.Version);
-
-        public IEnumerable<string> AvailableVersions => _AvailableVersions.Select(item => item.ToNormalizedString()).Reverse().ToList();
-
-        public string NewestRelease => _AvailableVersions.Where(item => !item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();
-
-        public string NewestPrerelease => _AvailableVersions.Where(item => item.IsPrerelease).OrderBy(item => item).LastOrDefault()?.ToString();        
-
-        public bool VersionIsUpToDate => Version == AvailableVersions.FirstOrDefault();
-
-        public bool HasVersionRange => _LocalReference.HasVersionRange;
-
-        public bool NeedsUpdate => !VersionIsUpToDate && !HasVersionRange;
+        public bool VersionIsUpToDate => Version.MinVersion == _AvailableVersions.FirstOrDefault();
+        public bool NeedsUpdate => !VersionIsUpToDate && !Version.HasUpperBound;
 
         #endregion
 
         #region API
 
-        public PackageIdentity GetCurrentIdentity()
+        private NUGETVERSIONRANGE _GetNewestVersionAvailable(bool isPrerelease)
         {
-            var version = new NUGETVERSION(Version);
+            var v = _AvailableVersions
+            .Where(item => item.IsPrerelease == isPrerelease)
+            .OrderByDescending(item => item)
+            .FirstOrDefault();
 
-            return new PackageIdentity(Name, version);
+            return v == null ? null : new NUGETVERSIONRANGE(v);
         }
 
+        public NUGETPACKIDENTITY GetCurrentIdentity()
+        {
+            var version = Version.MinVersion;
+
+            return new NUGETPACKIDENTITY(Name, version);
+        }
+
+        /// <summary>
+        /// Adds a project that depends on this package
+        /// </summary>        
         internal void _AddDependent(XmlProjectDOM prj)
         {
             _ProjectsUsingThis.Add(prj);

@@ -67,6 +67,7 @@ namespace DirectoryPackagesTools.DOM
                 version = _PropertyVersionXmlSource.FromPropertyElement(property);
             }
         }
+
         public string Version { get; set; }
     }
 
