@@ -24,5 +24,23 @@ namespace DirectoryPackagesTools
         {
             InitializeComponent();
         }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+            {
+                if (fe.DataContext is PackageMVVM package)
+                {
+                    var url = "https://www.nuget.org/packages/" + package.Name;
+
+                    var psi = new System.Diagnostics.ProcessStartInfo(url);
+                    psi.UseShellExecute = true;
+
+                    System.Diagnostics.Process.Start(psi);
+                }
+            }
+
+            
+        }
     }
 }

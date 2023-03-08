@@ -48,7 +48,11 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </DataTemplate>        
+        </DataTemplate>
+
+        <ContextMenu x:Key="myPackageNameMenu">
+            <MenuItem Header="Open in NuGet.Org" Click="MenuItem_Click" />
+        </ContextMenu>
         
     </UserControl.Resources>    
     
@@ -63,7 +67,15 @@
         -->        
         
         <DataGrid.Columns>
-            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" />
+            
+            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" >
+                <DataGridTextColumn.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="ContextMenu" Value="{StaticResource myPackageNameMenu}" />
+                    </Style>
+                </DataGridTextColumn.CellStyle>
+            </DataGridTextColumn>
+            
             <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" IsReadOnly="True" />
             <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
             <DataGridTemplateColumn Header="Used By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
