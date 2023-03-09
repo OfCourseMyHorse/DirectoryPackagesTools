@@ -156,28 +156,10 @@ namespace DirectoryPackagesTools
             MenuItem_Save(sender, e);
 
             var finfo = MVVMContext?.File;
-            if (finfo == null) return;
+            if (finfo == null) return;            
 
-            // TODO: check whether .git or .svn are in the directory, and launch appropiate frontend
-
-            _CommitSVN(finfo.Directory);
-
-            Application.Current.Shutdown();
-        }
-
-        private static void _CommitSVN(DirectoryInfo dinfo)
-        {
-            // https://tortoisesvn.net/docs/release/TortoiseSVN_en/tsvn-automation.html
-
-            var exePath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            exePath = System.IO.Path.Combine(exePath, "TortoiseSVN\\bin\\TortoiseProc.exe");
-
-            var psi = new System.Diagnostics.ProcessStartInfo(exePath, $"/command:commit /path:\"{dinfo.FullName}\" /logmsg:\"nugets++\"");
-            psi.UseShellExecute = true;
-            psi.WorkingDirectory = dinfo.FullName;
-
-            System.Diagnostics.Process.Start(psi);
-        }
+            if (finfo.Directory.CommitToVersionControl()) Application.Current.Shutdown();            
+        }        
 
         private void MenuItem_OpenCommandLine(object sender, RoutedEventArgs e)
         {
