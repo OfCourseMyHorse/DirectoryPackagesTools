@@ -79,9 +79,10 @@
             <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" IsReadOnly="True" />
             <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
             <DataGridTemplateColumn Header="Used By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
-            <!--
-            <DataGridTextColumn Header="Metadata" Width="180" Binding="{Binding ExistingVersion.Metadata}" IsReadOnly="True" />            
-            -->
+
+            <DataGridTextColumn Header="Frameworks" Width="180" Binding="{Binding Frameworks}" IsReadOnly="True" />
+            <DataGridTextColumn Header="Tags" Width="180" Binding="{Binding Metadata.Tags}" IsReadOnly="True" />
+
         </DataGrid.Columns>
     </DataGrid>
     

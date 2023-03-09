@@ -48,10 +48,11 @@ namespace DirectoryPackagesTools
             var client = new NuGetClient(dom.File.Directory.FullName);
 
             // Load all *.csproj within the directory
-            var csprojs = XmlProjectDOM
+            var csprojs = await XmlProjectDOM
                 .EnumerateProjects(dom.File.Directory, true)
                 .Where(item => item.ManagePackageVersionsCentrally)
-                .ToList();            
+                .ToListAsync(progress)
+                .ConfigureAwait(true);
 
             // verify
 
@@ -107,7 +108,7 @@ namespace DirectoryPackagesTools
             {
                 var package = locals.First(item => item.PackageId == pinfo.Id);                
 
-                var mvvm = new PackageMVVM(package, null, pinfo);
+                var mvvm = new PackageMVVM(package, pinfo);
 
                 mvvms.Add(mvvm);
             }

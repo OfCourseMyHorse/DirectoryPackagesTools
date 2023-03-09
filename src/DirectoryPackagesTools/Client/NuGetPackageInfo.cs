@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
 namespace DirectoryPackagesTools.Client
@@ -15,19 +16,31 @@ namespace DirectoryPackagesTools.Client
     {
         public NuGetPackageInfo(string id, VersionRange version)
         {
-            Id = id;            
+            Id = id;
+            _CurrVersion = version;
         }
 
-        public string Id { get; }        
+        public string Id { get; }
+
+        private VersionRange _CurrVersion;
 
         private readonly NUGETVERSIONSBAG _Versions = new NUGETVERSIONSBAG();
 
-        public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();
+        public NuGet.Protocol.Core.Types.IPackageSearchMetadata Metadata { get; private set; }
 
-        
+        public NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo Dependencies { get; private set; }
+
+        public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();        
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
+            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);
+
+            var mmm = await client.GetMetadataAsync(pid).ConfigureAwait(false);
+            Metadata = mmm.FirstOrDefault();
+
+            Dependencies = await client.GetDependencyInfoAsync(pid).ConfigureAwait(false);
+
             foreach (var api in client.Repositories)
             {
                 var vvv = await api.GetVersionsAsync(this.Id).ConfigureAwait(false);

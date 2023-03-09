@@ -147,7 +147,6 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
-
         public async Task<IReadOnlyList<IPackageSearchMetadata>> GetMetadataAsync(params PackageIdentity[] packages)
         {
             var result = new List<IPackageSearchMetadata>();

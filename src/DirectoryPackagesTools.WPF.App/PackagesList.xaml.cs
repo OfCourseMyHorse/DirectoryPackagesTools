@@ -38,9 +38,7 @@ namespace DirectoryPackagesTools
 
                     System.Diagnostics.Process.Start(psi);
                 }
-            }
-
-            
+            }            
         }
     }
 }

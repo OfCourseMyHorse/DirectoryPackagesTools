@@ -95,7 +95,14 @@ namespace DirectoryPackagesTools
             public void Report(int value)
             {
                 var wnd = _Window;
-                _Window.Dispatcher.Invoke(() => wnd.myProgressBar.Value = value);
+
+                void _setProgress()
+                {
+                    if (value >= 0) { wnd.myProgressBar.Value = value; wnd.myProgressBar.IsIndeterminate = false; }
+                    else { wnd.myProgressBar.Value = 0; wnd.myProgressBar.IsIndeterminate = true; }
+                }
+
+                _Window.Dispatcher.Invoke(_setProgress);
             }
 
             public void Report(Exception value)

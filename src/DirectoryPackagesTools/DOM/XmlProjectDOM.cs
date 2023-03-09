@@ -42,7 +42,8 @@ namespace DirectoryPackagesTools.DOM
 
         public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
         {
-            return _EnumerateProjects(dinfo, excludeDirPackProps).Select(f => Load<XmlProjectDOM>(f.FullName));
+            return _EnumerateProjects(dinfo, excludeDirPackProps)
+                .Select(f => Load<XmlProjectDOM>(f.FullName));
         }
 
         /// <summary>

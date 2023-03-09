@@ -30,4 +30,23 @@ namespace DirectoryPackagesTools
             _Percent?.Report((_Count * 100) / _Total);
         }
     }
+
+    static class _ProgressExtensions
+    {
+        public static async Task<List<T>> ToListAsync<T>(this IEnumerable<T> items, IProgress<int> progress)
+        {
+            progress.Report(-1);
+
+            var l = new List<T>();
+
+            foreach (var item in items)
+            {
+                await Task.Yield();                
+
+                l.Add(item);
+            }
+
+            return l;
+        }
+    }
 }

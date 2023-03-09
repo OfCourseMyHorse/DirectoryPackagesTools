@@ -26,9 +26,11 @@
                     <MenuItem Icon="💾" Header="Save"          Click="MenuItem_Save" ToolTip="Saves an existing Directory.Build.props." />
                     <MenuItem Icon="📤" Header="Save + Commit" Click="MenuItem_SaveAndCommit" ToolTip="Saves an existing Directory.Build.props and opens a Commit dialog."/>
                 </MenuItem>
+                <!--
                 <MenuItem Header="Services">
                     <MenuItem Header="Query package dependencies" Click="_MenuItem_QueryPackageDependencies" />                    
                 </MenuItem>
+                -->
                 <MenuItem Header="Tools">
                     <MenuItem Header="Restore versions to projects" Click="_MenuItem_RestoreVersionsToProjects" ToolTip="Attempts to restore back the PackageReference Versions in the csproj files, so Directory.Packages.props can be removed" />
                     <Separator />

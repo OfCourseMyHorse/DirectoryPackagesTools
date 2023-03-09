@@ -5,8 +5,13 @@
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>DirectoryPackagesTools</RootNamespace>    
-  </PropertyGroup>  
+    <RootNamespace>DirectoryPackagesTools</RootNamespace>
+    <ApplicationIcon>icon.ico</ApplicationIcon>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="icon.ico" />
+  </ItemGroup>  
 
   <ItemGroup>
     <ProjectReference Include="..\DirectoryPackagesTools\DirectoryPackagesTools.csproj" />
