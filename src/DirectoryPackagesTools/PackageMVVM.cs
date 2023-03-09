@@ -73,7 +73,7 @@ namespace DirectoryPackagesTools
 
         public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p + ".")));
 
-        public bool IsTest => Constants.TestPackages.Contains(Name) || Constants.TestPrefixes.Any(p => Name.StartsWith(p + "."));
+        public bool IsTest => Constants.IsTestPackage(Name);
 
         #endregion        
 
