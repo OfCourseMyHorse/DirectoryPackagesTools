@@ -153,25 +153,10 @@ namespace DirectoryPackagesTools
         {
             get
             {
-                // find package prefixes shared between at least 3 packages
-                var commonPrefixes = AllPackages
-                    .GroupBy(item => item.Prefix).Where(item => item.Count() >= 3)
-                    .Select(item => item.Key)
-                    .ToArray();
-
-                // group key evaluator
-                string getGroupKey(PackageMVVM mvvm)
-                {
-                    if (mvvm.IsSystem) return "System";
-                    if (mvvm.IsTest) return "Test";
-
-                    if (commonPrefixes.Contains(mvvm.Prefix)) return mvvm.Prefix;
-
-                    return "User";
-                }
+                var classifier = new PackageClassifier(AllPackages.Select(item => item.Prefix));
 
                 return AllPackages
-                    .GroupBy(getGroupKey)
+                    .GroupBy(p => p.GetPackageCategory(classifier))
                     .ToDictionary(item => item.Key, item => item.ToArray());
             }
         }

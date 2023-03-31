@@ -50,8 +50,8 @@ namespace DirectoryPackagesTools
 
         private readonly HashSet<XmlProjectDOM> _ProjectsUsingThis = new HashSet<XmlProjectDOM>();
 
-        private NUGETPACKMETADATA _Metadata;
-        private NUGETPACKDEPENDENCIES _Dependencies;
+        private readonly NUGETPACKMETADATA _Metadata;
+        private readonly NUGETPACKDEPENDENCIES _Dependencies;
 
         #endregion
 
@@ -67,13 +67,7 @@ namespace DirectoryPackagesTools
         /// <summary>
         /// Gets the first name of the package. Ex: 'Microsoft', 'System'
         /// </summary>
-        public string Prefix => _LocalReference.PackagePrefix;       
-
-        public bool IsUser => !IsSystem && !IsTest;
-
-        public bool IsSystem => !IsTest && (Constants.SystemPackages.Contains(Name) || Constants.SystemPrefixes.Any(p => Name.StartsWith(p + ".")));
-
-        public bool IsTest => Constants.IsTestPackage(Name);
+        public string Prefix => _LocalReference.PackagePrefix;                
 
         #endregion        
 
@@ -105,11 +99,16 @@ namespace DirectoryPackagesTools
 
         public NUGETPACKMETADATA Metadata => _Metadata;
 
-        public string Frameworks => string.Join(" ", _Dependencies.DependencyGroups.Select(item => item.TargetFramework.GetShortFolderName()));
+        public string Frameworks => string.Join(" ", _Dependencies.DependencyGroups.Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard","netstd")));
 
         #endregion
 
         #region API
+
+        internal string GetPackageCategory(PackageClassifier classifier)
+        {
+            return classifier.GetPackageCategory(_Metadata);
+        }
 
         private NUGETVERSIONRANGE _GetNewestVersionAvailable(bool isPrerelease)
         {
