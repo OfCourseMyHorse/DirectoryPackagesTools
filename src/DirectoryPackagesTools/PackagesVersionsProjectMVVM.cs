@@ -8,15 +8,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 using NuGet.Protocol.Core.Types;
-
-
-using DirectoryPackagesTools.Client;
-using DirectoryPackagesTools.DOM;
 using NuGet.Packaging.Core;
 using NuGet.Frameworks;
 using NuGet.Packaging;
-using NuGet.Versioning;
-using System.Threading.Tasks.Sources;
+
+using DirectoryPackagesTools.Client;
+using DirectoryPackagesTools.DOM;
 
 namespace DirectoryPackagesTools
 {
