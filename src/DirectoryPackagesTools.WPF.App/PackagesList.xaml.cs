@@ -40,5 +40,53 @@ namespace DirectoryPackagesTools
                 }
             }            
         }
+
+        private void CheckBox_UsedByPrjs(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                myUsedByProjectsColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void CheckBox_Frameworks(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                myFrameworksColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void CheckBox_Tags(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                myTagsColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void CheckBox_Summary(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                mySummaryColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void CheckBox_Description(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                myDescriptionColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void CheckBox_ProjectUrl(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                myProjectUrlColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
     }
 }

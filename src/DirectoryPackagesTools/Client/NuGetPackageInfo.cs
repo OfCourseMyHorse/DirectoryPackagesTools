@@ -34,7 +34,7 @@ namespace DirectoryPackagesTools.Client
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
-            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);
+            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);            
 
             var mmm = await client.GetMetadataAsync(pid).ConfigureAwait(false);
             Metadata = mmm.FirstOrDefault();

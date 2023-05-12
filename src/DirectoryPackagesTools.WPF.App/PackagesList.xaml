@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DirectoryPackagesTools"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             mc:Ignorable="d" >
     
     
 
@@ -54,36 +53,57 @@
             <MenuItem Header="Open in NuGet.Org" Click="MenuItem_Click" />
         </ContextMenu>
         
-    </UserControl.Resources>    
-    
-    <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single" HorizontalGridLinesBrush="LightGray" >
-        
-        <!--
-        generally speaking, DataGrid is more powerful than ListView, but it
-        has the drawback of not being able to disable the selection mode.
-        
-        also, although DataGrid has a DataGridComboBoxColumn, its ItemsSource can only
-        be bound to a static collection, or through a complex redirection.
-        -->        
-        
-        <DataGrid.Columns>
-            
-            <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" >
-                <DataGridTextColumn.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="ContextMenu" Value="{StaticResource myPackageNameMenu}" />
-                    </Style>
-                </DataGridTextColumn.CellStyle>
-            </DataGridTextColumn>
-            
-            <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" IsReadOnly="True" />
-            <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
-            <DataGridTemplateColumn Header="Used By" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+    </UserControl.Resources>
 
-            <DataGridTextColumn Header="Frameworks" Width="180" Binding="{Binding Frameworks}" IsReadOnly="True" />
-            <DataGridTextColumn Header="Tags" Width="180" Binding="{Binding Metadata.Tags}" IsReadOnly="True" />
+    <DockPanel>
+        
+        <DataGrid ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionMode="Single" HorizontalGridLinesBrush="LightGray" >
 
-        </DataGrid.Columns>
-    </DataGrid>
-    
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <!-- https://stackoverflow.com/questions/24778677/how-to-hide-datagrid-column-in-wpf-automatically-using-mvvm -->
+                    <CheckBox Content="Used by Projects" Checked="CheckBox_UsedByPrjs" Unchecked="CheckBox_UsedByPrjs" />
+                    <CheckBox Content="Frameworks" Checked="CheckBox_Frameworks" Unchecked="CheckBox_Frameworks" />
+                    <CheckBox Content="Tags" Checked="CheckBox_Tags" Unchecked="CheckBox_Tags" />
+                    <CheckBox Content="Summary" Checked="CheckBox_Summary" Unchecked="CheckBox_Summary" />
+                    <CheckBox Content="Description" Checked="CheckBox_Description" Unchecked="CheckBox_Description" />
+                    <CheckBox Content="Project URL" Checked="CheckBox_ProjectUrl" Unchecked="CheckBox_ProjectUrl" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+            
+            
+
+            <!--
+            generally speaking, DataGrid is more powerful than ListView, but it
+            has the drawback of not being able to disable the selection mode.
+        
+            also, although DataGrid has a DataGridComboBoxColumn, its ItemsSource can only
+            be bound to a static collection, or through a complex redirection.
+            -->
+
+            <DataGrid.Columns>
+
+                <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" >
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ContextMenu" Value="{StaticResource myPackageNameMenu}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" IsReadOnly="True" />
+                <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
+
+                <DataGridTemplateColumn Visibility="Collapsed" x:Name="myUsedByProjectsColumn" Header="Used By Projects" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+                <DataGridTextColumn Visibility="Collapsed" x:Name="myFrameworksColumn" Header="Frameworks" Width="180" Binding="{Binding Frameworks}" IsReadOnly="True" />                
+                <DataGridTextColumn Visibility="Collapsed" x:Name="myTagsColumn" Header="Tags" Width="180" Binding="{Binding Metadata.Tags}" IsReadOnly="True" />
+                <DataGridTextColumn Visibility="Collapsed" x:Name="mySummaryColumn" Header="Summary" Width="600" Binding="{Binding Metadata.Summary}" IsReadOnly="True" />
+                <DataGridTextColumn Visibility="Collapsed" x:Name="myDescriptionColumn" Header="Description" Width="600" Binding="{Binding Metadata.Description}" IsReadOnly="True" />
+                <DataGridHyperlinkColumn Visibility="Collapsed" x:Name="myProjectUrlColumn" Header="Project URL" Width="250" Binding="{Binding Metadata.ProjectUrl}" IsReadOnly="True" />
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </DockPanel>
+
 </UserControl>
