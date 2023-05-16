@@ -5,12 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 using NuGet.Protocol.Core.Types;
-using NuGet.Packaging.Core;
 using NuGet.Frameworks;
-using NuGet.Packaging;
 
 using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;

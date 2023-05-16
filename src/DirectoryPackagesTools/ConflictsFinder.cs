@@ -13,7 +13,6 @@ using NuGet.Frameworks;
 using NuGet.Packaging;
 
 using DirectoryPackagesTools.Client;
-using DirectoryPackagesTools.DOM;
 
 namespace DirectoryPackagesTools
 {
