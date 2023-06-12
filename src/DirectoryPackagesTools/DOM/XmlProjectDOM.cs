@@ -17,7 +17,36 @@ namespace DirectoryPackagesTools.DOM
     {
         #region factory
 
-        private static bool IsWorkDir(System.IO.DirectoryInfo dinfo)
+        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        {
+            return _EnumerateProjects(dinfo, excludeDirPackProps)
+                .Select(f => Load<XmlProjectDOM>(f.FullName));
+        }        
+
+        private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        {
+            if (dinfo.LinkTarget != null)
+            {
+                return Enumerable.Empty<System.IO.FileInfo>();
+            }
+
+            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
+
+            var files = dinfo
+                .EnumerateFiles()
+                .Where(item => !_IsWorkDir(item.Directory))
+                .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
+                .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
+
+            var dfiles = dinfo
+                .EnumerateDirectories()
+                .Where(item => !_ContainsPackagesOverride(item) ) // don't look into subdirectories containing a packages override
+                .SelectMany(item => _EnumerateProjects(item, excludeDirPackProps));
+
+            return files.Concat(dfiles);
+        }
+
+        private static bool _IsWorkDir(System.IO.DirectoryInfo dinfo)
         {
             while (dinfo != null)
             {
@@ -29,22 +58,14 @@ namespace DirectoryPackagesTools.DOM
             return false;
         }
 
-        private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        private static bool _ContainsPackagesOverride(System.IO.DirectoryInfo dinfo)
         {
-            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
+            if (dinfo.LinkTarget != null) return false;
 
-            return dinfo
-                .EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
-                .Where(item => !IsWorkDir(item.Directory))
-                .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
-                .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
+            return dinfo.EnumerateFiles().Any(item => item.Name.ToLower() == "directory.packages.props");
         }
 
-        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
-        {
-            return _EnumerateProjects(dinfo, excludeDirPackProps)
-                .Select(f => Load<XmlProjectDOM>(f.FullName));
-        }
+
 
         /// <summary>
         /// Iterates over all the csproj, targets and props of a directory and removes all the Version entries of PackageReference items.
