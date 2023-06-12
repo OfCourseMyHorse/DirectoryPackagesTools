@@ -33,39 +33,29 @@ namespace DirectoryPackagesTools.DOM
             var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
 
             var files = dinfo
-                .EnumerateFiles()
-                .Where(item => !_IsWorkDir(item.Directory))
+                .EnumerateFiles()                
                 .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
                 .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
 
             var dfiles = dinfo
                 .EnumerateDirectories()
-                .Where(item => !_ContainsPackagesOverride(item) ) // don't look into subdirectories containing a packages override
+                .Where(_IsValidDir)
                 .SelectMany(item => _EnumerateProjects(item, excludeDirPackProps));
 
             return files.Concat(dfiles);
         }
 
-        private static bool _IsWorkDir(System.IO.DirectoryInfo dinfo)
-        {
-            while (dinfo != null)
-            {
-                var name = dinfo.Name.ToLower();
-                if (name == "bin" || name == "obj") return true;
-                dinfo = dinfo.Parent;
-            }
-
-            return false;
-        }
-
-        private static bool _ContainsPackagesOverride(System.IO.DirectoryInfo dinfo)
+        private static bool _IsValidDir(System.IO.DirectoryInfo dinfo)
         {
             if (dinfo.LinkTarget != null) return false;
 
-            return dinfo.EnumerateFiles().Any(item => item.Name.ToLower() == "directory.packages.props");
+            if (string.Equals(dinfo.Name, "bin", StringComparison.OrdinalIgnoreCase)) return false;
+            if (string.Equals(dinfo.Name, "obj", StringComparison.OrdinalIgnoreCase)) return false;
+
+            if (dinfo.EnumerateFiles().Any(item => item.Name.ToLower() == "directory.packages.props")) return false;
+
+            return true;
         }
-
-
 
         /// <summary>
         /// Iterates over all the csproj, targets and props of a directory and removes all the Version entries of PackageReference items.
