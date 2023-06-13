@@ -17,45 +17,13 @@ namespace DirectoryPackagesTools.DOM
     {
         #region factory
 
-        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
+        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo)
         {
-            return _EnumerateProjects(dinfo, excludeDirPackProps)
+            return _ProjectUtils.EnumerateProjects(dinfo)
                 .Select(f => Load<XmlProjectDOM>(f.FullName));
         }        
 
-        private static IEnumerable<System.IO.FileInfo> _EnumerateProjects(System.IO.DirectoryInfo dinfo, bool excludeDirPackProps = true)
-        {
-            if (dinfo.LinkTarget != null)
-            {
-                return Enumerable.Empty<System.IO.FileInfo>();
-            }
-
-            var allowedExtensions = new[] { ".csproj", ".targets", ".props" };
-
-            var files = dinfo
-                .EnumerateFiles()                
-                .Where(item => allowedExtensions.Any(ext => item.Extension.ToLower().EndsWith(ext)))
-                .Where(item => !excludeDirPackProps || item.Name.ToLower() != "directory.packages.props");
-
-            var dfiles = dinfo
-                .EnumerateDirectories()
-                .Where(_IsValidDir)
-                .SelectMany(item => _EnumerateProjects(item, excludeDirPackProps));
-
-            return files.Concat(dfiles);
-        }
-
-        private static bool _IsValidDir(System.IO.DirectoryInfo dinfo)
-        {
-            if (dinfo.LinkTarget != null) return false;
-
-            if (string.Equals(dinfo.Name, "bin", StringComparison.OrdinalIgnoreCase)) return false;
-            if (string.Equals(dinfo.Name, "obj", StringComparison.OrdinalIgnoreCase)) return false;
-
-            if (dinfo.EnumerateFiles().Any(item => item.Name.ToLower() == "directory.packages.props")) return false;
-
-            return true;
-        }
+        
 
         /// <summary>
         /// Iterates over all the csproj, targets and props of a directory and removes all the Version entries of PackageReference items.
@@ -66,7 +34,7 @@ namespace DirectoryPackagesTools.DOM
         /// <param name="dinfo">the target directory</param>
         public static void RemoveVersionsFromProjectsFiles(System.IO.DirectoryInfo dinfo)
         {
-            var prjs = _EnumerateProjects(dinfo, true)
+            var prjs = _ProjectUtils.EnumerateProjects(dinfo)
                 .Select(f => Load<XmlProjectDOM>(f.FullName))
                 .Where(prj => prj.ManagePackageVersionsCentrally);
 
@@ -88,7 +56,7 @@ namespace DirectoryPackagesTools.DOM
 
         public static void RestoreVersionsToProjectsFiles(System.IO.DirectoryInfo dinfo, IReadOnlyDictionary<string, string> packageVersions)
         {
-            var prjs = _EnumerateProjects(dinfo, true)
+            var prjs = _ProjectUtils.EnumerateProjects(dinfo)
                 .Select(f => Load<XmlProjectDOM>(f.FullName))
                 .Where(prj => prj.ManagePackageVersionsCentrally);
 

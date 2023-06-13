@@ -43,7 +43,7 @@ namespace DirectoryPackagesTools
 
             // Load all *.csproj within the directory
             var csprojs = await XmlProjectDOM
-                .EnumerateProjects(dom.File.Directory, true)
+                .EnumerateProjects(dom.File.Directory)
                 .Where(item => item.ManagePackageVersionsCentrally)
                 .ToListAsync(progress)
                 .ConfigureAwait(true);
