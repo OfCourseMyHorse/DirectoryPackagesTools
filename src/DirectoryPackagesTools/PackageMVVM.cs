@@ -31,13 +31,50 @@ namespace DirectoryPackagesTools
             _Metadata = pinfo.Metadata;
             _Dependencies = pinfo.Dependencies;
 
-            _AvailableVersions = pinfo.GetVersions().OrderByDescending(item => item).ToArray();         
+            _AvailableVersions = pinfo
+                .GetVersions()
+                .OrderByDescending(item => item)
+                .ToArray();
+
+            var hidePrereleases = _HidePrereleases(local.PackageId, pinfo.Metadata);
+
+            // if all are pre-releases, don't hide.
+            if (_AvailableVersions.All(item => item.IsPrerelease)) hidePrereleases = false;
+
+            // if current version is a pre-release, don't hide.
+            if (local.Version.MinVersion.IsPrerelease) hidePrereleases = false;
+
+            if (hidePrereleases)
+            {
+                _AvailableVersions = _AvailableVersions
+                    .Where(item => !item.IsPrerelease)
+                    .OrderByDescending(item => item)
+                    .ToArray();
+            }
             
             AvailableVersions = _AvailableVersions.Select(item => new NUGETVERSIONRANGE(item)).ToList();
             NewestRelease = _GetNewestVersionAvailable(false);
-            NewestPrerelease = _GetNewestVersionAvailable(true);
+            NewestPrerelease = _GetNewestVersionAvailable(true);            
 
             ApplyVersionCmd = new Prism.Commands.DelegateCommand<NUGETVERSIONRANGE>(ver => this.Version = ver);
+
+            // remove preprelease from stable packages
+
+            if (Name == "Google.Protobug") NewestPrerelease = null;
+            if (PackageClassifier.IsUnitTestPackage(_Metadata)) NewestPrerelease = null;
+        }
+
+        private static bool _HidePrereleases(string name, NUGETPACKMETADATA meta)
+        {
+            if (name.StartsWith("System.")) return true;
+            if (name.StartsWith("Xamarin.")) return true;
+            if (name.StartsWith("Microsoft.")) return true;
+            if (name.StartsWith("Prism.")) return true;
+            if (name == "Google.Protobuf") return true;
+            if (name == "SkiaSharp") return true;
+            if (name == "MathNet.Numerics") return true;
+            if (PackageClassifier.IsUnitTestPackage(meta)) return true;
+            return false;
         }
 
         #endregion
@@ -93,7 +130,7 @@ namespace DirectoryPackagesTools
 
         #endregion
 
-        #region properties - metadata && ependent projects
+        #region properties - metadata && dependent projects
 
         public IEnumerable<System.IO.FileInfo> DependantProjects => _ProjectsUsingThis.Select(item => item.File);
 

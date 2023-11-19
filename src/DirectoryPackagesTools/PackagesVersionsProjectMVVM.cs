@@ -125,10 +125,10 @@ namespace DirectoryPackagesTools
         #endregion
 
         #region data
-        
-        private readonly XmlPackagesVersionsProjectDOM _Dom;
+
         private readonly NuGetClient _Client;
 
+        private readonly XmlPackagesVersionsProjectDOM _Dom;
         private readonly PackageMVVM[] _Packages;
 
         #endregion
@@ -141,8 +141,14 @@ namespace DirectoryPackagesTools
 
         public IEnumerable<SourceRepository> Repositories => _Client.Repositories;
 
+        /// <summary>
+        /// Gets all the packages.
+        /// </summary>
         public IReadOnlyList<PackageMVVM> AllPackages => _Packages;
 
+        /// <summary>
+        /// Gets all the packages grouped by category.
+        /// </summary>
         public IEnumerable<KeyValuePair<string, PackageMVVM[]>> GroupedPackages
         {
             get

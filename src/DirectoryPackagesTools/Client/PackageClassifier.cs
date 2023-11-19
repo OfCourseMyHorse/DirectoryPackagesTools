@@ -48,7 +48,7 @@ namespace DirectoryPackagesTools.Client
             return "Unsorted";
         }
 
-        private static bool IsUnitTestPackage(NUGETPACKMETADATA metadata)
+        internal static bool IsUnitTestPackage(NUGETPACKMETADATA metadata)
         {
             if (metadata?.Identity?.Id == null) return false;
 
