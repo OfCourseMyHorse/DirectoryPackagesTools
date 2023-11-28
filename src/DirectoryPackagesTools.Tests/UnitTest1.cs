@@ -92,6 +92,15 @@ namespace DirectoryPackagesTools
                             }
                         }
                     }
+
+                    var metas = await r.GetMetadataAsync("System.Numerics.Vectors");
+
+                    foreach(var meta in metas)
+                    {
+                        TestContext.WriteLine(meta.Owners);
+                    }
+
+                    
                 }                
             }            
         }
