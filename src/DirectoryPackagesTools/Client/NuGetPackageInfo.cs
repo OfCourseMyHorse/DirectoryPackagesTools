@@ -16,8 +16,8 @@ namespace DirectoryPackagesTools.Client
     {
         public NuGetPackageInfo(string id, VersionRange version)
         {
-            Id = id;
-            _CurrVersion = version;
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            _CurrVersion = version ?? throw new ArgumentNullException(nameof(version));
         }
 
         public string Id { get; }

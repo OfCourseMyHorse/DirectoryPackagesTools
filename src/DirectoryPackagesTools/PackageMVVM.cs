@@ -18,13 +18,13 @@ using NUGETPACKDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependenc
 namespace DirectoryPackagesTools
 {
     /// <summary>
-    /// MVVM view over <see cref="XmlPackageReferenceVersion"/>
+    /// MVVM view over <see cref="IPackageReferenceVersion"/>
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Name} {Version}")]
     public class PackageMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
-        internal PackageMVVM(XmlPackageReferenceVersion local, NuGetPackageInfo pinfo)
+        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageInfo pinfo)
         {
             _LocalReference = local;
 
@@ -81,11 +81,11 @@ namespace DirectoryPackagesTools
 
         #region data        
 
-        private readonly XmlPackageReferenceVersion _LocalReference;
+        private readonly IPackageReferenceVersion _LocalReference;
         
         private readonly IReadOnlyList<NUGETVERSION> _AvailableVersions;
 
-        private readonly HashSet<XmlProjectDOM> _ProjectsUsingThis = new HashSet<XmlProjectDOM>();
+        private readonly HashSet<XmlMSBuildProjectDOM> _ProjectsUsingThis = new HashSet<XmlMSBuildProjectDOM>();
 
         private readonly NUGETPACKMETADATA _Metadata;
         private readonly NUGETPACKDEPENDENCIES _Dependencies;
@@ -167,7 +167,7 @@ namespace DirectoryPackagesTools
         /// <summary>
         /// Adds a project that depends on this package
         /// </summary>        
-        internal void _AddDependent(XmlProjectDOM prj)
+        internal void _AddDependent(XmlMSBuildProjectDOM prj)
         {
             _ProjectsUsingThis.Add(prj);
         }        

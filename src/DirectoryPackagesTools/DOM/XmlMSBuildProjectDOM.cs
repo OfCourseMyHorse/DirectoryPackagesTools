@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-
 using NuGet.Versioning;
 
 namespace DirectoryPackagesTools.DOM
@@ -12,18 +11,19 @@ namespace DirectoryPackagesTools.DOM
     /// <summary>
     /// Wraps a .csproj general project file and exposes an API to retrieve all the PackageReference entries
     /// </summary>
+    /// <remarks>
+    /// Derived class: <see cref="XmlPackagesVersionsProjectDOM"/>
+    /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{File.Name}")]
-    class XmlProjectDOM
+    class XmlMSBuildProjectDOM : IPackageVersionsProject
     {
         #region factory
 
-        public static IEnumerable<XmlProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo)
+        public static IEnumerable<XmlMSBuildProjectDOM> EnumerateProjects(System.IO.DirectoryInfo dinfo)
         {
             return _ProjectUtils.EnumerateProjects(dinfo)
-                .Select(f => Load<XmlProjectDOM>(f.FullName));
+                .Select(f => Load<XmlMSBuildProjectDOM>(f.FullName));
         }        
-
-        
 
         /// <summary>
         /// Iterates over all the csproj, targets and props of a directory and removes all the Version entries of PackageReference items.
@@ -35,7 +35,7 @@ namespace DirectoryPackagesTools.DOM
         public static void RemoveVersionsFromProjectsFiles(System.IO.DirectoryInfo dinfo)
         {
             var prjs = _ProjectUtils.EnumerateProjects(dinfo)
-                .Select(f => Load<XmlProjectDOM>(f.FullName))
+                .Select(f => Load<XmlMSBuildProjectDOM>(f.FullName))
                 .Where(prj => prj.ManagePackageVersionsCentrally);
 
             foreach (var prj in prjs)
@@ -57,7 +57,7 @@ namespace DirectoryPackagesTools.DOM
         public static void RestoreVersionsToProjectsFiles(System.IO.DirectoryInfo dinfo, IReadOnlyDictionary<string, string> packageVersions)
         {
             var prjs = _ProjectUtils.EnumerateProjects(dinfo)
-                .Select(f => Load<XmlProjectDOM>(f.FullName))
+                .Select(f => Load<XmlMSBuildProjectDOM>(f.FullName))
                 .Where(prj => prj.ManagePackageVersionsCentrally);
 
             foreach (var prj in prjs)
@@ -77,7 +77,7 @@ namespace DirectoryPackagesTools.DOM
 
 
         public static T Load<T>(string path)
-            where T : XmlProjectDOM, new()
+            where T : XmlMSBuildProjectDOM, new()
         {
             try
             {
@@ -96,7 +96,9 @@ namespace DirectoryPackagesTools.DOM
 
         public void Save(string path = null)
         {
-            _Document.Save(path ?? _Source.FullName);
+            path ??= _Source.FullName;
+
+            _Document.Save(path);
         }
 
         #endregion
@@ -117,7 +119,7 @@ namespace DirectoryPackagesTools.DOM
         #if DEBUG
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-        private XmlPackageReferenceVersion[] _Packages => GetPackageReferences().ToArray();
+        private IPackageReferenceVersion[] _Packages => GetPackageReferences().ToArray();
 
         #endif
 
@@ -143,10 +145,13 @@ namespace DirectoryPackagesTools.DOM
                     ?.Value;
         }
 
-        public virtual IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(string itemName = "PackageReference")
+
+        protected virtual string GetPackageElementName() => "PackageReference";
+
+        public IEnumerable<IPackageReferenceVersion> GetPackageReferences()
         {
-            return XmlPackageReferenceVersion.GetPackageReferences(_Document, itemName);
-        }
+            return XmlPackageReferenceVersion.GetPackageReferences(_Document, GetPackageElementName());
+        }        
 
         #endregion
     }

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "Rehametrics.Common.L10nTool.L10nDownloader": {
+      "version": "0.1.1-ci-20230710-1406",
+      "commands": [
+        "Rehametrics.Common.L10nTool.L10nDownloader"
+      ]
+    },    
+    "xyz.com": {
+      "version": "0.1.1-ci-20230710-1406",
+      "commands": [
+        "Rehametrics.Common.L10nTool.L10nDownloader"
+      ]
+    }
+  }
+}

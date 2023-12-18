@@ -5,7 +5,6 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-
 using NuGet.Versioning;
 
 using KVPMACRO = System.Collections.Generic.KeyValuePair<string, string>;
@@ -17,7 +16,7 @@ namespace DirectoryPackagesTools.DOM
     /// </summary>
 
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
-    sealed class XmlPackageReferenceVersion
+    sealed class XmlPackageReferenceVersion : IPackageReferenceVersion
     {
         #region lifecycle
 
@@ -101,9 +100,7 @@ namespace DirectoryPackagesTools.DOM
 
                 return name;
             }
-        }
-
-        public string PackagePrefix => new string(PackageId.TakeWhile(c => c != '.').ToArray());       
+        }        
 
         public VersionRange Version
         {

@@ -30,58 +30,75 @@ namespace DirectoryPackagesTools
 
             if (updateProjects)
             {
-                XmlProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);
+                XmlMSBuildProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);
             }
         }
 
         public static async Task<PackagesVersionsProjectMVVM> LoadAsync(string filePath, IProgress<int> progress, CancellationToken ctoken)
         {
-            // Load Directory.Packages.Props
-            var dom = XmlPackagesVersionsProjectDOM.Load(filePath);
+            var isJson = filePath.ToLower().EndsWith(".json");
 
-            var client = new NuGetClient(dom.File.Directory.FullName);
+            IPackageVersionsProject xdom = null;
+            List<XmlMSBuildProjectDOM> csprojs = null;
 
-            // Load all *.csproj within the directory
-            var csprojs = await XmlProjectDOM
-                .EnumerateProjects(dom.File.Directory)
-                .Where(item => item.ManagePackageVersionsCentrally)
-                .ToListAsync(progress)
-                .ConfigureAwait(true);
-
-            // verify
-
-            var err = dom.VerifyDocument(csprojs);
-
-            if (err != null)
+            if (isJson)
             {
-                if (progress is IProgress<Exception> exrep)
-                {
-                    exrep.Report(new InvalidOperationException(err));
-                }
+                xdom = JsonToolsVersionsProjectDOM.Load(filePath);
+            }
+            else
+            {
 
-                return null;
+                // Load Directory.Packages.Props
+                var dom = XmlPackagesVersionsProjectDOM.Load(filePath);
+
+                xdom = dom;
+
+                // Load all *.csproj within the directory
+                csprojs = await XmlMSBuildProjectDOM
+                    .EnumerateProjects(dom.File.Directory)
+                    .Where(item => item.ManagePackageVersionsCentrally)
+                    .ToListAsync(progress)
+                    .ConfigureAwait(true);
+
+                // verify
+
+                var err = dom.VerifyDocument(csprojs);
+
+                if (err != null)
+                {
+                    if (progress is IProgress<Exception> exrep)
+                    {
+                        exrep.Report(new InvalidOperationException(err));
+                    }
+
+                    return null;
+                }
             }
 
             // retrieve versions from nuget repositories.
 
-            
-            var packages = await _GetPackagesAsync(dom, client, progress, ctoken);
-            
+            var client = new NuGetClient(xdom.File.Directory.FullName);
+
+            var packages = await _GetPackagesAsync(xdom, client, progress, ctoken);
+
             // add dependencies
 
-            foreach(var csproj in csprojs)
+            if (csprojs != null)
             {
-                foreach(var pkg in csproj.GetPackageReferences())
+                foreach (var csproj in csprojs)
                 {
-                    var dst = packages.FirstOrDefault(item => item.Name == pkg.PackageId);
-                    dst._AddDependent(csproj);
+                    foreach (var pkg in csproj.GetPackageReferences())
+                    {
+                        var dst = packages.FirstOrDefault(item => item.Name == pkg.PackageId);
+                        dst._AddDependent(csproj);
+                    }
                 }
             }
 
-            return new PackagesVersionsProjectMVVM(dom, client, packages);
+            return new PackagesVersionsProjectMVVM(xdom, client, packages);
         }
 
-        private static async Task<PackageMVVM[]> _GetPackagesAsync(XmlPackagesVersionsProjectDOM dom, NuGetClient client, IProgress<int> progress, CancellationToken ctoken)
+        private static async Task<PackageMVVM[]> _GetPackagesAsync(IPackageVersionsProject dom, NuGetClient client, IProgress<int> progress, CancellationToken ctoken)
         {
             var locals = dom
                 .GetPackageReferences()
@@ -115,7 +132,7 @@ namespace DirectoryPackagesTools
             _Dom.Save(null);
         }
 
-        private PackagesVersionsProjectMVVM(XmlPackagesVersionsProjectDOM dom, NuGetClient client, PackageMVVM[] packages)
+        private PackagesVersionsProjectMVVM(IPackageVersionsProject dom, NuGetClient client, PackageMVVM[] packages)
         {            
             _Dom = dom;
             _Client = client;
@@ -128,7 +145,7 @@ namespace DirectoryPackagesTools
 
         private readonly NuGetClient _Client;
 
-        private readonly XmlPackagesVersionsProjectDOM _Dom;
+        private readonly IPackageVersionsProject _Dom;
         private readonly PackageMVVM[] _Packages;
 
         #endregion
@@ -170,7 +187,7 @@ namespace DirectoryPackagesTools
             var packages = AllPackages
                 .ToDictionary(item => item.Name, item => item.Version.ToString());
 
-            XmlProjectDOM.RestoreVersionsToProjectsFiles(File.Directory, packages);
+            XmlMSBuildProjectDOM.RestoreVersionsToProjectsFiles(File.Directory, packages);
         }
 
         public async Task RefreshPackageDependenciesAsync(IProgress<int> progress, CancellationToken ctoken)
@@ -219,8 +236,6 @@ namespace DirectoryPackagesTools
         }
 
         #endregion
-    }
-
-    
+    }    
 }
 

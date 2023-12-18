@@ -35,6 +35,8 @@
                     <MenuItem Header="Restore versions to projects" Click="_MenuItem_RestoreVersionsToProjects" ToolTip="Attempts to restore back the PackageReference Versions in the csproj files, so Directory.Packages.props can be removed" />
                     <Separator />
                     <MenuItem Icon="🖥" Header="Open Command Line..." Click="MenuItem_OpenCommandLine" />
+                    <Separator />
+                    <MenuItem Icon="" Header="Conceal Nuget Config Clear Passwords..." Click="MenuItem_ConcealPasswords" />
                 </MenuItem>
             </Menu>
 

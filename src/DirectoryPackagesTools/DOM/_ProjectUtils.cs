@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DirectoryPackagesTools.DOM
 {
+    /// <summary>
+    ///  MsBuild csproj utils
+    /// </summary>
     internal static class _ProjectUtils
     {
         public static IEnumerable<System.IO.FileInfo> EnumerateProjects(System.IO.DirectoryInfo dinfo)

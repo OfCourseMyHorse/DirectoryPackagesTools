@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-using NuGet.Versioning;
-
 namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
@@ -60,9 +58,9 @@ namespace DirectoryPackagesTools.DOM
                     .Descendants(XName.Get("PropertyGroup")).SelectMany(item => item.Descendants())
                     .ToList();
 
-                var property = properties.FirstOrDefault(item => item.Name.LocalName == propName);
-
-                if (property == null) throw new InvalidOperationException($"element {propName} not found");
+                var property = properties
+                    .FirstOrDefault(item => item.Name.LocalName == propName)
+                    ?? throw new InvalidOperationException($"element {propName} not found");
 
                 version = _PropertyVersionXmlSource.FromPropertyElement(property);
             }
@@ -81,11 +79,14 @@ namespace DirectoryPackagesTools.DOM
     /// </c>
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _AttributeVersionXmlSource : IVersionXmlSource
+    readonly struct _AttributeVersionXmlSource : IVersionXmlSource
     {
         public static IVersionXmlSource FromVersionAttribute(XElement element)
         {
             if (element == null) return null;
+
+            if (element.Attribute(XName.Get("version")) != null) throw new ArgumentException("expected 'Version' but found 'version'");
+
             var attr = element.Attribute(XName.Get("Version"));
             if (attr == null) return null;
             if (string.IsNullOrWhiteSpace(attr.Value)) return null;
@@ -98,7 +99,7 @@ namespace DirectoryPackagesTools.DOM
             _Attribute = attr;
         }
 
-        XAttribute _Attribute;
+        private readonly XAttribute _Attribute;
 
         public string Version
         {
@@ -118,7 +119,7 @@ namespace DirectoryPackagesTools.DOM
     /// </c>
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{Version}")]
-    struct _PropertyVersionXmlSource : IVersionXmlSource
+    readonly struct _PropertyVersionXmlSource : IVersionXmlSource
     {
         public static IVersionXmlSource FromVersionElement(XElement element)
         {
@@ -145,7 +146,7 @@ namespace DirectoryPackagesTools.DOM
             _Property = element;
         }
 
-        XElement _Property;
+        readonly XElement _Property;
 
         public string Version
         {

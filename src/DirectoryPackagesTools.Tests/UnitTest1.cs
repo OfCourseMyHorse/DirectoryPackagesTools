@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using DirectoryPackagesTools.DOM;
 
@@ -21,8 +22,6 @@ namespace DirectoryPackagesTools
             var v1 = VersionRange.Parse("1.0.0");
             var v2 = VersionRange.Parse("1.0.0-preview3");
             var v3 = VersionRange.Parse("[1.0.0-preview3]");
-
-
         }
 
         [TestCase("tests.props")]
@@ -47,7 +46,7 @@ namespace DirectoryPackagesTools
         {
             var path = ResourceInfo.From(propsName);
 
-            var props = XmlProjectDOM.Load<XmlProjectDOM>(path);
+            var props = XmlMSBuildProjectDOM.Load<XmlMSBuildProjectDOM>(path);
 
             AttachmentInfo.From("xdp.xml").WriteObject(f => props.Save(f));
 
@@ -55,6 +54,18 @@ namespace DirectoryPackagesTools
             {
                 TestContext.WriteLine($"{p.PackageId} {p.Version}");
             }
+        }
+
+        [TestCase("dotnet-tools_x.json")]
+        public void TestLoadTools(string propsName)
+        {
+            var path = ResourceInfo.From(propsName);
+
+            var props = JsonToolsVersionsProjectDOM.Load(path);
+
+            var views = props.GetPackageReferences().ToArray();
+
+            TestContext.WriteLine($"{views.Length}");
         }
 
         [Test]

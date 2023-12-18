@@ -13,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+
+using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
 using Microsoft.Win32;
 
@@ -124,7 +126,7 @@ namespace DirectoryPackagesTools
         {
             var dlg = new OpenFileDialog();
             dlg.RestoreDirectory = true;
-            dlg.Filter = "Package Versions|directory.packages.props";
+            dlg.Filter = "Package Versions|directory.packages.props|Dotnet Tools Versions|dotnet-tools.json";
 
             if (!dlg.ShowDialog().Value) return;
             await _LoadDocumentAsync(dlg.FileName);
@@ -139,6 +141,8 @@ namespace DirectoryPackagesTools
                 this.DataContext = await PackagesVersionsProjectMVVM
                     .LoadAsync(documentPath, ctx, ctx.Token)
                     .ConfigureAwait(true);
+
+                this.Title = "Directory Packages Manager - " + documentPath;
             }
             catch (OperationCanceledException ex)
             {
@@ -176,6 +180,22 @@ namespace DirectoryPackagesTools
             psi.WorkingDirectory = dinfo.FullName;
 
             System.Diagnostics.Process.Start(psi);
+        }
+
+
+        private void MenuItem_ConcealPasswords(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog();
+            dlg.RestoreDirectory = true;
+            dlg.Filter = "Nuget.Config files|*.config";
+
+            if (dlg.ShowDialog() != true) return;
+
+            var finfo = new System.IO.FileInfo(dlg.FileName);
+
+            var r = CredentialsUtils.EncryptNugetConfigClearTextPasswords(finfo);
+
+            MessageBox.Show(r ? "passwords concealed" : "no clear passwords found", "result");
         }
 
         private async void MenuItem_New(object sender, RoutedEventArgs e)

@@ -75,7 +75,7 @@ namespace DirectoryPackagesTools.Client
         {
             _Repos = repos;
             Logger = logger;
-            _Cache = new SourceCacheContext();
+            _Cache = NullSourceCacheContext.Instance;
             _Token = token;
 
             _RepoAPIs = _Repos

@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace DirectoryPackagesTools.DOM
 {
     /// <summary>
     /// Wraps a Directory.Packages.Props project file and exposes an API to retrieve all the PackageVersion entries
     /// </summary>
-    class XmlPackagesVersionsProjectDOM : XmlProjectDOM
+    class XmlPackagesVersionsProjectDOM : XmlMSBuildProjectDOM
     {
         public static void CreateVersionFileFromExistingProjects(System.IO.FileInfo finfo)
         {
@@ -22,7 +19,7 @@ namespace DirectoryPackagesTools.DOM
                 .GroupBy(item => item.PackageId)
                 .OrderBy(item => item.Key);
 
-            NuGet.Versioning.VersionRange getVersionFrom(IEnumerable<XmlPackageReferenceVersion> references)
+            NuGet.Versioning.VersionRange getVersionFrom(IEnumerable<IPackageReferenceVersion> references)
             {
                 references = references.Where(item => item.Version != null);
                 if (!references.Any()) return NuGet.Versioning.VersionRange.None;
@@ -57,7 +54,7 @@ namespace DirectoryPackagesTools.DOM
             return Load<XmlPackagesVersionsProjectDOM>(path);
         }
 
-        public string VerifyDocument(IReadOnlyList<XmlProjectDOM> csprojs)
+        public string VerifyDocument(IReadOnlyList<XmlMSBuildProjectDOM> csprojs)
         {
             try
             {
@@ -118,10 +115,7 @@ namespace DirectoryPackagesTools.DOM
             catch (Exception ex) { return ex.Message; }
         }
 
-        public override IEnumerable<XmlPackageReferenceVersion> GetPackageReferences(string itemName = "PackageReference")
-        {
-            return base.GetPackageReferences("PackageVersion");
-        }
+        protected override string GetPackageElementName() => "PackageVersion";
     }
 
 }
