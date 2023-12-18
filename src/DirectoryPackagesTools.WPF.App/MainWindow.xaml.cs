@@ -143,11 +143,9 @@ namespace DirectoryPackagesTools
                     .ConfigureAwait(true);
 
                 this.Title = "Directory Packages Manager - " + documentPath;
-            }
-            catch (OperationCanceledException ex)
-            {
-                MessageBox.Show("Load cancelled.");
-            }
+            }            
+            catch (OperationCanceledException) { MessageBox.Show("Load cancelled."); }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Error"); }
         }
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)

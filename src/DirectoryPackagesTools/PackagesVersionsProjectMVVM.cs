@@ -47,23 +47,12 @@ namespace DirectoryPackagesTools
             }
             else
             {
-
                 // Load Directory.Packages.Props
                 var dom = XmlPackagesVersionsProjectDOM.Load(filePath);
-
                 xdom = dom;
 
-                // Load all *.csproj within the directory
-                csprojs = await XmlMSBuildProjectDOM
-                    .EnumerateProjects(dom.File.Directory)
-                    .Where(item => item.ManagePackageVersionsCentrally)
-                    .ToListAsync(progress)
-                    .ConfigureAwait(true);
-
                 // verify
-
                 var err = dom.VerifyDocument(csprojs);
-
                 if (err != null)
                 {
                     if (progress is IProgress<Exception> exrep)
@@ -73,13 +62,20 @@ namespace DirectoryPackagesTools
 
                     return null;
                 }
+
+                // Load all *.csproj within the directory
+                csprojs = await XmlMSBuildProjectDOM
+                    .EnumerateProjects(xdom.File.Directory)
+                    .Where(item => item.ManagePackageVersionsCentrally)
+                    .ToListAsync(progress)
+                    .ConfigureAwait(false);                
             }
 
             // retrieve versions from nuget repositories.
 
             var client = new NuGetClient(xdom.File.Directory.FullName);
 
-            var packages = await _GetPackagesAsync(xdom, client, progress, ctoken);
+            var packages = await _GetPackagesAsync(xdom, client, progress, ctoken).ConfigureAwait(false);
 
             // add dependencies
 

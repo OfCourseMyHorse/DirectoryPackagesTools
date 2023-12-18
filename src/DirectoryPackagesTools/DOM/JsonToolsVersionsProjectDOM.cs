@@ -11,12 +11,16 @@ namespace DirectoryPackagesTools.DOM
     [System.Diagnostics.DebuggerDisplay("{File}")]
     internal class JsonToolsVersionsProjectDOM : IPackageVersionsProject
     {
+        #region lifecycle
+
         public static JsonToolsVersionsProjectDOM Load(string filePath)
         {
+            var finfo = new System.IO.FileInfo(filePath);
+
             var json = System.IO.File.ReadAllText(filePath);
             var dom = System.Text.Json.Nodes.JsonNode.Parse(json);
 
-            return new JsonToolsVersionsProjectDOM(new System.IO.FileInfo(filePath), dom);
+            return new JsonToolsVersionsProjectDOM(finfo, dom);
         }        
 
         private JsonToolsVersionsProjectDOM(System.IO.FileInfo file, System.Text.Json.Nodes.JsonNode dom)
@@ -25,9 +29,17 @@ namespace DirectoryPackagesTools.DOM
             _DOM = dom;
         }
 
+        #endregion
+
+        #region data
+
         public System.IO.FileInfo File { get; }
 
         private readonly System.Text.Json.Nodes.JsonNode _DOM;
+
+        #endregion
+
+        #region API
 
         public IEnumerable<IPackageReferenceVersion> GetPackageReferences()
         {
@@ -50,26 +62,41 @@ namespace DirectoryPackagesTools.DOM
 
             System.IO.File.WriteAllText(path, json);
         }
+
+        #endregion
     }
 
     [System.Diagnostics.DebuggerDisplay("{PackageId} {Version}")]
     internal struct JsonPackageReferenceVersion : IPackageReferenceVersion
     {
+        #region lifecycle
         public JsonPackageReferenceVersion(string packageId, System.Text.Json.Nodes.JsonNode node)
         {
             this.PackageId = packageId;            
             this._Props = node.AsObject();
         }
 
+        #endregion
+
+        #region data
+
         private System.Text.Json.Nodes.JsonObject _Props;
 
-        public string PackageId { get; }        
+        public string PackageId { get; }
+
+        #endregion
+
+        #region properties
 
         public VersionRange Version
         {
             get => VersionRange.Parse(_Props["version"].GetValue<string>());
             set => _Props["version"] = value.ToShortString();
         }
+
+        #endregion
+
+        #region API
 
         public void RemoveVersion()
         {
@@ -80,5 +107,7 @@ namespace DirectoryPackagesTools.DOM
         {
             // do nothing
         }
+
+        #endregion
     }
 }
