@@ -24,8 +24,9 @@ namespace DirectoryPackagesTools
             var v3 = VersionRange.Parse("[1.0.0-preview3]");
         }
 
-        [TestCase("tests.props")]
+        
         [TestCase("versions.props")]
+        [TestCase("versions2.props")]
         public void TestLoadVersions(string propsName)
         {
             var path = ResourceInfo.From(propsName);
@@ -34,11 +35,17 @@ namespace DirectoryPackagesTools
 
             AttachmentInfo.From("xdp.xml").WriteObject(f => props.Save(f));
 
+            var prefs = props.GetPackageReferences().ToList();
 
-            foreach(var p in props.GetPackageReferences())
+            Assert.That(prefs, Has.Count.EqualTo(5));
+
+            foreach (var p in prefs)
             {
+                Assert.That(p.PackageId, Is.Not.Null);
+                Assert.That(p.Version, Is.Not.Null);
+
                 TestContext.WriteLine($"{p.PackageId} {p.Version}");
-            }
+            }            
         }
 
         [TestCase("tests.props")]        

@@ -55,7 +55,8 @@ namespace DirectoryPackagesTools.DOM
                 propName = propName.TrimEnd(')');
 
                 var properties = root
-                    .Descendants(XName.Get("PropertyGroup")).SelectMany(item => item.Descendants())
+                    .Descendants(root.GetDefaultNamespace().GetName("PropertyGroup"))
+                    .SelectMany(item => item.Descendants())
                     .ToList();
 
                 var property = properties
@@ -127,7 +128,9 @@ namespace DirectoryPackagesTools.DOM
 
             System.Diagnostics.Debug.Assert(element.Name.LocalName.StartsWith("Package")); // PackageReference | PackageVersion
 
-            element = element.Element(XName.Get("Version"));
+            var xversion = element.GetDefaultNamespace().GetName("Version");
+
+            element = element.Element(xversion);
             if (element == null) return null;
             if (element.Name.LocalName != "Version") return null;
             if (string.IsNullOrWhiteSpace(element.Value)) return null;

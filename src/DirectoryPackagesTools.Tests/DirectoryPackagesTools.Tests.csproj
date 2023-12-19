@@ -9,6 +9,7 @@
     <None Remove="dotnet-tools_x.json" />
     <None Remove="tests.props" />
     <None Remove="versions.props" />
+    <None Remove="versions2.props" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,6 +17,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="tests.props">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="versions2.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="versions.props">

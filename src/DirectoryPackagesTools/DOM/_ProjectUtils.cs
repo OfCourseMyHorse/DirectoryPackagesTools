@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace DirectoryPackagesTools.DOM
 {
@@ -10,6 +11,13 @@ namespace DirectoryPackagesTools.DOM
     /// </summary>
     internal static class _ProjectUtils
     {
+        public static XElement GetRoot(this XElement element)
+        {
+            if (element == null) return null;
+            if (element.Parent == null) return element;
+            return element.GetRoot();
+        }
+
         public static IEnumerable<System.IO.FileInfo> EnumerateProjects(System.IO.DirectoryInfo dinfo)
         {
             if (dinfo.LinkTarget != null)

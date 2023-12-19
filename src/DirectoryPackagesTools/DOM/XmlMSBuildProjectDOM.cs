@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -53,7 +54,6 @@ namespace DirectoryPackagesTools.DOM
             }
         }
 
-
         public static void RestoreVersionsToProjectsFiles(System.IO.DirectoryInfo dinfo, IReadOnlyDictionary<string, string> packageVersions)
         {
             var prjs = _ProjectUtils.EnumerateProjects(dinfo)
@@ -74,7 +74,6 @@ namespace DirectoryPackagesTools.DOM
                 if (modified) prj.Save();
             }
         }
-
 
         public static T Load<T>(string path)
             where T : XmlMSBuildProjectDOM, new()
@@ -139,10 +138,16 @@ namespace DirectoryPackagesTools.DOM
 
         public string GetPropertyValue(string propertyName)
         {
+            var xPropGroup = _Document
+                .Root
+                .GetDefaultNamespace()
+                .GetName("PropertyGroup");
+
             return _Document
-                    .Descendants(XName.Get("PropertyGroup")).SelectMany(item => item.Descendants())
-                    .FirstOrDefault(item => item.Name.LocalName == propertyName)
-                    ?.Value;
+                .Descendants(xPropGroup)
+                .SelectMany(item => item.Descendants())
+                .FirstOrDefault(item => item.Name.LocalName == propertyName)
+                ?.Value;
         }
 
 

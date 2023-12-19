@@ -27,8 +27,10 @@ namespace DirectoryPackagesTools.DOM
 
             if (itemName != "PackageVersion" && itemName != "PackageReference") throw new ArgumentException("Must be a valid element name", nameof(itemName));
 
+            var xName = doc.Root.GetDefaultNamespace().GetName(itemName);
+
             return doc.Root
-                .Descendants(XName.Get(itemName))
+                .Descendants(xName)                
                 .SelectMany(item => _From(item))
                 .Where(item => item != null)
                 .ToList();
