@@ -191,6 +191,8 @@ namespace DirectoryPackagesTools
 
             var finfo = new System.IO.FileInfo(dlg.FileName);
 
+            if (!ConfirmAction("Conceal passwords? (Cannot be reverted)")) return;
+
             var r = CredentialsUtils.EncryptNugetConfigClearTextPasswords(finfo);
 
             MessageBox.Show(r ? "passwords concealed" : "no clear passwords found", "result");
@@ -232,6 +234,8 @@ namespace DirectoryPackagesTools
 
         private void _MenuItem_RestoreVersionsToProjects(object sender, RoutedEventArgs e)
         {
+            if (!ConfirmAction("Restore versions back to csprojs? (Cannot be reverted)")) return;
+
             MVVMContext?.RestoreVersionsToProjects();
         }
 
@@ -244,6 +248,12 @@ namespace DirectoryPackagesTools
             await MVVMContext
                 .RefreshPackageDependenciesAsync(ctx, ctx.Token)
                 .ConfigureAwait(true);
+        }
+
+        private bool ConfirmAction(string msg)
+        {
+            var r = MessageBox.Show(this, msg, "Confirm Action", MessageBoxButton.OKCancel, MessageBoxImage.Question);
+            return r == MessageBoxResult.OK;
         }
 
         #endregion
