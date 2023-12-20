@@ -13,5 +13,9 @@ namespace DirectoryPackagesTools
     /// </summary>
     public partial class App : Application
     {
+        static App()
+        {
+            System.Net.ServicePointManager.DefaultConnectionLimit = 16;
+        }
     }
 }
