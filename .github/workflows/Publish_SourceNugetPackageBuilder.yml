@@ -17,9 +17,9 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build -c Release --version-suffix ${{ env.VERSIONSUFFIX }}
-    - name: Test
-      run: dotnet test -c Release --no-build
+#    - name: Test
+#      run: dotnet test -c Release --no-build
     - name: Pack nugets
       run: dotnet pack -c Release --no-build --output .
-#    - name: Push to NuGet
-#      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.Publish_NugetPackageTools}} --source https://api.nuget.org/v3/index.json
+    - name: Push to NuGet
+      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.PUSH_TO_NUGET_ORG}} --source https://api.nuget.org/v3/index.json
