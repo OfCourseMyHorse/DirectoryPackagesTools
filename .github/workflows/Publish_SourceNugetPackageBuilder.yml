@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build src/SourceNugetPackageBuilder.Tool/SourceNugetPackageBuilder.Tool.csproj -c Release --version-suffix ${{ env.VERSIONSUFFIX }}
+      run: dotnet build -c Release --version-suffix ${{ env.VERSIONSUFFIX }}
     - name: Test
       run: dotnet test -c Release --no-build
     - name: Pack nugets

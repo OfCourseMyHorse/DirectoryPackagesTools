@@ -8,6 +8,7 @@
     <RootNamespace>DirectoryPackagesTools</RootNamespace>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <IsPackable>false</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
