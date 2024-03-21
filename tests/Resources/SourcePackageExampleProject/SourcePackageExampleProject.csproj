@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Copyright>2024</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageVersion>1.2.3-preview-2000</PackageVersion>
+  </PropertyGroup>
+  
+  
+  <ItemGroup>
+    <Content Include="..\icon.png" Link="icon.png" PackagePath="/" />
+  </ItemGroup>
+
+ </Project>

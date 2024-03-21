@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -13,38 +13,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="dotnet-tools_x.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tests.props">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="versions2.props">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="versions.props">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="dotnet-tools_x.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="tests.props" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="versions2.props" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="versions.props" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageReference Include="NUnit" Version="4.0.1" />
+    <PackageReference Include="NUnit" Version="4.1.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="NUnit.Analyzers" Version="4.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="6.0.0">
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="TestAttachments.NUnit" Version="4.0.0-Preview-20240102-0955" />
+    <PackageReference Include="NuGet.Packaging" Version="6.9.1" />
   </ItemGroup>
+  
 
   <ItemGroup>
-    <ProjectReference Include="..\DirectoryPackagesTools\DirectoryPackagesTools.csproj" />
+    <ProjectReference Include="..\..\src\DirectoryPackagesTools\DirectoryPackagesTools.csproj" />
+    <ProjectReference Include="..\..\src\SourceNugetPackageBuilder.Tool\SourceNugetPackageBuilder.Tool.csproj" />
   </ItemGroup>
 
 </Project>

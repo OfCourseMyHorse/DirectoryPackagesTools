@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Authors>Vicente Penades</Authors>    
+    <Description>SourceNugetPackageBuilder is a tool that can be used to pack a regular c# project into a sources only package.</Description>
+    <Tags>nuget tool sources</Tags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>SourceNugetPackageBuilder</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>    
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>PackAsSourcesNuget</ToolCommandName>    
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageIcon>nuget_icon_cs.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="nuget_icon_cs.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>pre-$([System.DateTime]::UtcNow.ToString("yyyyMMdd-HHmmss"))</VersionSuffix>    
+  </PropertyGroup>  
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Preview-20240305-200801" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.CommandLine" Version="6.9.1" />
+    <PackageReference Include="NuGet.Commands" Version="6.9.1" />
+    <PackageReference Include="NuGet.Packaging" Version="6.9.1" />    
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="17.9.5" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
+  </ItemGroup>
+  
+</Project>
