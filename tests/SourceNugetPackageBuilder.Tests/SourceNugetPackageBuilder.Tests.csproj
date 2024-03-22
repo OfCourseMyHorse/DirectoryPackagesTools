@@ -1,24 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
-  </PropertyGroup>
+  </PropertyGroup>  
 
-  <ItemGroup>
-    <None Remove="dotnet-tools_x.json" />
-    <None Remove="tests.props" />
-    <None Remove="versions.props" />
-    <None Remove="versions2.props" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="dotnet-tools_x.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="tests.props" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="versions2.props" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="versions.props" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
@@ -32,12 +18,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="TestAttachments.NUnit" Version="4.0.0-Preview-20240102-0955" />    
+    <PackageReference Include="TestAttachments.NUnit" Version="4.0.0-Preview-20240102-0955" />
+    <PackageReference Include="NuGet.Packaging" Version="6.9.1" />
   </ItemGroup>
-  
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\DirectoryPackagesTools\DirectoryPackagesTools.csproj" />    
+  <ItemGroup>    
+    <ProjectReference Include="..\..\src\SourceNugetPackageBuilder.Tool\SourceNugetPackageBuilder.Tool.csproj" />
   </ItemGroup>
+
 
 </Project>

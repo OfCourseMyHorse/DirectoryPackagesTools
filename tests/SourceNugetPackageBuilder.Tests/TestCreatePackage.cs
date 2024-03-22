@@ -24,10 +24,13 @@ namespace DirectoryPackagesTools
         [SetUp]
         public void Setup()
         {
-            var instance = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(instance => instance.Version).First();
-            Microsoft.Build.Locator.MSBuildLocator.RegisterInstance(instance);
+            if (!MSBuildLocator.IsRegistered && MSBuildLocator.CanRegister)
+            {
+                var instance = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(instance => instance.Version).First();
+                MSBuildLocator.RegisterInstance(instance);
 
-            _MSBuildPath = instance.MSBuildPath;
+                _MSBuildPath = instance.MSBuildPath;
+            }            
         }
 
 
