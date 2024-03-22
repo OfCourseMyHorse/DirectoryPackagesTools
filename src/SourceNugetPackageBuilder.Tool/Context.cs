@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NuGet.Packaging;
 using NuGet.Versioning;
 using CommandLine;
+using System.IO;
 
 
 namespace SourceNugetPackageBuilder
@@ -115,52 +116,59 @@ namespace SourceNugetPackageBuilder
 
             foreach(var framework in factory.TargetFrameworks)
             {
-                foreach (var finfo in factory.GetCompilableFiles())
+                var files = factory.FindCompilableFiles(framework).ToList();
+
+                foreach (var finfo in files)
                 {
-                    var fileNameLC = finfo.Name.ToLowerInvariant();
-                    if (fileNameLC == "_accessmodifiers.public.cs") continue;
-                    if (fileNameLC == "_publicaccessmodifiers.cs") continue;
-
-                    string targetPath = null;
-
-                    if (finfo.Name.EndsWith(".pp.cs") || finfo.Name.EndsWith(".cs.pp"))
-                    {
-                        // template files need to use a path as short as
-                        // possible due to long paths generated on build
-                        // see; https://github.com/NuGet/Home/issues/13193
-                        targetPath = $"{templateFileCounter}.cs.pp";
-                        templateFileCounter++;
-                    }
-                    else if (finfo.Extension.EndsWith(".cs"))
-                    {
-                        if (factory.ProjectPath.Directory.IsParentOf(finfo))
-                        {
-                            targetPath = finfo.GetPathRelativeTo(factory.ProjectPath.Directory).Replace("\\", "/");
-                        }
-                        else
-                        {
-                            targetPath = $"Shared/{finfo.Name}"; // possibly a link
-                        }                        
-                    }
-
-                    // var body = finfo.ReadAllLines();
-                    // if (framework != "netstandard2.0" && body[0] =="#if NETSTANDARD2_0") continue;
-
-                    if (targetPath == null) continue;
-
-                    var pkgFile = new PhysicalPackageFile();
-                    pkgFile.SourcePath = finfo.FullName;
-                    pkgFile.TargetPath = $"contentFiles/cs/{framework}/{targetPath}";
-                    builder.Files.Add(pkgFile);
-
-                    var manifest = new ManifestContentFiles();
-                    manifest.Include = pkgFile.TargetPath;
-                    manifest.BuildAction = "Compile";
-                    builder.ContentFiles.Add(manifest);
+                    _AddSourceFile(factory, builder, ref templateFileCounter, framework, finfo);
                 }
             }            
 
             return builder;
+        }
+
+        private static void _AddSourceFile(ManifestFactory factory, PackageBuilder builder, ref int templateFileCounter, string framework, FileInfo finfo)
+        {
+            var fileNameLC = finfo.Name.ToLowerInvariant();
+            if (fileNameLC == "_accessmodifiers.public.cs") return;
+            if (fileNameLC == "_publicaccessmodifiers.cs") return;
+
+            string targetPath = null;
+
+            if (fileNameLC.EndsWith(".pp.cs") || fileNameLC.EndsWith(".cs.pp"))
+            {
+                // template files need to use a path as short as
+                // possible due to long paths generated on build
+                // see; https://github.com/NuGet/Home/issues/13193
+                targetPath = $"{templateFileCounter}.cs.pp";
+                templateFileCounter++;
+            }
+            else if (fileNameLC.EndsWith(".cs"))
+            {
+                if (factory.ProjectPath.Directory.IsParentOf(finfo))
+                {
+                    targetPath = finfo.GetPathRelativeTo(factory.ProjectPath.Directory).Replace("\\", "/");
+                }
+                else
+                {
+                    targetPath = $"Shared/{finfo.Name}"; // possibly a link
+                }
+            }
+
+            // var body = finfo.ReadAllLines();
+            // if (framework != "netstandard2.0" && body[0] =="#if NETSTANDARD2_0") continue;
+
+            if (targetPath == null) return;
+
+            var pkgFile = new PhysicalPackageFile();
+            pkgFile.SourcePath = finfo.FullName;
+            pkgFile.TargetPath = $"contentFiles/cs/{framework}/{targetPath}";
+            builder.Files.Add(pkgFile);
+
+            var manifest = new ManifestContentFiles();
+            manifest.Include = pkgFile.TargetPath;
+            manifest.BuildAction = "Compile";
+            builder.ContentFiles.Add(manifest);            
         }
 
         private static PhysicalPackageFile CreatePhysicalPackageFileFromText(string textBody)

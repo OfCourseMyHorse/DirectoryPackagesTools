@@ -25,135 +25,45 @@ namespace SourceNugetPackageBuilder
         public static ManifestFactory Create(System.IO.FileInfo csprojFile)
         {
             // Load the project
-            var project = new Project(csprojFile.FullName);
+            var project = new ProjectEvaluator(csprojFile);
 
-            return new ManifestFactory(project);
+            var perFramework = project.TargetFrameworks.ToDictionary(item => item, item => new ProjectEvaluator(csprojFile, item));
+
+            return new ManifestFactory(project, perFramework);
         }
 
-        private ManifestFactory(Project project)
-        {            
+        private ManifestFactory(ProjectEvaluator project, IReadOnlyDictionary<string, ProjectEvaluator> frameworkProject)
+        {
             _Project = project;
-            ProjectPath = new System.IO.FileInfo(project.FullPath);
+            _FrameworkProject = frameworkProject;
         }
 
         #endregion
 
         #region data
 
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        private readonly Project _Project;
-
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        public System.IO.FileInfo ProjectPath { get; }
+        private readonly ProjectEvaluator _Project;
+        private IReadOnlyDictionary<string,ProjectEvaluator> _FrameworkProject;
 
         #endregion
 
         #region properties
 
-        /// <summary>
-        /// Package ID
-        /// </summary>
-        public string Id
-        {
-            get
-            {
-                var id = _GetValueOrNull("PackageId");
-                if (!string.IsNullOrWhiteSpace(id)) return id;
+        public System.IO.FileInfo ProjectPath => _Project.ProjectPath;
 
-                // fallback to AssemblyName
-                id = _GetValueOrNull("AssemblyName");
-                if (!string.IsNullOrWhiteSpace(id)) return id;                
-
-                // fallback to Project name
-                return System.IO.Path.GetFileNameWithoutExtension(_Project.FullPath);
-            }
-        }
-
-        /// <summary>
-        /// Target frameworks used by the project
-        /// </summary>
-        public string[] TargetFrameworks
-        {
-            get
-            {
-                var frameworks = _GetValueOrNull("TargetFrameworks");
-                if (string.IsNullOrWhiteSpace(frameworks)) return [_GetValueOrNull("TargetFramework") ?? "netstandard2.0"];
-
-                return frameworks.Split(';');
-            }
-        }
-
-        public string[] Authors => _GetValueOrEmpty("Authors").Split(';');
-        public string[] Owners => _GetValueOrEmpty("Owners").Split(';');
-        public string Copyright => _GetValueOrNull("Copyright");
-        public string PackageTags => _GetValueOrNull("PackageTags");
-        public string Description => _GetValueOrNull("Description") ?? "Package Description";
-        public string PackageLicenseExpression => _GetValueOrEmpty("PackageLicenseExpression");
-        public string PackageProjectUrl => _GetValueOrEmpty("PackageProjectUrl");
-
-        public string RepositoryType => _GetValueOrNull("RepositoryType");
-        public string RepositoryUrl => _GetValueOrNull("RepositoryUrl");        
-        public bool PublishRepositoryUrl => _GetValueOrEmpty("PublishRepositoryUrl")?.ToUpperInvariant() == "TRUE";
+        public IEnumerable<string> TargetFrameworks => _FrameworkProject.Keys;
 
         #endregion
 
         #region API
 
-        private string _GetValueOrEmpty(string name)
+        public System.IO.FileInfo FindIcon() => _Project.FindIcon();
+
+        public IEnumerable<System.IO.FileInfo> FindCompilableFiles(string targetFrameworkMoniker)
         {
-            return _Project.GetPropertyValue(name) ?? string.Empty;
-        }
+            if (!_FrameworkProject.TryGetValue(targetFrameworkMoniker, out var prj)) throw new KeyNotFoundException(targetFrameworkMoniker);
 
-        private string _GetValueOrNull(string name)
-        {
-            var value = _Project.GetPropertyValue(name);
-            return string.IsNullOrWhiteSpace(value) ? null : value;
-        }
-        
-
-        public NuGetVersion GetPackageVersion()
-        {
-            // https://andrewlock.net/version-vs-versionsuffix-vs-packageversion-what-do-they-all-mean/
-
-            var pv = _GetValueOrNull("PackageVersion") ?? "1.0.0";
-            return NuGetVersion.Parse(pv);
-        }
-
-
-        public IEnumerable<System.IO.FileInfo> GetCompilableFiles()
-        {
-            return _Project
-                .Items                
-                .Select(GetCompilableItemInfo)
-                .Where(item => item != null)
-                .ToList();
-        }
-
-        private System.IO.FileInfo GetCompilableItemInfo(ProjectItem item)
-        {
-            if (item == null) return null;
-            if (item.ItemType != "Compile") return null;
-            
-            return ProjectPath.Directory.DefineFile(item.EvaluatedInclude);
-        }
-
-        public System.IO.FileInfo FindIcon()
-        {
-            var iconName = _GetValueOrNull("PackageIcon")
-                ?? _GetValueOrNull("ApplicationIcon");
-
-            var packableItems = _Project
-                .Items
-                .Where(item => item.HasMetadata("PackagePath") || item.GetMetadataValue("Pack") == "true")
-                .ToArray();
-
-            var iconItem = packableItems.FirstOrDefault(item => item.EvaluatedInclude.Contains(iconName));
-
-            if (iconItem == null) return null;
-
-            var iconPath = ProjectPath.Directory.DefineFile(iconItem.EvaluatedInclude);
-
-            return iconPath.Exists ? iconPath : null;
+            return prj.GetCompilableFiles();
         }
 
         public ManifestMetadata CreateMetadata()
@@ -166,19 +76,19 @@ namespace SourceNugetPackageBuilder
             // Create a ManifestMetadata object and populate it with .csproj properties
             var metadata = new ManifestMetadata();
 
-            metadata.Id = this.Id;
-            metadata.Version = GetPackageVersion();
-            metadata.Authors = this.Authors;
-            metadata.Owners = this.Owners;
-            metadata.Description = this.Description;
-            metadata.Copyright = this.Copyright;
-            metadata.Tags = this.PackageTags;
+            metadata.Id = _Project.Id;
+            metadata.Version = _Project.GetPackageVersion();
+            metadata.Authors = _Project.Authors;
+            metadata.Owners = _Project.Owners;
+            metadata.Description = _Project.Description;
+            metadata.Copyright = _Project.Copyright;
+            metadata.Tags = _Project.PackageTags;
 
-            if (Uri.TryCreate(this.PackageProjectUrl, UriKind.Absolute, out var _)) metadata.SetProjectUrl(this.PackageProjectUrl);
+            if (Uri.TryCreate(_Project.PackageProjectUrl, UriKind.Absolute, out var _)) metadata.SetProjectUrl(_Project.PackageProjectUrl);
 
             metadata.Repository = CreateRepoMetadata();
 
-            var lic = this.PackageLicenseExpression;
+            var lic = _Project.PackageLicenseExpression;
 
             if (!string.IsNullOrWhiteSpace(lic))
             {
@@ -191,14 +101,14 @@ namespace SourceNugetPackageBuilder
 
         public RepositoryMetadata CreateRepoMetadata()
         {
-            if (!PublishRepositoryUrl) return null;
-            if (string.IsNullOrWhiteSpace(RepositoryType) || string.IsNullOrWhiteSpace(RepositoryUrl)) return null;
+            if (!_Project.PublishRepositoryUrl) return null;
+            if (string.IsNullOrWhiteSpace(_Project.RepositoryType) || string.IsNullOrWhiteSpace(_Project.RepositoryUrl)) return null;
 
             // https://github.com/NuGet/NuGet.Client/blob/8c972cdff5b1194d7c37384fca5816a33ffbe0c4/src/NuGet.Core/NuGet.Build.Tasks.Pack/PackTaskLogic.cs#L179
 
             var md = new RepositoryMetadata();
-            md.Type = RepositoryType;
-            md.Url = RepositoryUrl;
+            md.Type = _Project.RepositoryType;
+            md.Url = _Project.RepositoryUrl;
 
             return md;
         }
