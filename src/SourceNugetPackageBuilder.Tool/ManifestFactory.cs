@@ -91,9 +91,9 @@ namespace SourceNugetPackageBuilder
         public string PackageLicenseExpression => _GetValueOrEmpty("PackageLicenseExpression");
         public string PackageProjectUrl => _GetValueOrEmpty("PackageProjectUrl");
 
-        public string RepositoryType => _GetValueOrEmpty("RepositoryType");
-        public string RepositoryUrl => _GetValueOrEmpty("RepositoryUrl");        
-        public bool PublishRepositoryUrl => _GetValueOrEmpty("PublishRepositoryUrl").ToUpperInvariant() == "TRUE";
+        public string RepositoryType => _GetValueOrNull("RepositoryType");
+        public string RepositoryUrl => _GetValueOrNull("RepositoryUrl");        
+        public bool PublishRepositoryUrl => _GetValueOrEmpty("PublishRepositoryUrl")?.ToUpperInvariant() == "TRUE";
 
         #endregion
 
@@ -119,6 +119,23 @@ namespace SourceNugetPackageBuilder
             return NuGetVersion.Parse(pv);
         }
 
+
+        public IEnumerable<System.IO.FileInfo> GetCompilableFiles()
+        {
+            return _Project
+                .Items                
+                .Select(GetCompilableItemInfo)
+                .Where(item => item != null)
+                .ToList();
+        }
+
+        private System.IO.FileInfo GetCompilableItemInfo(ProjectItem item)
+        {
+            if (item == null) return null;
+            if (item.ItemType != "Compile") return null;
+            
+            return ProjectPath.Directory.DefineFile(item.EvaluatedInclude);
+        }
 
         public System.IO.FileInfo FindIcon()
         {
@@ -156,7 +173,9 @@ namespace SourceNugetPackageBuilder
             metadata.Description = this.Description;
             metadata.Copyright = this.Copyright;
             metadata.Tags = this.PackageTags;
-            metadata.SetProjectUrl(this.PackageProjectUrl);
+
+            if (Uri.TryCreate(this.PackageProjectUrl, UriKind.Absolute, out var _)) metadata.SetProjectUrl(this.PackageProjectUrl);
+
             metadata.Repository = CreateRepoMetadata();
 
             var lic = this.PackageLicenseExpression;

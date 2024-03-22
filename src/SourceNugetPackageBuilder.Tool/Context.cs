@@ -22,14 +22,14 @@ namespace SourceNugetPackageBuilder
         [Option('o', "outdir", Required = false, HelpText = "output directory")]
         public System.IO.DirectoryInfo OutputDirectory { get; set; }
 
-        [Option('v', "version", Required = false, HelpText = "package version")]
+        [Option('v', "package-version", Required = false, HelpText = "package version")]
         public string Version { get; set; }
 
         [Option("version-suffix", Required = false, HelpText = "package version suffix")]
         public string VersionSuffix { get; set; }
 
-        [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package")]
-        public bool AppendSourceSuffix { get; set; }
+        [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package Id")]
+        public bool AppendSourceSuffix { get; set; }        
 
         #endregion
 
@@ -115,31 +115,42 @@ namespace SourceNugetPackageBuilder
 
             foreach(var framework in factory.TargetFrameworks)
             {
-                foreach (var finfo in factory.ProjectPath.Directory.GetFiles("*", System.IO.SearchOption.AllDirectories))
+                foreach (var finfo in factory.GetCompilableFiles())
                 {
-                    string targetName = null;
+                    var fileNameLC = finfo.Name.ToLowerInvariant();
+                    if (fileNameLC == "_accessmodifiers.public.cs") continue;
+                    if (fileNameLC == "_publicaccessmodifiers.cs") continue;
+
+                    string targetPath = null;
 
                     if (finfo.Name.EndsWith(".pp.cs") || finfo.Name.EndsWith(".cs.pp"))
                     {
                         // template files need to use a path as short as
                         // possible due to long paths generated on build
                         // see; https://github.com/NuGet/Home/issues/13193
-                        targetName = $"{templateFileCounter}.cs.pp";
+                        targetPath = $"{templateFileCounter}.cs.pp";
                         templateFileCounter++;
                     }
                     else if (finfo.Extension.EndsWith(".cs"))
                     {
-                        targetName = finfo.GetPathRelativeTo(factory.ProjectPath.Directory).Replace("\\", "/");
+                        if (factory.ProjectPath.Directory.IsParentOf(finfo))
+                        {
+                            targetPath = finfo.GetPathRelativeTo(factory.ProjectPath.Directory).Replace("\\", "/");
+                        }
+                        else
+                        {
+                            targetPath = $"Shared/{finfo.Name}"; // possibly a link
+                        }                        
                     }
 
                     // var body = finfo.ReadAllLines();
                     // if (framework != "netstandard2.0" && body[0] =="#if NETSTANDARD2_0") continue;
 
-                    if (targetName == null) continue;
+                    if (targetPath == null) continue;
 
                     var pkgFile = new PhysicalPackageFile();
                     pkgFile.SourcePath = finfo.FullName;
-                    pkgFile.TargetPath = $"contentFiles/cs/{framework}/{targetName}";
+                    pkgFile.TargetPath = $"contentFiles/cs/{framework}/{targetPath}";
                     builder.Files.Add(pkgFile);
 
                     var manifest = new ManifestContentFiles();
