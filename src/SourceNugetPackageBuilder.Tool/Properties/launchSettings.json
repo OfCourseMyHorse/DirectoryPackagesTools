@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SourceNugetPackageBuilder.Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "\"D:\\Github\\(_Owned_)\\(_LIBS_)\\_GIT\\InteropTypes\\src\\InteropTypes.Tensors\\InteropTypes.Tensors.csproj\" --package-id pepito.Sources"
+    }
+  }
+}

@@ -22,6 +22,21 @@ namespace SourceNugetPackageBuilder
     {
         #region lifecycle
 
+        public static IEnumerable<ManifestFactory> Create(IEnumerable<System.IO.FileInfo> sourceFiles)
+        {
+            IEnumerable<System.IO.FileInfo> _EvaluateFile(System.IO.FileInfo srcFile)
+            {
+                if (srcFile.Extension.EndsWith("csproj", StringComparison.OrdinalIgnoreCase)) return new[] { srcFile };
+                if (srcFile.Extension.EndsWith("sln", StringComparison.OrdinalIgnoreCase)) return ProjectEvaluator.GetSolutionProjectFiles(srcFile);
+                return Enumerable.Empty<System.IO.FileInfo>();
+            }
+
+            return sourceFiles
+                .SelectMany(_EvaluateFile)
+                .Distinct(CodeSugarForSystemIO.GetFullNameComparer<System.IO.FileInfo>())
+                .Select(Create);
+        }
+
         public static ManifestFactory Create(System.IO.FileInfo csprojFile)
         {
             // Load the project
@@ -56,6 +71,8 @@ namespace SourceNugetPackageBuilder
         #endregion
 
         #region API
+
+        public bool IsPackableAsSources => _Project.IsPackableAsSources;
 
         public System.IO.FileInfo FindIcon() => _Project.FindIcon();
 

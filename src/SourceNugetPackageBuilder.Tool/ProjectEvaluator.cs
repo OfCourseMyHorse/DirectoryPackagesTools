@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 
 using NuGet.Versioning;
@@ -13,12 +14,53 @@ namespace SourceNugetPackageBuilder
     [System.Diagnostics.DebuggerDisplay("{ProjectPath.FullName,nq}")]
     internal class ProjectEvaluator
     {
-        #region lifecycle        
+        #region lifecycle
+
+        public static IReadOnlyCollection<System.IO.FileInfo> GetSolutionProjectFiles(System.IO.FileInfo solutionInfo)
+        {
+            var solution = SolutionFile.Parse(solutionInfo.FullName);            
+
+            var prjs = new List<System.IO.FileInfo>();
+
+            foreach (var projectInSolution in solution.ProjectsInOrder)
+            {
+                var path = projectInSolution.AbsolutePath;
+
+                var prj = new System.IO.FileInfo(path);
+                prjs.Add(prj);
+            }
+
+            return prjs;
+        }
+
+        public static IReadOnlyCollection<ProjectEvaluator> FromSolution(System.IO.FileInfo solutionInfo)
+        {
+            var solutionProjects = GetSolutionProjectFiles(solutionInfo);
+
+            var projectCollection = new ProjectCollection();
+
+            var prjs = new List<ProjectEvaluator>();
+
+            foreach (var projectInSolution in solutionProjects)
+            {
+                var prj = new ProjectEvaluator(projectCollection, projectInSolution.FullName);
+                prjs.Add(prj);
+            }
+
+            return prjs;
+        }
 
         public ProjectEvaluator(System.IO.FileInfo finfo)
         {
             _TargetFramework = null;
             _Project = new Project(finfo.FullName);
+            ProjectPath = new System.IO.FileInfo(_Project.FullPath);
+        }
+
+        private ProjectEvaluator(ProjectCollection projectCollection, string csprojPath)
+        {
+            _TargetFramework = null;
+            _Project = projectCollection.LoadProject(csprojPath);
             ProjectPath = new System.IO.FileInfo(_Project.FullPath);
         }
 
@@ -93,6 +135,8 @@ namespace SourceNugetPackageBuilder
         public string RepositoryUrl => _GetValueOrNull("RepositoryUrl");
         public bool PublishRepositoryUrl => _GetValueOrEmpty("PublishRepositoryUrl")?.ToUpperInvariant() == "TRUE";
 
+        public bool IsPackableAsSources => _GetValueOrEmpty("IsPackableAsSources")?.ToUpperInvariant() == "TRUE";
+
         #endregion
 
         #region API
@@ -107,7 +151,6 @@ namespace SourceNugetPackageBuilder
             var value = _Project.GetPropertyValue(name);
             return string.IsNullOrWhiteSpace(value) ? null : value;
         }
-
 
         public NuGetVersion GetPackageVersion()
         {
@@ -130,17 +173,17 @@ namespace SourceNugetPackageBuilder
 
         public System.IO.FileInfo FindIcon()
         {
-            var iconName = _GetValueOrNull("PackageIcon")
-                ?? _GetValueOrNull("ApplicationIcon");
+            // find the icon name
+            var iconName = _GetValueOrNull("PackageIcon");
 
-            var packableItems = _Project
-                .Items
-                .Where(item => item.HasMetadata("PackagePath") || item.GetMetadataValue("Pack") == "true")
-                .ToArray();
+            if (string.IsNullOrWhiteSpace(iconName)) return null;
 
-            var iconItem = packableItems.FirstOrDefault(item => item.EvaluatedInclude.Contains(iconName));
+            // find the item with the given name            
+
+            var iconItem = _Project.GetItemsByEvaluatedInclude(iconName).Where(item => item.HasMetadata("PackagePath")).FirstOrDefault();
 
             if (iconItem == null) return null;
+            if (iconItem.GetMetadataValue("Pack") != "true") return null;            
 
             var iconPath = ProjectPath.Directory.DefineFile(iconItem.EvaluatedInclude);
 

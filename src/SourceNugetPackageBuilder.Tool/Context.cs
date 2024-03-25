@@ -15,12 +15,12 @@ namespace SourceNugetPackageBuilder
     [System.Diagnostics.DebuggerDisplay("{SourceProjectPath.FullName,nq} => {OutputDirectory.FullName,nq}")]
     public class Context
     {
-        #region output
+        #region arguments
 
-        [Option('p', "project", Required = true, HelpText = "path to source project file")]
-        public System.IO.FileInfo SourceProjectPath { get; set; }
+        [Value(0, Required =true, HelpText ="Source files, which can be a solution or project files")]
+        public IEnumerable<System.IO.FileInfo> SourceFiles { get; set; }        
 
-        [Option('o', "outdir", Required = false, HelpText = "output directory")]
+        [Option('o', "output", Required = false, HelpText = "output directory")]
         public System.IO.DirectoryInfo OutputDirectory { get; set; }
 
         [Option('v', "package-version", Required = false, HelpText = "package version")]
@@ -29,8 +29,11 @@ namespace SourceNugetPackageBuilder
         [Option("version-suffix", Required = false, HelpText = "package version suffix")]
         public string VersionSuffix { get; set; }
 
+        [Option("package-id", Required = false, HelpText = "Alternative package ID")]
+        public string AltPackageId { get; set; }
+
         [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package Id")]
-        public bool AppendSourceSuffix { get; set; }        
+        public bool AppendSourceSuffix { get; set; }
 
         #endregion
 
@@ -47,15 +50,37 @@ namespace SourceNugetPackageBuilder
 
         public async Task RunAsync()
         {
-            OutputDirectory ??= SourceProjectPath.Directory.DefineDirectory("bin");
+            if (SourceFiles == null || !SourceFiles.Any())
+            {
+                var currDir = new System.IO.DirectoryInfo(Environment.CurrentDirectory);
+                var defaultFile = currDir.EnumerateFiles("*.sln").FirstOrDefault();
+                defaultFile ??= currDir.EnumerateFiles("*.csproj").FirstOrDefault();
+                SourceFiles = new[] { defaultFile };
+            }            
 
-            var factory = ManifestFactory.Create(SourceProjectPath);
+            var factories = ManifestFactory.Create(SourceFiles).ToList();
+            if (factories.Count > 1)
+            {
+                if (!string.IsNullOrWhiteSpace(AltPackageId)) throw new ArgumentException("--package-id can only be set for a single project");
+                
+                factories = factories.Where(item => item.IsPackableAsSources).ToList();
+            }            
 
-            await Task.Yield();
+            foreach (var f in factories)
+            {
+                _PackProject(f);
+                await Task.Yield();
+            }
+        }
+
+        private void _PackProject(ManifestFactory factory)
+        {
+            Console.Write($"Packing as sources: {factory.ProjectPath.Name}...");
 
             var config = factory.CreateMetadata();
 
-            if (AppendSourceSuffix) { config.Id += ".Sources"; }
+            if (!string.IsNullOrWhiteSpace(AltPackageId)) { config.Id = AltPackageId; }
+            if (AppendSourceSuffix && !config.Id.EndsWith(".Sources")) { config.Id += ".Sources"; }
 
             if (!config.Authors.Any()) config.Authors = new string[] { "unknown" };
             if (string.IsNullOrEmpty(config.Description)) config.Description = config.Id;
@@ -68,12 +93,12 @@ namespace SourceNugetPackageBuilder
 
                 var suffix = VersionSuffix;
                 suffix = suffix.Replace("{DATE}", dt.ToString("yyyyMMdd"));
-                suffix = suffix.Replace("{SHORTDATE}", dt.ToString("yyMMdd"));                
+                suffix = suffix.Replace("{SHORTDATE}", dt.ToString("yyMMdd"));
                 suffix = suffix.Replace("{TIME}", dt.ToString("HHmmss"));
                 suffix = suffix.Replace("{SHORTTIME}", dt.ToString("HHmm"));
 
                 var v = config.Version;
-                config.Version = new NuGetVersion(v.Major, v.Minor, v.Patch, suffix);                
+                config.Version = new NuGetVersion(v.Major, v.Minor, v.Patch, suffix);
             }
 
 
@@ -84,23 +109,24 @@ namespace SourceNugetPackageBuilder
             // builder.ReleaseNotes =
 
             // save result
-            var writePath = OutputDirectory.DefineFile($"{builder.Id}.{builder.Version}.nupkg");
-            writePath.Directory.Create();            
+            var outDir = OutputDirectory ?? factory.ProjectPath.Directory.DefineDirectory("bin");
+            var writePath = outDir.DefineFile($"{builder.Id}.{builder.Version}.nupkg");
+            writePath.Directory.Create();
 
-            using(var w = writePath.OpenWrite())
+            using (var w = writePath.OpenWrite())
             {
                 try
                 {
                     builder.Save(w);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
                     throw;
-                }                
+                }
             }
 
-            await Task.Yield();
+            Console.WriteLine("Completed");
         }
 
         private static PackageBuilder _BuildPackage(ManifestFactory factory, ManifestMetadata config)

@@ -70,8 +70,8 @@ namespace DirectoryPackagesTools
         public async Task CreateSourcePackageFromProject()
         {
             var ctx = new SourceNugetPackageBuilder.Context();
-            ctx.SourceProjectPath = ResourceInfo.From("SourcePackageExampleProject/SourcePackageExampleProject.csproj");
-            ctx.AppendSourceSuffix = true;
+            ctx.SourceFiles = new System.IO.FileInfo[] { ResourceInfo.From("SourcePackageExampleProject/SourcePackageExampleProject.csproj").File };
+            
             ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
 
             await ctx.RunAsync().ConfigureAwait(false);
