@@ -22,11 +22,12 @@ namespace SourceNugetPackageBuilder
 
             var prjs = new List<System.IO.FileInfo>();
 
-            foreach (var projectInSolution in solution.ProjectsInOrder)
+            foreach (var slnItem in solution.ProjectsInOrder)
             {
-                var path = projectInSolution.AbsolutePath;
+                if (slnItem.ProjectType == SolutionProjectType.SolutionFolder) continue;
+                if (slnItem.ProjectType == SolutionProjectType.SharedProject) continue;                
 
-                var prj = new System.IO.FileInfo(path);
+                var prj = new System.IO.FileInfo(slnItem.AbsolutePath);
                 prjs.Add(prj);
             }
 
