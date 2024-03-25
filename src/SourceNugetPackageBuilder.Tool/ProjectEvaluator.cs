@@ -167,7 +167,7 @@ namespace SourceNugetPackageBuilder
 
             return _Project
                 .GetItems("Compile")
-                .Select(item => ProjectPath.Directory.DefineFile(item.EvaluatedInclude))
+                .Select(_GetItemPath)
                 .Where(item => item != null)
                 .ToList();
         }
@@ -181,15 +181,29 @@ namespace SourceNugetPackageBuilder
 
             // find the item with the given name            
 
-            var iconItem = _Project.GetItemsByEvaluatedInclude(iconName).Where(item => item.HasMetadata("PackagePath")).FirstOrDefault();
+            var iconItem = _Project
+                .Items
+                .Where(item => item.EvaluatedInclude.EndsWith(iconName, StringComparison.OrdinalIgnoreCase))
+                .Where(item => item.HasMetadata("PackagePath"))
+                .FirstOrDefault();
 
             if (iconItem == null) return null;
             if (iconItem.GetMetadataValue("Pack") != "true") return null;            
 
-            var iconPath = ProjectPath.Directory.DefineFile(iconItem.EvaluatedInclude);
+            var iconPath = _GetItemPath(iconItem);
 
             return iconPath.Exists ? iconPath : null;
-        }        
+        }
+
+        private System.IO.FileInfo _GetItemPath(ProjectItem item)
+        {
+            // item.EvaluatedInclude may be relative to current project, or absolute path (specially if it uses $MSBuildThisFileDirectory);
+
+            if (item == null) return null;
+            if (string.IsNullOrWhiteSpace(item.EvaluatedInclude)) return null;
+            if (System.IO.Path.IsPathRooted(item.EvaluatedInclude)) return new System.IO.FileInfo(item.EvaluatedInclude);
+            return ProjectPath.Directory.DefineFile(item.EvaluatedInclude);
+        }
 
         #endregion
     }
