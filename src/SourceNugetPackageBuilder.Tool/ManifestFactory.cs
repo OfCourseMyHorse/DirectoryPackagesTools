@@ -6,17 +6,15 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.Build.Evaluation;
-
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Packaging.Licenses;
-using NuGet.Versioning;
-
 
 namespace SourceNugetPackageBuilder
 {
-
+    /// <summary>
+    /// Wraps a CSPROJ file and provides useful information to the package builder 
+    /// </summary>
     [System.Diagnostics.DebuggerDisplay("{ProjectPath.FullName,nq}")]
     class ManifestFactory
     {
@@ -73,6 +71,8 @@ namespace SourceNugetPackageBuilder
         #region API
 
         public bool IsPackableAsSources => _Project.IsPackableAsSources;
+
+        public bool PackAsInternalSources => _Project.PackAsInternalSources;
 
         public System.IO.FileInfo FindIcon() => _Project.FindIcon();
 

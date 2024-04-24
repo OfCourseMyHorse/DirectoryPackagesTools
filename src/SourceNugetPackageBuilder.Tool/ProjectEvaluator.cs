@@ -138,6 +138,8 @@ namespace SourceNugetPackageBuilder
 
         public bool IsPackableAsSources => _GetValueOrEmpty("IsPackableAsSources")?.ToUpperInvariant() == "TRUE";
 
+        public bool PackAsInternalSources => _GetValueOrEmpty("PackAsInternalSources")?.ToUpperInvariant() == "TRUE";
+
         #endregion
 
         #region API

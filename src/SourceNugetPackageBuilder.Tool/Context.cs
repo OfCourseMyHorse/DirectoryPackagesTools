@@ -33,7 +33,7 @@ namespace SourceNugetPackageBuilder
         public string AltPackageId { get; set; }
 
         [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package Id")]
-        public bool AppendSourceSuffix { get; set; }
+        public bool AppendSourceSuffix { get; set; }        
 
         #endregion
 
@@ -156,6 +156,8 @@ namespace SourceNugetPackageBuilder
         private static void _AddSourceFile(ManifestFactory factory, PackageBuilder builder, ref int templateFileCounter, string framework, FileInfo finfo)
         {
             var fileNameLC = finfo.Name.ToLowerInvariant();
+
+            // special file names will not be included in the source package.
             if (fileNameLC == "_accessmodifiers.public.cs") return;
             if (fileNameLC == "_publicaccessmodifiers.cs") return;
 
@@ -186,8 +188,10 @@ namespace SourceNugetPackageBuilder
 
             if (targetPath == null) return;
 
-            var pkgFile = new PhysicalPackageFile();
-            pkgFile.SourcePath = finfo.FullName;
+            var pkgFile = factory.PackAsInternalSources && MakeInternalRewriter.TryProcess(finfo.ReadAllText(), out var internalText)
+                ? CreatePhysicalPackageFromText(internalText)
+                : CreatePhysicalPackageFile(finfo);
+
             pkgFile.TargetPath = $"contentFiles/cs/{framework}/{targetPath}";
             builder.Files.Add(pkgFile);
 
@@ -197,7 +201,14 @@ namespace SourceNugetPackageBuilder
             builder.ContentFiles.Add(manifest);            
         }
 
-        private static PhysicalPackageFile CreatePhysicalPackageFileFromText(string textBody)
+        private static PhysicalPackageFile CreatePhysicalPackageFile(System.IO.FileInfo finfo)
+        {
+            var pkgFile = new PhysicalPackageFile();
+            pkgFile.SourcePath = finfo.FullName;
+            return pkgFile;
+        }
+
+        private static PhysicalPackageFile CreatePhysicalPackageFromText(string textBody)
         {
             var m = new System.IO.MemoryStream(); // memory leak!!
 
