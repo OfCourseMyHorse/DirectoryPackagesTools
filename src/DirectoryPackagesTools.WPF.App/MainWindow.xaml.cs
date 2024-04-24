@@ -6,16 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 using DirectoryPackagesTools.Client;
-using DirectoryPackagesTools.DOM;
+
 using Microsoft.Win32;
 
 namespace DirectoryPackagesTools
@@ -181,21 +174,11 @@ namespace DirectoryPackagesTools
         }
 
 
-        private void MenuItem_ConcealPasswords(object sender, RoutedEventArgs e)
+        
+
+        private void MenuItem_ShowNugetPasswordsManagerDialog(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.RestoreDirectory = true;
-            dlg.Filter = "Nuget.Config files|*.config";
-
-            if (dlg.ShowDialog() != true) return;
-
-            var finfo = new System.IO.FileInfo(dlg.FileName);
-
-            if (!ConfirmAction("Conceal passwords? (Cannot be reverted)")) return;
-
-            var r = CredentialsUtils.EncryptNugetConfigClearTextPasswords(finfo);
-
-            MessageBox.Show(r ? "passwords concealed" : "no clear passwords found", "result");
+            NugetCredentialsCryptoPanel.ShowDialog(this);
         }
 
         private async void MenuItem_New(object sender, RoutedEventArgs e)
@@ -257,5 +240,7 @@ namespace DirectoryPackagesTools
         }
 
         #endregion
+
+        
     }    
 }
