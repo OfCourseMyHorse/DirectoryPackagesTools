@@ -54,6 +54,7 @@ namespace DirectoryPackagesTools
 
         private readonly struct _BackgroundTaskMonitor : IDisposable, IProgress<int>, IProgress<Exception>
         {
+            #region lifecycle
             public _BackgroundTaskMonitor(MainWindow window)
             {
                 _Window = window;
@@ -82,10 +83,18 @@ namespace DirectoryPackagesTools
                 _Window.myCancelBtn.Visibility = Visibility.Collapsed;
             }
 
+            #endregion
+
+            #region data
+
             private readonly MainWindow _Window;
             private readonly CancellationTokenSource _TokenSource;
 
-            public CancellationToken Token => _TokenSource.Token;
+            public CancellationToken Token => _TokenSource.Token;            
+
+            #endregion
+
+            #region API
 
             public void Report(int value)
             {
@@ -102,13 +111,16 @@ namespace DirectoryPackagesTools
 
             public void Report(Exception value)
             {
-                _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));
+                Console.WriteLine(value.Message);
+                // _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));                
             }
 
             private void MyCancelBtn_Click(object sender, RoutedEventArgs e)
             {
                 _TokenSource.Cancel();
-            }            
+            }
+
+            #endregion
         }
 
         #endregion

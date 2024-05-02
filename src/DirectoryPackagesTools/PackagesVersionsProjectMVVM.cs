@@ -36,6 +36,8 @@ namespace DirectoryPackagesTools
 
         public static async Task<PackagesVersionsProjectMVVM> LoadAsync(string filePath, IProgress<int> progress, CancellationToken ctoken)
         {
+            // read document
+
             var isJson = filePath.ToLower().EndsWith(".json");
 
             IPackageVersionsProject xdom = null;

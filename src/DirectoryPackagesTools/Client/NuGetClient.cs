@@ -81,6 +81,7 @@ namespace DirectoryPackagesTools.Client
             _RepoAPIs = _Repos
                 .GetRepositories()
                 .Select(item => new SourceRepositoryAPI(this, item))
+                .OrderByDescending(item => item.PriorityScore)
                 .ToArray();            
         }
 
@@ -140,10 +141,10 @@ namespace DirectoryPackagesTools.Client
             var percent = new _ProgressCounter(progress, packages.Count);
 
             foreach (var package in packages)
-            {
-                await package.UpdateAsync(this);
+            {                
+                await package.UpdateAsync(this).ConfigureAwait(true);
 
-                percent.Report(package.Id);
+                percent.Report(package.Id);                                
             }
         }
 
@@ -199,8 +200,27 @@ namespace DirectoryPackagesTools.Client
         private readonly NuGetClientContext _Context;
         private readonly SourceRepository _Repo;
         private readonly Dictionary<Type, INuGetResource> _APIsCache = new Dictionary<Type, INuGetResource>();
-
         public SourceRepository Source => _Repo;
+
+        public bool IsOfficial => _Repo.PackageSource.IsOfficial;
+
+        public bool IsLocal => _Repo.PackageSource.IsLocal;
+
+        public bool IsNugetOrg => !_Repo.PackageSource.IsLocal && _Repo.PackageSource.SourceUri.DnsSafeHost.EndsWith("nuget.org");
+
+        public bool IsVisualStudio => _Repo.PackageSource.IsLocal && _Repo.PackageSource.Name == "Microsoft Visual Studio Offline Packages";
+
+        public float PriorityScore
+        {
+            get
+            {
+                if (IsLocal) return 10000;
+                if (IsVisualStudio) return 1000;
+                if (IsNugetOrg) return 100;
+                if (IsOfficial) return 10;
+                return 0;
+            }
+        }
 
         #endregion
 
@@ -286,6 +306,6 @@ namespace DirectoryPackagesTools.Client
             return await api.SearchAsync(searchTerm, filter, skip, take, _Context.Logger, _Context._Token);
         }
 
-        #endregion
-    }    
+        #endregion             
+    }
 }

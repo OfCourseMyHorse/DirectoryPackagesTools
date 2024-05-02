@@ -14,11 +14,16 @@ namespace DirectoryPackagesTools.Client
     [System.Diagnostics.DebuggerDisplay("{Id}")]
     public class NuGetPackageInfo
     {
+        #region lifecycle
         public NuGetPackageInfo(string id, VersionRange version)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             _CurrVersion = version ?? throw new ArgumentNullException(nameof(version));
         }
+
+        #endregion
+
+        #region data
 
         public string Id { get; }
 
@@ -30,26 +35,53 @@ namespace DirectoryPackagesTools.Client
 
         public NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo Dependencies { get; private set; }
 
+        #endregion
+
+        #region API
+
         public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();        
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
-            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);            
+            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);
 
-            var mmm = await client.GetMetadataAsync(pid).ConfigureAwait(false);
-            Metadata = mmm.FirstOrDefault();
-
-            Dependencies = await client.GetDependencyInfoAsync(pid).ConfigureAwait(false);
-
-            foreach (var api in client.Repositories)
+            foreach (var repo in client.Repositories)
             {
-                var vvv = await api.GetVersionsAsync(this.Id).ConfigureAwait(false);
-
-                foreach (var v in vvv)
+                if (!repo.IsNugetOrg && !repo.IsVisualStudio)
                 {
-                    if (!_Versions.Contains(v)) _Versions.Add(v);
-                }                
+                    if (pid.Id.StartsWith("System.")) continue;
+                    if (pid.Id.StartsWith("Microsoft.")) continue;
+                }
+
+                try // get package information from the current repo. A package can have different dependencies, metadata and versions on different repos
+                {
+                    if (Dependencies == null)
+                    {
+                        var deps = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
+                        if (deps == null) continue;
+                        Dependencies = deps;
+                    }
+                    
+                    if (Metadata == null)
+                    {
+                        var mmm = await repo.GetMetadataAsync(pid).ConfigureAwait(false);
+                        Metadata = mmm;
+                    }                    
+
+                    var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);                    
+
+                    foreach (var v in vvv)
+                    {
+                        if (!_Versions.Contains(v)) _Versions.Add(v);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"{repo.Source} + {pid.Id} = \r\n{ex.Message}");
+                }
             }
         }
+
+        #endregion
     }
 }
