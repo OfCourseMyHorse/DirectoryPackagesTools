@@ -110,9 +110,8 @@ namespace DirectoryPackagesTools
             }
 
             public void Report(Exception value)
-            {
-                Console.WriteLine(value.Message);
-                // _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));                
+            {                
+                _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));                
             }
 
             private void MyCancelBtn_Click(object sender, RoutedEventArgs e)
@@ -134,7 +133,7 @@ namespace DirectoryPackagesTools
             dlg.Filter = "Package Versions|directory.packages.props|Dotnet Tools Versions|dotnet-tools.json";
 
             if (!dlg.ShowDialog().Value) return;
-            await _LoadDocumentAsync(dlg.FileName);
+            await _LoadDocumentAsync(dlg.FileName).ConfigureAwait(false);
         }
 
         private async Task _LoadDocumentAsync(string documentPath)
@@ -143,10 +142,13 @@ namespace DirectoryPackagesTools
 
             try
             {
-                this.DataContext = await PackagesVersionsProjectMVVM
+                var doc = await PackagesVersionsProjectMVVM
                     .LoadAsync(documentPath, ctx, ctx.Token)
                     .ConfigureAwait(true);
 
+                if (doc == null) return;
+
+                this.DataContext = doc;
                 this.Title = "Directory Packages Manager - " + documentPath;
             }            
             catch (OperationCanceledException) { MessageBox.Show("Load cancelled."); }

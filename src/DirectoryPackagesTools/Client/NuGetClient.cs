@@ -266,7 +266,9 @@ namespace DirectoryPackagesTools.Client
 
             var vvv = await resPID.GetAllVersionsAsync(packageId, _Context._Cache, _Context.Logger, _Context._Token).ConfigureAwait(false);
 
-            return vvv.ToArray();
+            return vvv == null
+                ? Array.Empty<NuGetVersion>()
+                : vvv.ToArray();
         }
 
         public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package)

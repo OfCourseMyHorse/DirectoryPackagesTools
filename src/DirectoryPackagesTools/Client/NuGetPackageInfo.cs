@@ -58,14 +58,14 @@ namespace DirectoryPackagesTools.Client
                     if (Dependencies == null)
                     {
                         var deps = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
-                        if (deps == null) continue;
-                        Dependencies = deps;
+                        // if (deps == null) continue;
+                        Dependencies ??= deps;
                     }
                     
                     if (Metadata == null)
                     {
                         var mmm = await repo.GetMetadataAsync(pid).ConfigureAwait(false);
-                        Metadata = mmm;
+                        Metadata ??= mmm;
                     }                    
 
                     var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);                    
