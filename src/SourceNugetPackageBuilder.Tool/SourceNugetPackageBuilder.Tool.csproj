@@ -19,10 +19,18 @@
 
   <PropertyGroup>
     <PackageIcon>nuget_icon_cs.png</PackageIcon>
-  </PropertyGroup>
+  </PropertyGroup>  
 
   <ItemGroup>
     <None Include="nuget_icon_cs.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="CompileChecks_targets.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="CompileChecks_targets.xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -32,22 +40,22 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Preview-20240305-200801" PrivateAssets="all" />
+    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20240622 " PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.9.1" />
-    <PackageReference Include="NuGet.Commands" Version="6.9.1" />
-    <PackageReference Include="NuGet.Packaging" Version="6.9.1" />    
+    <PackageReference Include="NuGet.CommandLine" Version="6.10.1" />
+    <PackageReference Include="NuGet.Commands" Version="6.10.1" />
+    <PackageReference Include="NuGet.Packaging" Version="6.10.1" />    
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.9.5" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="17.10.4" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
-  </ItemGroup>
+  </ItemGroup>  
   
 </Project>
