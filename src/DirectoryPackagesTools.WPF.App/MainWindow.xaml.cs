@@ -1,4 +1,6 @@
-﻿using System;
+﻿// #define DISABLE_TRYCATCH
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-using DirectoryPackagesTools.Client;
+
+
 
 using Microsoft.Win32;
 
@@ -110,7 +113,11 @@ namespace DirectoryPackagesTools
             }
 
             public void Report(Exception value)
-            {                
+            {
+                #if !DISABLE_TRYCATCH
+                System.Diagnostics.Debug.Fail(value.Message);
+                #endif
+
                 _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));                
             }
 
@@ -140,8 +147,9 @@ namespace DirectoryPackagesTools
         {
             using var ctx = BeginTask();
 
-            try
-            {
+            #if !DISABLE_TRYCATCH
+            try {
+            #endif
                 var doc = await PackagesVersionsProjectMVVM
                     .LoadAsync(documentPath, ctx, ctx.Token)
                     .ConfigureAwait(true);
@@ -150,9 +158,15 @@ namespace DirectoryPackagesTools
 
                 this.DataContext = doc;
                 this.Title = "Directory Packages Manager - " + documentPath;
+
+            #if !DISABLE_TRYCATCH
             }            
             catch (OperationCanceledException) { MessageBox.Show("Load cancelled."); }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "Error"); }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+            #endif
         }
 
         private void MenuItem_Save(object sender, RoutedEventArgs e)

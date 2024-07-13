@@ -18,7 +18,7 @@ namespace DirectoryPackagesTools.Client
         public NuGetPackageInfo(string id, VersionRange version)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
-            _CurrVersion = version ?? throw new ArgumentNullException(nameof(version));
+            _CurrVersion = version ?? throw new ArgumentException($"Invalid version for package {id}", nameof(version));
         }
 
         #endregion
