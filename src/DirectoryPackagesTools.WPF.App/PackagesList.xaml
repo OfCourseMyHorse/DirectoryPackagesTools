@@ -62,16 +62,16 @@
             <DataGrid.ContextMenu>
                 <ContextMenu>
                     <!-- https://stackoverflow.com/questions/24778677/how-to-hide-datagrid-column-in-wpf-automatically-using-mvvm -->
-                    <CheckBox Content="Used by Projects" Checked="CheckBox_UsedByPrjs" Unchecked="CheckBox_UsedByPrjs" />
-                    <CheckBox Content="Frameworks" Checked="CheckBox_Frameworks" Unchecked="CheckBox_Frameworks" />
-                    <CheckBox Content="Tags" Checked="CheckBox_Tags" Unchecked="CheckBox_Tags" />
-                    <CheckBox Content="Summary" Checked="CheckBox_Summary" Unchecked="CheckBox_Summary" />
-                    <CheckBox Content="Description" Checked="CheckBox_Description" Unchecked="CheckBox_Description" />
-                    <CheckBox Content="Project URL" Checked="CheckBox_ProjectUrl" Unchecked="CheckBox_ProjectUrl" />
+                    <MenuItem IsCheckable="True" Header="Used by Projects" Checked="CheckBox_UsedByPrjs" Unchecked="CheckBox_UsedByPrjs" />
+                    <MenuItem IsCheckable="True" Header="Frameworks" Checked="CheckBox_Frameworks" Unchecked="CheckBox_Frameworks" />
+                    <MenuItem IsCheckable="True" Header="Tags" Checked="CheckBox_Tags" Unchecked="CheckBox_Tags" />
+                    <MenuItem IsCheckable="True" Header="Summary" Checked="CheckBox_Summary" Unchecked="CheckBox_Summary" />
+                    <MenuItem IsCheckable="True" Header="Description" Checked="CheckBox_Description" Unchecked="CheckBox_Description" />
+                    <MenuItem IsCheckable="True" Header="Project URL" Checked="CheckBox_ProjectUrl" Unchecked="CheckBox_ProjectUrl" />
                 </ContextMenu>
-            </DataGrid.ContextMenu>
-            
-            
+            </DataGrid.ContextMenu>           
+
+
 
             <!--
             generally speaking, DataGrid is more powerful than ListView, but it
