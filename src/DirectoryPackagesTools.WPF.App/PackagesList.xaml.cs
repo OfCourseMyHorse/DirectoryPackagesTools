@@ -51,41 +51,41 @@ namespace DirectoryPackagesTools
 
         private void CheckBox_Frameworks(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
-            {
-                myFrameworksColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
-            }
+            myFrameworksColumn.Visibility = _Visibility(sender as DependencyObject);
         }
 
         private void CheckBox_Tags(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
-            {
-                myTagsColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
-            }
+            myTagsColumn.Visibility = _Visibility(sender as DependencyObject);
         }
 
         private void CheckBox_Summary(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
-            {
-                mySummaryColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
-            }
+            mySummaryColumn.Visibility = _Visibility(sender as DependencyObject);
         }
 
         private void CheckBox_Description(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
-            {
-                myDescriptionColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
-            }
+            myDescriptionColumn.Visibility = _Visibility(sender as DependencyObject);
         }
 
         private void CheckBox_ProjectUrl(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
+            myProjectUrlColumn.Visibility = _Visibility(sender as DependencyObject);
+        }
+
+        public static Visibility _Visibility(DependencyObject dep)
+        {
+            return _IsChecked(dep) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public static bool _IsChecked(DependencyObject dep)
+        {
+            switch(dep)
             {
-                myProjectUrlColumn.Visibility = cb.IsChecked ?? true ? Visibility.Visible : Visibility.Collapsed;
+                case CheckBox cb: return cb.IsChecked == true;
+                case MenuItem mi: return mi.IsChecked == true;
+                default: return false;
             }
         }
     }
