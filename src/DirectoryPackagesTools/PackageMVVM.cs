@@ -58,9 +58,7 @@ namespace DirectoryPackagesTools
 
             ApplyVersionCmd = new Prism.Commands.DelegateCommand<NUGETVERSIONRANGE>(ver => this.Version = ver);
 
-            // remove preprelease from stable packages
-
-            if (Name == "Google.Protobug") NewestPrerelease = null;
+            // remove preprelease from stable packages            
             if (PackageClassifier.IsUnitTestPackage(_Metadata)) NewestPrerelease = null;
         }
 

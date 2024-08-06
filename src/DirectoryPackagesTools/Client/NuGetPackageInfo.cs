@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
+using NPMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
+using NPDEPRECATION = NuGet.Protocol.PackageDeprecationMetadata;
+using NPDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
+
 namespace DirectoryPackagesTools.Client
 {
-    using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;
-
     [System.Diagnostics.DebuggerDisplay("{Id}")]
     public class NuGetPackageInfo
     {
@@ -19,6 +21,8 @@ namespace DirectoryPackagesTools.Client
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             _CurrVersion = version ?? throw new ArgumentException($"Invalid version for package {id}", nameof(version));
+
+            _PackageId = new PackageIdentity(Id, _CurrVersion.MinVersion);
         }
 
         #endregion
@@ -28,18 +32,27 @@ namespace DirectoryPackagesTools.Client
         public string Id { get; }
 
         private VersionRange _CurrVersion;
+        private PackageIdentity _PackageId;
 
-        private readonly NUGETVERSIONSBAG _Versions = new NUGETVERSIONSBAG();
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion,_Extras> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, _Extras>();
 
-        public NuGet.Protocol.Core.Types.IPackageSearchMetadata Metadata { get; private set; }
+        public NPMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
 
-        public NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo Dependencies { get; private set; }
+        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;
+
+        public NPDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
 
         #endregion
 
         #region API
 
-        public IReadOnlyList<NuGetVersion> GetVersions() => _Versions.OrderBy(item => item).ToList();        
+        public IReadOnlyList<NuGetVersion> GetVersions()
+        {
+            return _Versions
+                .Where(item => item.Value.DeprecationInfo == null)
+                .Select(item => item.Key)
+                .OrderBy(item => item).ToList();
+        }
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
@@ -55,24 +68,47 @@ namespace DirectoryPackagesTools.Client
 
                 try // get package information from the current repo. A package can have different dependencies, metadata and versions on different repos
                 {
-                    if (Dependencies == null)
-                    {
-                        var deps = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
-                        // if (deps == null) continue;
-                        Dependencies ??= deps;
-                    }
-                    
-                    if (Metadata == null)
-                    {
-                        var mmm = await repo.GetMetadataAsync(pid).ConfigureAwait(false);
-                        Metadata ??= mmm;
-                    }                    
+                    // get all versions
+                    var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);
+                    if (vvv == null || vvv.Length == 0) continue;
 
-                    var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);                    
+                    bool newVersionsAdded = false;
 
                     foreach (var v in vvv)
                     {
-                        if (!_Versions.Contains(v)) _Versions.Add(v);
+                        if (!_Versions.ContainsKey(v))
+                        {
+                            _Versions[v] = new _Extras();
+                            newVersionsAdded = true;
+                        }
+                    }
+
+                    if (!newVersionsAdded) continue; // nothing to do
+
+                    // get all metadatas
+                    var mmm = await repo.GetMetadataAsync(this.Id).ConfigureAwait(false);
+
+                    foreach(var metaData in mmm)
+                    {
+                        if (!_Versions.TryGetValue(metaData.Identity.Version, out var extras)) continue;
+
+                        extras.Metadata = metaData;
+                        extras.DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
+                    }
+
+                    // get dependencies ONLY for the current verson                    
+
+                    if (Dependencies == null)
+                    {
+                        var deps = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
+                        if (deps != null)
+                        {
+                            if (_Versions.TryGetValue(_PackageId.Version, out var extras))
+                            {
+                                extras.Dependencies = deps;
+                            }
+                        }
+                        
                     }
                 }
                 catch (Exception ex)
@@ -83,5 +119,20 @@ namespace DirectoryPackagesTools.Client
         }
 
         #endregion
+
+        #region nested type
+
+        class _Extras
+        {
+            public NPMETADATA Metadata { get; set; }
+
+            public NPDEPRECATION DeprecationInfo { get; set; }
+
+            public NPDEPENDENCIES Dependencies { get; set; }
+        }
+
+        #endregion
     }
+
+
 }
