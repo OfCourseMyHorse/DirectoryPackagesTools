@@ -69,12 +69,20 @@ namespace DirectoryPackagesTools
         [Test]
         public async Task CreateSourcePackageFromProject()
         {
-            var ctx = new SourceNugetPackageBuilder.Context();
-            ctx.SourceFiles = new System.IO.FileInfo[] { ResourceInfo.From("SourcePackageExampleProject/SourcePackageExampleProject.csproj").File };
-            
-            ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
+            var prjPath = ResourceInfo.From("SourcePackageExampleProject/SourcePackageExampleProject.csproj");
 
-            await ctx.RunAsync().ConfigureAwait(false);
+            using (var testDir = new AttachmentDirectory())
+            {
+
+                var ctx = new SourceNugetPackageBuilder.Context();
+                ctx.SourceFiles = [prjPath.File];
+                ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
+                ctx.IncludeCompileChecks = true;
+
+                ctx.OutputDirectory = testDir.Directory;
+
+                await ctx.RunAsync().ConfigureAwait(false);
+            }            
         }
     }
 }

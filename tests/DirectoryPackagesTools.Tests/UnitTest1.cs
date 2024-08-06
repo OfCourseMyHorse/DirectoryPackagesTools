@@ -75,52 +75,72 @@ namespace DirectoryPackagesTools
             TestContext.WriteLine($"{views.Length}");
         }
 
-        [Test]
-        public async System.Threading.Tasks.Task Test2()
+        [TestCase("System.Numerics.Vectors")]
+        [TestCase("InteropTypes.Tensors.ONNX.Sources")]
+        public async System.Threading.Tasks.Task GetPackageInfo(string packageName)
         {
-            var name = "System.Numerics.Vectors";
-
             var nuClient = new Client.NuGetClient();
 
             using(var context = nuClient.CreateContext(CancellationToken.None))
             {
                 foreach(var r in context.Repositories)
                 {
-                    TestContext.WriteLine();
-                    TestContext.WriteLine(r.Source.PackageSource);
+                    var versions = await r.GetVersionsAsync(packageName);
 
-                    var versions = await r.GetVersionsAsync("System.Numerics.Vectors");
+                    if (versions == null || versions.Length == 0) continue;
+
+                    var metas = await r.GetMetadataAsync(packageName);
+
+                    TestContext.WriteLine();
+                    TestContext.WriteLine($"--------------------------------------- From: " + r.Source.PackageSource);
+                    TestContext.WriteLine();
 
                     foreach (var v in versions)
                     {
-                        var pid = new PackageIdentity(name, v);
+                        var pid = new PackageIdentity(packageName, v);                        
 
-                        var isLocal = await r.ExistLocally(pid);
+                        var isLocal = await r.ExistLocally(pid);                        
+
+                        TestContext.WriteLine($"{v} Exists Locally:{isLocal}");
+                        TestContext.WriteLine();
+
                         var depInfo = await r.GetDependencyInfoAsync(pid);
-
-                        TestContext.WriteLine($"{v} {isLocal}");
-
-                        foreach(var kk in depInfo.DependencyGroups)
+                        foreach (var dg in depInfo.DependencyGroups)
                         {
-                            TestContext.WriteLine($"       {kk.TargetFramework}");
+                            TestContext.WriteLine($"       {dg.TargetFramework}");
 
-                            foreach(var jj in kk.Packages)
+                            foreach(var jj in dg.Packages)
                             {
                                 TestContext.WriteLine($"           {jj}");
                             }
                         }
-                    }
-
-                    var metas = await r.GetMetadataAsync("System.Numerics.Vectors");
+                    }                    
 
                     foreach(var meta in metas)
                     {
-                        TestContext.WriteLine(meta.Owners);
-                    }
+                        TestContext.WriteLine(_ToJson(meta));
 
-                    
+                        var deprecation = await meta.GetDeprecationMetadataAsync();
+
+                        TestContext.WriteLine(_ToJson(deprecation));
+                    }                    
                 }                
             }            
+        }
+
+        private static string _ToJson(Object obj)
+        {
+            try
+            {
+                if (obj == null) return "NULL";
+
+                var opts = new System.Text.Json.JsonSerializerOptions();
+                opts.IncludeFields = true;
+                opts.WriteIndented = true;
+
+                return System.Text.Json.JsonSerializer.Serialize(obj, opts);
+            }
+            catch (Exception ex) { return "ERROR"; }
         }
 
     }
