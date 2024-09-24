@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- REQUIRES VISUAL STUDIO 2022 v17.2+ -->
+
+  <!-- https://devblogs.microsoft.com/nuget/introducing-central-package-management/ -->
+  <!-- https://github.com/HeikeHofmann/TestPropsFile -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!-- it's been archived and deprecated, we might need to remove it in the future -->
+    <PackageVersion Include="DotNetZip" Version="[1.16.0]" />
+
+  </ItemGroup>
+
+</Project>

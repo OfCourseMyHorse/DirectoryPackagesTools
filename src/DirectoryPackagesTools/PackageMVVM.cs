@@ -31,6 +31,8 @@ namespace DirectoryPackagesTools
             _Metadata = pinfo.Metadata;
             _Dependencies = pinfo.Dependencies;
 
+            AllDeprecated = pinfo.AllDeprecated;
+
             _AvailableVersions = pinfo
                 .GetVersions()
                 .OrderByDescending(item => item)
@@ -108,6 +110,8 @@ namespace DirectoryPackagesTools
 
         #region Properties - version
 
+        public bool AllDeprecated { get; }
+
         public IReadOnlyList<NUGETVERSIONRANGE> AvailableVersions { get; }
         public NUGETVERSIONRANGE NewestRelease { get; }
         public NUGETVERSIONRANGE NewestPrerelease { get; }
@@ -142,6 +146,8 @@ namespace DirectoryPackagesTools
 
         internal string GetPackageCategory(PackageClassifier classifier)
         {
+            if (AllDeprecated) return "⚠ Deprecated ⚠";
+
             return classifier.GetPackageCategory(_Metadata);
         }
 

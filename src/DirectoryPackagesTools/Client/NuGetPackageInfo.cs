@@ -13,6 +13,9 @@ using NPDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
 
 namespace DirectoryPackagesTools.Client
 {
+    /// <summary>
+    /// Metadata information associated to a package
+    /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Id}")]
     public class NuGetPackageInfo
     {
@@ -38,7 +41,9 @@ namespace DirectoryPackagesTools.Client
 
         public NPMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
 
-        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;
+        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
+
+        public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
 
         public NPDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
 
@@ -48,8 +53,10 @@ namespace DirectoryPackagesTools.Client
 
         public IReadOnlyList<NuGetVersion> GetVersions()
         {
+            var allDeprecated = this.AllDeprecated;
+
             return _Versions
-                .Where(item => item.Value.DeprecationInfo == null)
+                .Where(item => allDeprecated || item.Value.DeprecationInfo == null)
                 .Select(item => item.Key)
                 .OrderBy(item => item).ToList();
         }

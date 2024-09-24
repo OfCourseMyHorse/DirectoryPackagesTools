@@ -137,7 +137,7 @@ namespace DirectoryPackagesTools
         {
             var dlg = new OpenFileDialog();
             dlg.RestoreDirectory = true;
-            dlg.Filter = "Package Versions|directory.packages.props|Dotnet Tools Versions|dotnet-tools.json";
+            dlg.Filter = "Package Versions|directory.packages.props|Dotnet Tools Versions|dotnet-tools.json|properties file|*.props";
 
             if (!dlg.ShowDialog().Value) return;
             await _LoadDocumentAsync(dlg.FileName).ConfigureAwait(false);

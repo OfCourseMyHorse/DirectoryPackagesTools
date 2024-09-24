@@ -75,6 +75,7 @@ namespace DirectoryPackagesTools
             TestContext.WriteLine($"{views.Length}");
         }
 
+        [TestCase("DotNetZip")]
         [TestCase("System.Numerics.Vectors")]
         [TestCase("InteropTypes.Tensors.ONNX.Sources")]
         public async System.Threading.Tasks.Task GetPackageInfo(string packageName)
