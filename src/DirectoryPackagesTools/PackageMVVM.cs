@@ -35,6 +35,7 @@ namespace DirectoryPackagesTools
 
             _AvailableVersions = pinfo
                 .GetVersions()
+                .Where(item => _ShowVersion(pinfo.Id, item))
                 .OrderByDescending(item => item)
                 .ToArray();
 
@@ -64,14 +65,32 @@ namespace DirectoryPackagesTools
             if (PackageClassifier.IsUnitTestPackage(_Metadata)) NewestPrerelease = null;
         }
 
+        /// <summary>
+        /// This is used to hide out of order versions
+        /// </summary>
+        /// <returns>true if the version is to be shown</returns>
+        private static bool _ShowVersion(string name, NUGETVERSION ver)
+        {
+            if (name == "System.ComponentModel.Composition")
+            {                
+                if (ver.OriginalVersion.StartsWith("2010.2.11")) return false;
+            }
+
+            return true;
+        }
+
         private static bool _HidePrereleases(string name, NUGETPACKMETADATA meta)
         {
             if (name.StartsWith("System.")) return true;
             if (name.StartsWith("Xamarin.")) return true;
             if (name.StartsWith("Microsoft.")) return true;
             if (name.StartsWith("Prism.")) return true;
+            if (name.StartsWith("Avalonia.")) return true;
             if (name == "Google.Protobuf") return true;
             if (name == "SkiaSharp") return true;
+            if (name == "ClosedXML") return true;
+            if (name == "Grpc.Tools") return true;
+            if (name == "log4net") return true;
             if (name == "MathNet.Numerics") return true;
             if (PackageClassifier.IsUnitTestPackage(meta)) return true;
             return false;
