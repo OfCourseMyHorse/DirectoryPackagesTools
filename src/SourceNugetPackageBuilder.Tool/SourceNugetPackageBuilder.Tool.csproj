@@ -4,11 +4,12 @@
     <Authors>Vicente Penades</Authors>    
     <Description>SourceNugetPackageBuilder is a tool that can be used to pack a regular c# project into a sources only package.</Description>
     <Tags>nuget tool sources</Tags>
-  </PropertyGroup>
+    <RepositoryUrl>https://github.com/OfCourseMyHorse/DirectoryPackagesTools</RepositoryUrl>
+  </PropertyGroup>  
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>SourceNugetPackageBuilder</RootNamespace>
   </PropertyGroup>
 
@@ -51,16 +52,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.11.0">
+    <PackageReference Include="NuGet.CommandLine" Version="6.12.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuGet.Commands" Version="6.11.0" />
-    <PackageReference Include="NuGet.Packaging" Version="6.11.0" />    
+    <PackageReference Include="NuGet.Commands" Version="6.12.1" />
+    <PackageReference Include="NuGet.Packaging" Version="6.12.1" />    
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.11.4" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="17.12.6" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
   </ItemGroup>  
   
