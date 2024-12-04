@@ -48,7 +48,7 @@
                 <TabControl ItemsSource="{Binding GroupedPackages}" DisplayMemberPath="Key" >
                     <TabControl.ContentTemplate>
                         <DataTemplate>
-                            <local:PackagesList DataContext="{Binding Value}" />
+                            <local:PackagesList DataContext="{Binding Packages}" />
                         </DataTemplate>
                     </TabControl.ContentTemplate>
                 </TabControl>

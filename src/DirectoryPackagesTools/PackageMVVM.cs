@@ -136,9 +136,10 @@ namespace DirectoryPackagesTools
         public NUGETVERSIONRANGE NewestPrerelease { get; }
         public NUGETVERSIONRANGE Version
         {
-            get { return _LocalReference.Version; }
+            get => _LocalReference.Version;
             set
             {
+                if (value == null) return;
                 _LocalReference.Version = value;
                 RaisePropertyChanged(nameof(Version));
                 RaisePropertyChanged(nameof(VersionIsUpToDate));

@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9B4E485A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceNugetPackageBuilder.Tests", "tests\SourceNugetPackageBuilder.Tests\SourceNugetPackageBuilder.Tests.csproj", "{51BFE73F-3904-4803-8920-D1EAC1D49196}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectoryPackagesTools.Avalonia.App", "src\DirectoryPackagesTools.Avalonia.App\DirectoryPackagesTools.Avalonia.App.csproj", "{592E0438-4E3F-4807-B5A4-73DF150CE0E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{51BFE73F-3904-4803-8920-D1EAC1D49196}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51BFE73F-3904-4803-8920-D1EAC1D49196}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51BFE73F-3904-4803-8920-D1EAC1D49196}.Release|Any CPU.Build.0 = Release|Any CPU
+		{592E0438-4E3F-4807-B5A4-73DF150CE0E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{592E0438-4E3F-4807-B5A4-73DF150CE0E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{592E0438-4E3F-4807-B5A4-73DF150CE0E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{592E0438-4E3F-4807-B5A4-73DF150CE0E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

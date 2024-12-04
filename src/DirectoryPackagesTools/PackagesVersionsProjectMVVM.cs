@@ -11,6 +11,7 @@ using NuGet.Frameworks;
 
 using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
+using System.Collections;
 
 namespace DirectoryPackagesTools
 {
@@ -20,6 +21,7 @@ namespace DirectoryPackagesTools
     /// <remarks>
     /// This is the MVVM of a Directory.Packages.props project
     /// </remarks>
+    [System.Diagnostics.DebuggerDisplay("{DocumentPath}")]
     public class PackagesVersionsProjectMVVM : Prism.Mvvm.BindableBase
     {
         #region lifecycle
@@ -148,13 +150,12 @@ namespace DirectoryPackagesTools
 
         #endregion
 
-        #region API
+        #region Properties
 
         public System.IO.FileInfo File => _Dom.File;
-
         public string DocumentPath => _Dom.File.FullName;
 
-        public IEnumerable<SourceRepository> Repositories => _Client.Repositories;
+        public RepositoriesCollectionMVVM Repositories => new RepositoriesCollectionMVVM(_Client);
 
         /// <summary>
         /// Gets all the packages.
@@ -164,7 +165,7 @@ namespace DirectoryPackagesTools
         /// <summary>
         /// Gets all the packages grouped by category.
         /// </summary>
-        public IEnumerable<KeyValuePair<string, PackageMVVM[]>> GroupedPackages
+        public IEnumerable<PackagesGroupMVVM> GroupedPackages
         {
             get
             {
@@ -172,9 +173,11 @@ namespace DirectoryPackagesTools
 
                 return AllPackages
                     .GroupBy(p => p.GetPackageCategory(classifier))
-                    .ToDictionary(item => item.Key, item => item.ToArray());
+                    .Select(item => new PackagesGroupMVVM(item.Key, item));
             }
         }
+
+        public IEnumerable<KeyedViewMVVM> Views => GroupedPackages.Cast<KeyedViewMVVM>().Append(Repositories);
 
         #endregion
 
@@ -235,5 +238,45 @@ namespace DirectoryPackagesTools
 
         #endregion
     }    
+
+
+    public abstract class KeyedViewMVVM
+    {
+        protected KeyedViewMVVM(string key)
+        {
+            Key = key;
+        }
+
+        public string Key { get; }
+    }
+
+    public sealed class RepositoriesCollectionMVVM : KeyedViewMVVM, IEnumerable<SourceRepository>
+    {
+        internal RepositoriesCollectionMVVM(NuGetClient client) : base("Repositories")
+        {
+            _Client = client;
+        }
+
+        private readonly NuGetClient _Client;        
+
+        public IEnumerator<SourceRepository> GetEnumerator()
+        {
+            return _Client.Repositories.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _Client.Repositories.GetEnumerator();
+        }
+    }
+
+    public class PackagesGroupMVVM : KeyedViewMVVM
+    {
+        public PackagesGroupMVVM(string key, IEnumerable<PackageMVVM> values) : base(key)
+        {            
+            Packages = values.ToList();
+        }        
+        public IReadOnlyList<PackageMVVM> Packages { get; }
+    }
 }
 

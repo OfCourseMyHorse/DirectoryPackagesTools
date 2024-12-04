@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="using:DirectoryPackagesTools"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DirectoryPackagesTools.PackagesList">  
+
+  <UserControl.Resources>
+
+    
+    <local:VersionRangeShortTextConverter x:Key="asShortText" />
+    
+    <ContextMenu x:Key="myPackageNameMenu">      
+      <MenuItem Header="Open in NuGet.Org" Click="MenuItem_Click" />      
+    </ContextMenu>
+
+    <DataTemplate x:Key="myPackageVersionsSelector" x:DataType="local:PackageMVVM">
+      <StackPanel Orientation="Horizontal">
+        <ComboBox VerticalAlignment="Center" ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock VerticalAlignment="Center" Text=" 🔒" IsVisible="{Binding Version.HasUpperBound}" ToolTip.Tip="Version is locked, removed '[' - ']' from SemVer to unlock" />
+        
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" IsVisible="{Binding NeedsUpdate}">
+          <TextBlock Text=" "/>
+          <Button Content="{Binding NewestRelease, Converter={StaticResource asShortText}}" Background="LightGreen" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+          <TextBlock Text=" "/>
+          <Button Content="{Binding NewestPrerelease, Converter={StaticResource asShortText}}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
+        </StackPanel>
+        
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="myDependantProjects" x:DataType="local:PackageMVVM">
+      <ItemsControl ItemsSource="{Binding DependantProjects}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="📁" ToolTip.Tip="{Binding Name}" >
+              <TextBlock.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="{Binding Name}" />
+                  <Separator />
+                  <MenuItem Header="Open containing folder" />
+                </ContextMenu>
+              </TextBlock.ContextMenu>
+            </TextBlock>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </DataTemplate>
+
+  </UserControl.Resources>
+
+  <DockPanel>
+
+    <DataGrid x:Name="myPackages" x:DataType="local:PackageMVVM"
+              AutoGenerateColumns="False"
+              SelectionMode="Single"
+              GridLinesVisibility="All" BorderThickness="1" BorderBrush="Gray" >
+
+      <!-- generic code DataGrid code snippet to have a context menu with autohiding columns -->
+      <DataGrid.ContextMenu>
+        <ContextMenu ItemsSource="{Binding $parent[DataGrid].Columns}">
+          <ContextMenu.ItemTemplate>
+            <DataTemplate x:DataType="DataGridColumn">
+              <MenuItem Header="{Binding Header}">
+                <MenuItem.Icon>
+                  <CheckBox IsChecked="{Binding IsVisible}" />
+                </MenuItem.Icon>
+              </MenuItem>
+            </DataTemplate>
+          </ContextMenu.ItemTemplate>          
+        </ContextMenu>
+      </DataGrid.ContextMenu>
+      <!-- ================================================================================ -->
+
+      <DataGrid.Columns>
+
+        <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" >
+          <!--
+          <DataGridTextColumn.CellStyle>
+            <Style TargetType="DataGridCell">
+              <Setter Property="ContextMenu" Value="{StaticResource myPackageNameMenu}" />
+            </Style>
+          </DataGridTextColumn.CellStyle>
+          -->
+        </DataGridTextColumn>
+        
+        <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" />        
+        <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
+
+        <DataGridTemplateColumn IsVisible="false" Header="Used By Projects" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+        <DataGridTextColumn IsVisible="false" Header="Frameworks" Width="180" Binding="{Binding Frameworks}" />
+        <DataGridTextColumn IsVisible="false" Header="Tags" Width="180" Binding="{Binding Metadata.Tags}" />
+        <DataGridTextColumn IsVisible="false" Header="Summary" Width="600" Binding="{Binding Metadata.Summary}" />
+        <DataGridTextColumn IsVisible="false" Header="Description" Width="600" Binding="{Binding Metadata.Description}" />
+
+        <DataGridTemplateColumn IsVisible="true" Header="Project URL" Width="250" >
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="local:PackageMVVM">
+              <TextBlock>
+                <HyperlinkButton Content="{Binding Metadata.ProjectUrl}" NavigateUri="{Binding Metadata.ProjectUrl}" />
+              </TextBlock>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+          
+        
+
+      </DataGrid.Columns>
+    </DataGrid>
+
+  </DockPanel>
+  
+</UserControl>
