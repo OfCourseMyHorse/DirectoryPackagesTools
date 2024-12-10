@@ -58,7 +58,7 @@ namespace DirectoryPackagesTools
                 // Load all *.csproj within the directory
                 csprojs = await XmlMSBuildProjectDOM
                     .EnumerateProjects(xdom.File.Directory)
-                    .Where(item => item.ManagePackageVersionsCentrally)
+                    .Where(item => !item.IsLegacyProject && item.ManagePackageVersionsCentrally)
                     .ToListAsync(progress)
                     .ConfigureAwait(false);
 

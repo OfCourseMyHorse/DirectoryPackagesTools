@@ -37,7 +37,7 @@ namespace DirectoryPackagesTools.DOM
         {
             var prjs = _ProjectUtils.EnumerateProjects(dinfo)
                 .Select(f => Load<XmlMSBuildProjectDOM>(f.FullName))
-                .Where(prj => prj.ManagePackageVersionsCentrally);
+                .Where(prj => !prj.IsLegacyProject && prj.ManagePackageVersionsCentrally);
 
             foreach (var prj in prjs)
             {
@@ -58,7 +58,7 @@ namespace DirectoryPackagesTools.DOM
         {
             var prjs = _ProjectUtils.EnumerateProjects(dinfo)
                 .Select(f => Load<XmlMSBuildProjectDOM>(f.FullName))
-                .Where(prj => prj.ManagePackageVersionsCentrally);
+                .Where(prj => !prj.IsLegacyProject && prj.ManagePackageVersionsCentrally);
 
             foreach (var prj in prjs)
             {
@@ -125,6 +125,18 @@ namespace DirectoryPackagesTools.DOM
         #endregion
 
         #region API
+
+        public bool IsLegacyProject
+        {
+            get
+            {
+                var defns = _Document.Root.GetDefaultNamespace();
+
+                if (defns == "http://schemas.microsoft.com/developer/msbuild/2003") return true;
+
+                return false; // actually the answer would be "not sure"
+            }
+        }
 
         public bool ManagePackageVersionsCentrally
         {

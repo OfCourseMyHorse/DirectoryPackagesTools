@@ -14,7 +14,7 @@ namespace DirectoryPackagesTools.DOM
         {
             var packages =
                 EnumerateProjects(finfo.Directory)
-                .Where(prj => prj.ManagePackageVersionsCentrally)
+                .Where(prj => !prj.IsLegacyProject && prj.ManagePackageVersionsCentrally)
                 .SelectMany(item => item.GetPackageReferences())
                 .GroupBy(item => item.PackageId)
                 .OrderBy(item => item.Key);
