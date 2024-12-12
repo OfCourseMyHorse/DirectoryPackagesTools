@@ -60,6 +60,7 @@
     <DataGrid x:Name="myPackages" x:DataType="local:PackageMVVM"
               AutoGenerateColumns="False"
               SelectionMode="Single"
+              CanUserResizeColumns="True"
               GridLinesVisibility="All" BorderThickness="1" BorderBrush="Gray" >
 
       <!-- generic code DataGrid code snippet to have a context menu with autohiding columns -->
@@ -80,7 +81,7 @@
 
       <DataGrid.Columns>
 
-        <DataGridTextColumn Header="Package" Width="250" Binding="{Binding Name}" IsReadOnly="True" >
+        <DataGridTextColumn Header="Package" MinWidth="250" Binding="{Binding Name}" IsReadOnly="True" >
           <!--
           <DataGridTextColumn.CellStyle>
             <Style TargetType="DataGridCell">
@@ -90,16 +91,16 @@
           -->
         </DataGridTextColumn>
         
-        <DataGridTextColumn Header="Version" Width="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" />        
+        <DataGridTextColumn Header="Version" MinWidth="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" />        
         <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
 
-        <DataGridTemplateColumn IsVisible="false" Header="Used By Projects" Width="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
-        <DataGridTextColumn IsVisible="false" Header="Frameworks" Width="180" Binding="{Binding Frameworks}" />
-        <DataGridTextColumn IsVisible="false" Header="Tags" Width="180" Binding="{Binding Metadata.Tags}" />
-        <DataGridTextColumn IsVisible="false" Header="Summary" Width="600" Binding="{Binding Metadata.Summary}" />
-        <DataGridTextColumn IsVisible="false" Header="Description" Width="600" Binding="{Binding Metadata.Description}" />
+        <DataGridTemplateColumn IsVisible="false" Header="Used By Projects" MinWidth="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+        <DataGridTextColumn IsVisible="false" Header="Frameworks" MinWidth="180" Binding="{Binding Frameworks}" />
+        <DataGridTextColumn IsVisible="false" Header="Tags" MinWidth="180" Binding="{Binding Metadata.Tags}" />
+        <DataGridTextColumn IsVisible="false" Header="Summary" MinWidth="600" Binding="{Binding Metadata.Summary}" />
+        <DataGridTextColumn IsVisible="false" Header="Description" MinWidth="600" Binding="{Binding Metadata.Description}" />
 
-        <DataGridTemplateColumn IsVisible="true" Header="Project URL" Width="250" >
+        <DataGridTemplateColumn IsVisible="true" Header="Project URL" MinWidth="250" >
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="local:PackageMVVM">
               <TextBlock>
@@ -107,11 +108,10 @@
               </TextBlock>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-          
-        
+        </DataGridTemplateColumn>        
 
       </DataGrid.Columns>
+      
     </DataGrid>
 
   </DockPanel>

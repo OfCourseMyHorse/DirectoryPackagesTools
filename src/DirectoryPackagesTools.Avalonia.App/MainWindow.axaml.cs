@@ -109,8 +109,8 @@ namespace DirectoryPackagesTools
                 System.Diagnostics.Debug.Fail(value.Message);
                 #endif
 
-                throw new NotImplementedException();
-                // Avalonia.Threading.Dispatcher.UIThread.Invoke(_setProgress);
+                var wnd = _Window;
+                Avalonia.Threading.Dispatcher.UIThread.Invoke( async ()=> await wnd.MessageBox().Show(value.Message, "Error") );
                 // _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));
             }
 
