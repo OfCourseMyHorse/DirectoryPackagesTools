@@ -39,7 +39,9 @@
             <MenuItem.Icon> <TextBlock Text="🖥" /> </MenuItem.Icon>
             </MenuItem>
           <Separator />
-          <MenuItem Header="Nuget Password Clear/Encryption converter" Click="MenuItem_ShowNugetPasswordsManagerDialog" />          
+          <MenuItem Header="Nuget Password Clear/Encryption converter" Click="MenuItem_ShowNugetPasswordsManagerDialog" >
+            <MenuItem.Icon> <TextBlock Text="🔐" /> </MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
         <MenuItem Header="Help">
           <MenuItem Header="About..." Click="_MenuItem_About">

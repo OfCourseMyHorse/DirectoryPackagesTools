@@ -12,6 +12,7 @@ namespace DirectoryPackagesTools;
 
 public partial class NugetCredentialsCryptoPanel : UserControl
 {
+    #region lifecycle
     public static async Task ShowDialog(Window wnd)
     {
         var window = new Window();
@@ -32,6 +33,10 @@ public partial class NugetCredentialsCryptoPanel : UserControl
     {
         InitializeComponent();
     }
+
+    #endregion
+
+    #region data
 
     private void _OnClick_Encrypt(object sender, RoutedEventArgs e)
     {
@@ -64,4 +69,6 @@ public partial class NugetCredentialsCryptoPanel : UserControl
         var r = await this.MessageBox().Show(msg, "Confirm Action", MessageBoxButton.OKCancel, MessageBoxImage.Question);
         return r == MessageBoxResult.OK;
     }
+
+    #endregion
 }
