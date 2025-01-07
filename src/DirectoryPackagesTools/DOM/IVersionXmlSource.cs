@@ -82,6 +82,7 @@ namespace DirectoryPackagesTools.DOM
     [System.Diagnostics.DebuggerDisplay("{Version}")]
     readonly struct _AttributeVersionXmlSource : IVersionXmlSource
     {
+        #region lifecycle
         public static IVersionXmlSource FromVersionAttribute(XElement element)
         {
             if (element == null) return null;
@@ -100,13 +101,23 @@ namespace DirectoryPackagesTools.DOM
             _Attribute = attr;
         }
 
+        #endregion
+
+        #region data
+
         private readonly XAttribute _Attribute;
+
+        #endregion
+
+        #region properties
 
         public string Version
         {
             get => _Attribute.Value.Trim();
             set => _Attribute.Value = value;
         }
+
+        #endregion
     }
 
     /// <summary>
@@ -122,6 +133,7 @@ namespace DirectoryPackagesTools.DOM
     [System.Diagnostics.DebuggerDisplay("{Version}")]
     readonly struct _PropertyVersionXmlSource : IVersionXmlSource
     {
+        #region lifecycle
         public static IVersionXmlSource FromVersionElement(XElement element)
         {
             if (element == null) return null;
@@ -149,12 +161,22 @@ namespace DirectoryPackagesTools.DOM
             _Property = element;
         }
 
+        #endregion
+
+        #region data
+
         readonly XElement _Property;
+
+        #endregion
+
+        #region properties
 
         public string Version
         {
             get => _Property.Value.Trim();
             set => _Property.Value = value;
         }
+
+        #endregion
     }
 }

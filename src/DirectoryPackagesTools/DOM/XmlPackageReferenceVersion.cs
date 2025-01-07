@@ -42,17 +42,20 @@ namespace DirectoryPackagesTools.DOM
             var p = new XmlPackageReferenceVersion(e);
             if (string.IsNullOrWhiteSpace(p.PackageId)) yield break;
 
-            if (!p.PackageId.Contains("$("))
-            {
-                yield return p;
-                yield break;
-            }
+            // update elements are expected to have another include element before it.
+            if (p.IsUpdate) { yield break; }
+            
+            // not a macro, so we return the element as is.
+            if (!p.PackageId.Contains("$(")) { yield return p; yield break; }            
 
+            // Some packages have a dual PackageId.Debug and PackageId.Release variants like Avalonia.Diagnostics
             if (p.PackageId.Contains("$(Configuration)"))
             {
                 yield return new XmlPackageReferenceVersion(e, new KVPMACRO("$(Configuration)", "Debug"));
                 yield return new XmlPackageReferenceVersion(e, new KVPMACRO("$(Configuration)", "Release"));
             }
+
+            // for other macros, do nothing
         }
 
         private XmlPackageReferenceVersion(XElement e, params KVPMACRO[] macros)
@@ -81,6 +84,8 @@ namespace DirectoryPackagesTools.DOM
         #endregion
 
         #region properties
+
+        public bool IsUpdate => _Element.Attribute(XName.Get("Update"))?.Value != null;
 
         public string PackageId
         {
