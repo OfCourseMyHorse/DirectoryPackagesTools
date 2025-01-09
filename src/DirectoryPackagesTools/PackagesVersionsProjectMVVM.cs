@@ -12,6 +12,7 @@ using NuGet.Frameworks;
 using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
 using System.Collections;
+using NuGet.Protocol.Plugins;
 
 namespace DirectoryPackagesTools
 {
@@ -48,12 +49,12 @@ namespace DirectoryPackagesTools
             if (isJson)
             {
                 xdom = JsonToolsVersionsProjectDOM.Load(filePath);
-            }
+            }            
             else
             {
                 // Load Directory.Packages.Props
                 var dom = XmlPackagesVersionsProjectDOM.Load(filePath);
-                xdom = dom;                
+                xdom = dom;
 
                 // Load all *.csproj within the directory
                 csprojs = await XmlMSBuildProjectDOM
@@ -73,7 +74,17 @@ namespace DirectoryPackagesTools
 
                     return null;
                 }
-            }
+
+                // also load the json
+
+                var dnt = MergedPackagesVersions.GetDotNetToolsFileFor(filePath);
+
+                if (dnt != null)
+                {
+                    var jdom = JsonToolsVersionsProjectDOM.Load(dnt.FullName);
+                    if (jdom != null) xdom = new MergedPackagesVersions(dom, jdom);
+                }
+            }            
 
             // retrieve versions from nuget repositories.
 

@@ -58,7 +58,8 @@ namespace DirectoryPackagesTools.Client
             return _Versions
                 .Where(item => allDeprecated || item.Value.DeprecationInfo == null)
                 .Select(item => item.Key)
-                .OrderBy(item => item).ToList();
+                .OrderBy(item => item)
+                .ToList();
         }
 
         public async Task UpdateAsync(NuGetClientContext client)
@@ -103,7 +104,7 @@ namespace DirectoryPackagesTools.Client
                         extras.DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
                     }
 
-                    // get dependencies ONLY for the current verson                    
+                    // get dependencies ONLY for the current version                    
 
                     if (Dependencies == null)
                     {

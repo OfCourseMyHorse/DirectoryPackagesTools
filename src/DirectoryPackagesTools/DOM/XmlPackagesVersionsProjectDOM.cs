@@ -10,6 +10,8 @@ namespace DirectoryPackagesTools.DOM
     /// </summary>
     class XmlPackagesVersionsProjectDOM : XmlMSBuildProjectDOM
     {
+        #region lifecycle
+
         public static void CreateVersionFileFromExistingProjects(System.IO.FileInfo finfo)
         {
             var packages =
@@ -48,11 +50,14 @@ namespace DirectoryPackagesTools.DOM
             System.IO.File.WriteAllText(finfo.FullName, sb.ToString());
         }
 
-
         public static XmlPackagesVersionsProjectDOM Load(string path)
         {
             return Load<XmlPackagesVersionsProjectDOM>(path);
         }
+
+        #endregion
+
+        #region API
 
         public string VerifyDocument(IReadOnlyList<XmlMSBuildProjectDOM> csprojs)
         {
@@ -116,6 +121,8 @@ namespace DirectoryPackagesTools.DOM
         }
 
         protected override string GetPackageElementName() => "PackageVersion";
+
+        #endregion
     }
 
 }

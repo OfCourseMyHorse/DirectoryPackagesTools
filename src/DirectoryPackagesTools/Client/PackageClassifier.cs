@@ -17,6 +17,26 @@ namespace DirectoryPackagesTools.Client
     /// </summary>
     internal class PackageClassifier
     {
+        public static bool HasHiddenPrereleases(NUGETPACKMETADATA meta)
+        {
+            var name = meta.Identity.Id;
+
+            if (name.StartsWith("System.")) return true;
+            if (name.StartsWith("Xamarin.")) return true;
+            if (name.StartsWith("Microsoft.")) return true;
+            if (name.StartsWith("Prism.")) return true;
+            if (name.StartsWith("Avalonia.")) return true;
+            if (name == "Google.Protobuf") return true;
+            if (name == "SkiaSharp") return true;
+            if (name == "ClosedXML") return true;
+            if (name == "Grpc.Tools") return true;
+            if (name == "log4net") return true;
+            if (name == "MathNet.Numerics") return true;
+            if (name == "CommunityToolkit.Mvvm") return true;
+            if (IsUnitTestPackage(meta)) return true;
+            return false;
+        }
+
         public PackageClassifier(IEnumerable<string> prefixes)
         {
             // find package prefixes shared between at least 3 packages
@@ -36,8 +56,9 @@ namespace DirectoryPackagesTools.Client
             if (metadata?.Identity?.Id == null) return "Null";
 
             if (IsUnitTestPackage(metadata)) return "Unit Tests";
+            if (IsAvaloniaPackage(metadata)) return "Avalonia";
             if (IsAzurePackage(metadata)) return "Azure";
-            if (IsSystemPackage(metadata)) return "System";
+            if (IsSystemPackage(metadata)) return "System";            
 
             if (_CommonPrefixes != null)
             {
@@ -89,6 +110,15 @@ namespace DirectoryPackagesTools.Client
             return _IsTestPackage(metadata.Identity.Id);
         }
 
+        private static bool IsAvaloniaPackage(NUGETPACKMETADATA metadata)
+        {
+            var id = metadata.Identity.Id;
+
+            if (id.ToLower().Contains("avalonia")) return true;
+
+            return false;
+        }
+
         private static bool IsSystemPackage(NUGETPACKMETADATA metadata)
         {
             var id = metadata.Identity.Id;            
@@ -120,10 +150,9 @@ namespace DirectoryPackagesTools.Client
             return false;
         }
 
-        private static readonly IReadOnlyList<string> SystemPrefixes = new[] { "System", "Microsoft", "Azure", "Google", "Xamarin", "Prism", "MathNet", "MonoGame", "Newtonsoft" };
+        private static readonly IReadOnlyList<string> SystemPrefixes = new[] { "System", "Microsoft", "Azure", "Google", "Xamarin", "MathNet", "MonoGame", "Newtonsoft" };
 
         private static readonly IReadOnlyList<string> SystemPackages = new[] { "log4net", "DotNetZip", "ClosedXML", "Humanizer" };
-
 
         private static readonly IReadOnlyList<string> TestPrefixes = new[] { "NUnit", "coverlet", "TestAttachments", "TestImages", "ErrorProne" };
 

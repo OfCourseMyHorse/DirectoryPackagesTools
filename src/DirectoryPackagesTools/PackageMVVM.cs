@@ -39,7 +39,7 @@ namespace DirectoryPackagesTools
                 .OrderByDescending(item => item)
                 .ToArray();
 
-            var hidePrereleases = _HidePrereleases(local.PackageId, pinfo.Metadata);
+            var hidePrereleases = PackageClassifier.HasHiddenPrereleases(pinfo.Metadata);
 
             // if all are pre-releases, don't hide.
             if (_AvailableVersions.All(item => item.IsPrerelease)) hidePrereleases = false;
@@ -77,24 +77,7 @@ namespace DirectoryPackagesTools
             }
 
             return true;
-        }
-
-        private static bool _HidePrereleases(string name, NUGETPACKMETADATA meta)
-        {
-            if (name.StartsWith("System.")) return true;
-            if (name.StartsWith("Xamarin.")) return true;
-            if (name.StartsWith("Microsoft.")) return true;
-            if (name.StartsWith("Prism.")) return true;
-            if (name.StartsWith("Avalonia.")) return true;
-            if (name == "Google.Protobuf") return true;
-            if (name == "SkiaSharp") return true;
-            if (name == "ClosedXML") return true;
-            if (name == "Grpc.Tools") return true;
-            if (name == "log4net") return true;
-            if (name == "MathNet.Numerics") return true;
-            if (PackageClassifier.IsUnitTestPackage(meta)) return true;
-            return false;
-        }
+        }        
 
         #endregion
 
