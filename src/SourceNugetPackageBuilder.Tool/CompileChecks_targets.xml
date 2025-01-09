@@ -1,0 +1,51 @@
+﻿<Project>
+
+  <Target Name="CodeSugar_EnsureRootNamespaceIsDefined" BeforeTargets="BeforeBuild">
+    
+    <!--
+    Source code only packages that contain templates require the RootNamespace to be defined.
+    See: https://github.com/dotnet/sdk/issues/39933
+    -->
+    
+    <Error Condition="'$(RootNamespace)' == ''" Text="CodeSugar: The RootNamespace property is not defined. Please define it in the .csproj file." />
+    
+    <Message Text="CodeSugar: Root Namespace is $(RootNamespace)" Importance="high" />
+    
+  </Target>
+
+  <Target Name="CodeSugar_CheckProjectPathLength" BeforeTargets="BeforeBuild">
+    
+    <!--
+    Source code only packages with templates are consumed within a project using an absurdly long path that looks like this:    
+      "\obj\Debug\net6.0\NuGet\2BDBA0093D3251BA8BA79941339862A81B7DA187\CodeSugar.Sys.IO.Sources\1.0.0-Preview-20240305-200801"    
+    Which prevents the code from compiling if the max path is exceeded.
+    See: https://github.com/NuGet/Home/issues/13193    
+    -->
+    
+    <PropertyGroup>
+      <CodeSugarProjectPathLength>$(MSBuildProjectDirectory.Length)</CodeSugarProjectPathLength>
+      
+      <!-- 140 = 260 minus the calculated size used by the compiler to allocate the templates in /obj/xxx -->
+      <CodeSugarMaxPathLength>140</CodeSugarMaxPathLength>      
+    </PropertyGroup>
+
+    <Error Condition="$(CodeSugarProjectPathLength) > $(CodeSugarMaxPathLength)" Text="CodeSugar: The project directory path exceeds the maximum allowed length of $(CodeSugarMaxPathLength) characters." />
+  
+    <Message Text="CodeSugar: Path Length is $(MSBuildProjectDirectory.Length)" Importance="high" />
+  
+  </Target>
+  
+  <Target Name="CodeSugar_EnsureLangVersionIsAtLeast8" BeforeTargets="BeforeBuild">
+    
+    <PropertyGroup>
+      <!-- Set the minimum LangVersion -->
+      <CodeSugarMinimumLangVersion>8.0</CodeSugarMinimumLangVersion>
+    </PropertyGroup>
+
+    <Error Condition=" '$(LangVersion)' != 'latest' AND '$(LangVersion)' != 'preview' AND '$(LangVersion)' &lt; '$(CodeSugarMinimumLangVersion)' " Text="CodeSugar: The LangVersion is set to a version lower than the minimum required 8.0. Please update the LangVersion in the .csproj file." />
+    
+    <Message Text="CodeSugar: Language Version is $(LangVersion)" Importance="high" />
+  
+  </Target>
+
+</Project>

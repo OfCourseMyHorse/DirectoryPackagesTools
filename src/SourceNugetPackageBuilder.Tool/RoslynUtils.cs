@@ -16,7 +16,7 @@ namespace SourceNugetPackageBuilder
         {
             // Usage
             var tree = CSharpSyntaxTree.ParseText(sourceCode);
-            var root = (CompilationUnitSyntax)tree.GetRoot();
+            var root = (CompilationUnitSyntax)tree.GetRoot();            
 
             var rewriter = new MakeInternalRewriter();
             var newRoot = rewriter.Visit(root);
@@ -81,5 +81,27 @@ namespace SourceNugetPackageBuilder
 
             return true;
         }
-    }    
+    }
+
+    public static class NullableContextExtensions
+    {
+        public static bool IsInNullableContext(this CSharpSyntaxNode node, SemanticModel semanticModel)
+        {
+            // CSharpCompilation compilation = ...; // your CSharpCompilation object
+            // SyntaxTree syntaxTree = ...; // your SyntaxTree object
+            // SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
+
+            var location = node.GetLocation();
+
+            var nullableContext = semanticModel.GetNullableContext(location.SourceSpan.Start);
+
+            return AnnotationsEnabled(nullableContext);
+        }        
+
+        public static bool WarningsEnabled(this NullableContext context) => IsFlagSet(context, NullableContext.WarningsEnabled);
+
+        public static bool AnnotationsEnabled(this NullableContext context) => IsFlagSet(context, NullableContext.AnnotationsEnabled);
+
+        private static bool IsFlagSet(this NullableContext context, NullableContext flag) => (context & flag) == flag;
+    }
 }

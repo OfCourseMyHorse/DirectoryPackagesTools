@@ -66,16 +66,16 @@ namespace DirectoryPackagesTools
             return new PhysicalPackageFile(m);
         }
 
-        [Test]
-        public async Task CreateSourcePackageFromProject()
+        [TestCase("SourcePackageExampleProject/SourcePackageExampleProject.csproj")]
+        [TestCase("D:\\Github\\(_Owned_)\\(_LIBS_)\\_GIT\\CodeSugar\\src\\CodeSugar.FileProviders.Sources\\CodeSugar.FileProviders.Sources.csproj")]
+        public async Task CreateSourcePackageFromProject(string prjPath)
         {
-            var prjPath = ResourceInfo.From("SourcePackageExampleProject/SourcePackageExampleProject.csproj");
+            var prjInfo = ResourceInfo.From(prjPath);
 
             using (var testDir = new AttachmentDirectory())
             {
-
                 var ctx = new SourceNugetPackageBuilder.Context();
-                ctx.SourceFiles = [prjPath.File];
+                ctx.SourceFiles = [prjInfo.File];
                 ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
                 ctx.IncludeCompileChecks = true;
 
