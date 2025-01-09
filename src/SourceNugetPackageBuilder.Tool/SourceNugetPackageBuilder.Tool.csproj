@@ -44,15 +44,15 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20240723" PrivateAssets="all" />
+    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20241007" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.12.1">
+    <PackageReference Include="NuGet.CommandLine" Version="6.12.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
