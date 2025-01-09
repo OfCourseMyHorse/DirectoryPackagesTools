@@ -140,6 +140,8 @@ namespace SourceNugetPackageBuilder
 
         public bool PackAsInternalSources => _GetValueOrEmpty("PackAsInternalSources")?.ToUpperInvariant() == "TRUE";
 
+        public string PackAsSourcesFolder => _GetValueOrEmpty("PackAsSourcesFolder");
+
         #endregion
 
         #region API

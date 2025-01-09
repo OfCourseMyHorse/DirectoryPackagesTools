@@ -31,7 +31,7 @@ namespace SourceNugetPackageBuilder
 
             return sourceFiles
                 .SelectMany(_EvaluateFile)
-                .Distinct(CodeSugarForSystemIO.GetFullNameComparer<System.IO.FileInfo>())
+                .Distinct(System.IO.MatchCasing.PlatformDefault.GetFullNameComparer<System.IO.FileInfo>())
                 .Select(Create);
         }
 
@@ -73,6 +73,8 @@ namespace SourceNugetPackageBuilder
         public bool IsPackableAsSources => _Project.IsPackableAsSources;
 
         public bool PackAsInternalSources => _Project.PackAsInternalSources;
+
+        public string PackAsSourcesFolder => _Project.PackAsSourcesFolder;
 
         public System.IO.FileInfo FindIcon() => _Project.FindIcon();
 
