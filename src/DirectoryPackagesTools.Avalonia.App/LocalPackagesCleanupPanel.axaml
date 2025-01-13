@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="DirectoryPackagesTools.LocalPackagesCleanupPanel">
+  <DockPanel>
+    
+    <ProgressBar DockPanel.Dock="Bottom" Height="10" x:Name="myProgressBar" Maximum="100" />
+
+    <StackPanel>
+      <Button Content="Find Packages" Click="_OnClick_FindPackagesToDelete" />
+    </StackPanel>
+
+    <DockPanel>
+      <Button HorizontalAlignment="Center" DockPanel.Dock="Bottom" Content="Delete All" Click="_OnClick_DeleteListedPackages" />
+      <ListBox x:Name="myPackagesToDelete" />      
+    </DockPanel>
+    
+  </DockPanel>
+</UserControl>

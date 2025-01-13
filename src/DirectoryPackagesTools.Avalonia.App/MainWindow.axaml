@@ -42,6 +42,11 @@
           <MenuItem Header="Nuget Password Clear/Encryption converter" Click="MenuItem_ShowNugetPasswordsManagerDialog" >
             <MenuItem.Icon> <TextBlock Text="🔐" /> </MenuItem.Icon>
           </MenuItem>
+          <MenuItem Header="Nuget Local Packages Cleanup" Click="MenuItem_ShowLocalPackagesCleanupDialog" >
+            <MenuItem.Icon>
+              <TextBlock Text="🗑️" />
+            </MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
         <MenuItem Header="Help">
           <MenuItem Header="About..." Click="_MenuItem_About">

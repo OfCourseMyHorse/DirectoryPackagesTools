@@ -10,7 +10,7 @@ using NuGet.Configuration;
 
 namespace DirectoryPackagesTools;
 
-public partial class NugetCredentialsCryptoPanel : UserControl
+partial class NugetCredentialsCryptoPanel : UserControl
 {
     #region lifecycle
     public static async Task ShowDialog(Window wnd)
