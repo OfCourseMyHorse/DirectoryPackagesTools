@@ -22,9 +22,10 @@ namespace DirectoryPackagesTools
             var window = new Window();
 
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+            
             window.ShowInTaskbar = false;
-            window.SizeToContent = SizeToContent.WidthAndHeight;
+            window.SizeToContent = SizeToContent.WidthAndHeight;            
+            window.Height = 600;
 
             window.Title = "Nuget local packages cleanup";
 
@@ -130,7 +131,7 @@ namespace DirectoryPackagesTools
 
         public void Report(int percent)
         {
-            myProgressBar.Value = percent;
+            
         }
 
         #endregion

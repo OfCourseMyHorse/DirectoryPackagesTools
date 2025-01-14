@@ -4,18 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              x:Class="DirectoryPackagesTools.LocalPackagesCleanupPanel">
-  <DockPanel>
-    
-    <ProgressBar DockPanel.Dock="Bottom" Height="10" x:Name="myProgressBar" Maximum="100" />
+  
+  
+  <Grid RowDefinitions="auto * auto" Margin="4">
 
-    <StackPanel>
-      <Button Content="Find Packages" Click="_OnClick_FindPackagesToDelete" />
-    </StackPanel>
+    <Button Margin="4" Grid.Row="0" Content="Find Packages" Click="_OnClick_FindPackagesToDelete" />
 
-    <DockPanel>
-      <Button HorizontalAlignment="Center" DockPanel.Dock="Bottom" Content="Delete All" Click="_OnClick_DeleteListedPackages" />
-      <ListBox x:Name="myPackagesToDelete" />      
-    </DockPanel>
+    <ListBox Margin="4" Grid.Row="1" x:Name="myPackagesToDelete" />
     
-  </DockPanel>
+    <Button Margin="4" Grid.Row="2" HorizontalAlignment="Center" DockPanel.Dock="Bottom" Content="Delete All" Click="_OnClick_DeleteListedPackages" />    
+    
+  </Grid>
+  
 </UserControl>
