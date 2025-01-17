@@ -19,6 +19,8 @@ namespace DirectoryPackagesTools.Client
     {
         public static bool HasHiddenPrereleases(NUGETPACKMETADATA meta)
         {
+            if (meta == null) return false;
+
             var name = meta.Identity.Id;
 
             if (name.StartsWith("System.")) return true;
@@ -53,6 +55,7 @@ namespace DirectoryPackagesTools.Client
         public string GetPackageCategory(NUGETPACKMETADATA metadata)
         {
             if (metadata == null) return "Null";
+
             if (metadata?.Identity?.Id == null) return "Null";
 
             if (IsUnitTestPackage(metadata)) return "Unit Tests";
@@ -71,6 +74,8 @@ namespace DirectoryPackagesTools.Client
 
         internal static bool IsUnitTestPackage(NUGETPACKMETADATA metadata)
         {
+            if (metadata == null) return false;
+
             if (metadata?.Identity?.Id == null) return false;
 
             if (metadata.Tags != null)
@@ -88,6 +93,8 @@ namespace DirectoryPackagesTools.Client
 
         private static bool IsAzurePackage(NUGETPACKMETADATA metadata)
         {
+            if (metadata == null) return false;
+
             var id = metadata.Identity.Id;
 
             if (id.ToLower().Contains("azure")) return true;
@@ -112,6 +119,8 @@ namespace DirectoryPackagesTools.Client
 
         private static bool IsAvaloniaPackage(NUGETPACKMETADATA metadata)
         {
+            if (metadata == null) return false;
+
             var id = metadata.Identity.Id;
 
             if (id.ToLower().Contains("avalonia")) return true;
@@ -121,6 +130,8 @@ namespace DirectoryPackagesTools.Client
 
         private static bool IsSystemPackage(NUGETPACKMETADATA metadata)
         {
+            if (metadata == null) return false;
+
             var id = metadata.Identity.Id;            
 
             if (SystemPackages.Contains(id)) return true;

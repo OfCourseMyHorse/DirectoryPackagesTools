@@ -13,6 +13,7 @@ using NUGETVERSIONRANGE = NuGet.Versioning.VersionRange;
 using NUGETPACKIDENTITY = NuGet.Packaging.Core.PackageIdentity;
 using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
 using NUGETPACKDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
+using NuGet.Protocol;
 
 
 namespace DirectoryPackagesTools
@@ -28,18 +29,20 @@ namespace DirectoryPackagesTools
         {
             _LocalReference = local;
 
-            _Metadata = pinfo.Metadata;
+            // packages stored in a local source directory may report metadata as Null
+            _Metadata = pinfo.Metadata;            
+
+            var hidePrereleases = PackageClassifier.HasHiddenPrereleases(_Metadata);
+
             _Dependencies = pinfo.Dependencies;
 
-            AllDeprecated = pinfo.AllDeprecated;
+            AllDeprecated = pinfo.AllDeprecated;            
 
             _AvailableVersions = pinfo
                 .GetVersions()
                 .Where(item => _ShowVersion(pinfo.Id, item))
                 .OrderByDescending(item => item)
-                .ToArray();
-
-            var hidePrereleases = PackageClassifier.HasHiddenPrereleases(pinfo.Metadata);
+                .ToArray();            
 
             // if all are pre-releases, don't hide.
             if (_AvailableVersions.All(item => item.IsPrerelease)) hidePrereleases = false;
@@ -141,7 +144,14 @@ namespace DirectoryPackagesTools
 
         public NUGETPACKMETADATA Metadata => _Metadata;
 
-        public string Frameworks => string.Join(" ", _Dependencies.DependencyGroups.Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard","netstd")));
+        public string Frameworks
+        {
+            get
+            {
+                if (_Dependencies == null) return "Unknown";
+                return string.Join(" ", _Dependencies.DependencyGroups.Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd")));
+            }
+        }
 
         #endregion
 
