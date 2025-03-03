@@ -67,6 +67,8 @@ public partial class PackagesList : UserControl
 
     #endregion
 
+    #region events
+
     private void MenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is StyledElement se)
@@ -82,4 +84,6 @@ public partial class PackagesList : UserControl
             }
         }
     }
+
+    #endregion
 }

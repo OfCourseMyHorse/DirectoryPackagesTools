@@ -33,24 +33,52 @@ namespace DirectoryPackagesTools
 
         public async Task<MessageBoxResult> Show(string text)
         {
+            var dsp = Avalonia.Threading.Dispatcher.UIThread;
+
+            if (!dsp.CheckAccess())
+            {
+                return await dsp.InvokeAsync<MessageBoxResult>(async () => await Show(text));                
+            }
+
             var (content, buttons) = _CreateContent(text, string.Empty, MessageBoxButton.OK, MessageBoxImage.None);
             return await _Open(content, buttons);
         }
 
         public async Task<MessageBoxResult> Show(string text, string title)
         {
+            var dsp = Avalonia.Threading.Dispatcher.UIThread;
+
+            if (!dsp.CheckAccess())
+            {
+                return await dsp.InvokeAsync<MessageBoxResult>(async () => await Show(text, title));
+            }
+
             var (content, buttons) = _CreateContent(text, title, MessageBoxButton.OK, MessageBoxImage.None);
             return await _Open(content, buttons);
         }
 
         public async Task<MessageBoxResult> Show(string text, string title, MessageBoxButton button)
         {
+            var dsp = Avalonia.Threading.Dispatcher.UIThread;
+
+            if (!dsp.CheckAccess())
+            {
+                return await dsp.InvokeAsync<MessageBoxResult>(async () => await Show(text, title, button));
+            }
+
             var (content, buttons) = _CreateContent(text, title, button, MessageBoxImage.None);
             return await _Open(content, buttons);
         }
 
         public async Task<MessageBoxResult> Show(string text, string title, MessageBoxButton button, MessageBoxImage image)
         {
+            var dsp = Avalonia.Threading.Dispatcher.UIThread;
+
+            if (!dsp.CheckAccess())
+            {
+                return await dsp.InvokeAsync<MessageBoxResult>(async () => await Show(text, title, button, image));
+            }
+
             var (content, buttons) = _CreateContent(text, title, button, image);
             return await _Open(content, buttons);
         }

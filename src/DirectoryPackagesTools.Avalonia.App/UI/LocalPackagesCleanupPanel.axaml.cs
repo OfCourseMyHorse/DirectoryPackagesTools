@@ -15,33 +15,36 @@ namespace DirectoryPackagesTools
     partial class LocalPackagesCleanupPanel : UserControl, IProgress<int>
     {
         #region lifecycle
-
-        #region lifecycle
         public static async Task ShowDialog(Window wnd)
         {
             var window = new Window();
 
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            
-            window.ShowInTaskbar = false;
-            window.SizeToContent = SizeToContent.WidthAndHeight;            
-            window.Height = 600;
 
-            window.Title = "Nuget local packages cleanup";
+            window.ShowInTaskbar = false;
+            window.SizeToContent = SizeToContent.WidthAndHeight;
+
+            window.Title = "Nuget package cache trimmer.";
 
             window.Content = new LocalPackagesCleanupPanel();
 
             await window.ShowDialog(wnd);
         }
 
-        public LocalPackagesCleanupPanel()
+        private LocalPackagesCleanupPanel()
         {
             InitializeComponent();
         }
 
         #endregion
 
+        #region data
+
         private List<string> _DirectoriesToDelete;
+
+        #endregion
+
+        #region events
 
         private async void _OnClick_FindPackagesToDelete(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {

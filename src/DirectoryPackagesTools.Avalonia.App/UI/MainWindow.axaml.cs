@@ -46,8 +46,17 @@ namespace DirectoryPackagesTools
             return new _BackgroundTaskMonitor(this);
         }
 
-        private readonly struct _BackgroundTaskMonitor : IDisposable, IProgress<int>, IProgress<Exception>
+        private readonly struct _BackgroundTaskMonitor
+            : IDisposable
+            , IProgress<int>
+            , IProgress<Exception>
         {
+            #region diag
+
+            private static readonly log4net.ILog _Log = log4net.LogManager.GetLogger(typeof(_BackgroundTaskMonitor));
+
+            #endregion
+
             #region lifecycle
             public _BackgroundTaskMonitor(MainWindow window)
             {
@@ -102,16 +111,16 @@ namespace DirectoryPackagesTools
 
                 Avalonia.Threading.Dispatcher.UIThread.Invoke(_setProgress);
             }
-
+            
             public void Report(Exception value)
             {
-                #if !DISABLE_TRYCATCH
-                System.Diagnostics.Debug.Fail(value.Message);
-                #endif
+                _Log.Error(value.Message, value);
 
-                var wnd = _Window;
-                Avalonia.Threading.Dispatcher.UIThread.Invoke( async ()=> await wnd.MessageBox().Show(value.Message, "Error") );
-                // _Window.Dispatcher.Invoke(() => MessageBox.Show(value.Message, "Error"));
+                #if !SUPRESSTRYCATCH
+                System.Diagnostics.Debug.Fail(value.Message);
+                #endif                
+                
+                _Window.MessageBox().Show(value.Message, "Error").GetAwaiter().GetResult();
             }
 
             private void MyCancelBtn_Click(object sender, RoutedEventArgs e)
@@ -143,9 +152,8 @@ namespace DirectoryPackagesTools
         {
             using var ctx = BeginTask();
 
-            #if !DISABLE_TRYCATCH
-            try
-            {
+            #if !SUPRESSTRYCATCH
+            try {
             #endif
                 var doc = await PackagesVersionsProjectMVVM
                     .LoadAsync(documentPath, ctx, ctx.Token)
@@ -156,12 +164,12 @@ namespace DirectoryPackagesTools
                 this.DataContext = doc;
                 this.Title = "Directory Packages Manager - " + documentPath;
 
-            #if !DISABLE_TRYCATCH
+            #if !SUPRESSTRYCATCH
             }
-            catch (OperationCanceledException) { this.MessageBox().Show("Load cancelled."); }
+            catch (OperationCanceledException) { await this.MessageBox().Show("Load cancelled."); }
             catch (Exception ex)
             {
-                this.MessageBox().Show(ex.Message, "Error");
+                await this.MessageBox().Show(ex.Message, "Error");
             }
             #endif
         }
@@ -254,7 +262,11 @@ namespace DirectoryPackagesTools
 
         private async void _MenuItem_About(object? sender, RoutedEventArgs e)
         {
-            var r = await this.MessageBox().Show("This tool is used to update package versions\r\nof a Directory.Packages.props file.", "About Directory Packages tools", MessageBoxButton.OK, MessageBoxImage.Question);                        
+            var msg = $"This tool is used to update package versions\r\nof a Directory.Packages.props file.\r\n{System.AppContext.BaseDirectory}";
+
+            await this
+                .MessageBox()
+                .Show(msg, "About Directory Packages tools", MessageBoxButton.OK, MessageBoxImage.Question);                        
         }
 
         #endregion
