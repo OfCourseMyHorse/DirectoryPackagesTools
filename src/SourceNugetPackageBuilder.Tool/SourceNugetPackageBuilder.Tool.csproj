@@ -48,20 +48,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.12.2">
+    <PackageReference Include="NuGet.CommandLine" Version="6.13.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuGet.Commands" Version="6.12.1" />
-    <PackageReference Include="NuGet.Packaging" Version="6.12.1" />    
+    <PackageReference Include="NuGet.Commands" Version="6.13.2" />
+    <PackageReference Include="NuGet.Packaging" Version="6.13.2" />    
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.12.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="17.13.9" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
   </ItemGroup>  
   
