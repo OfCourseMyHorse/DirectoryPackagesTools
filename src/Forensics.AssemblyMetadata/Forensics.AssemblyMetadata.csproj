@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>
+      Assembly Metadata loader.
+      Code taken from [NuGetPackageExplorer](https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/tree/main/Core/AssemblyMetadata)
+    </Description>
+  </PropertyGroup>  
+
+</Project>
