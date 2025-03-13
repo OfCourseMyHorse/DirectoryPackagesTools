@@ -19,10 +19,10 @@
           </MenuItem>
           <MenuItem Header="Open..."       Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Build.props.">
             <MenuItem.Icon> <TextBlock Text="📂" /> </MenuItem.Icon>
-            </MenuItem>
+          </MenuItem>
           <MenuItem Header="Save"          Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Build.props." >
             <MenuItem.Icon> <TextBlock Text="💾" /> </MenuItem.Icon>
-            </MenuItem>
+          </MenuItem>
           <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Build.props and opens a Commit dialog." >
             <MenuItem.Icon> <TextBlock Text="📤" /> </MenuItem.Icon>
           </MenuItem>

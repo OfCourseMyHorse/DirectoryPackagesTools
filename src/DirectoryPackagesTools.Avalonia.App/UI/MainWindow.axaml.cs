@@ -114,11 +114,7 @@ namespace DirectoryPackagesTools
             
             public void Report(Exception value)
             {
-                _Log.Error(value.Message, value);
-
-                #if !SUPRESSTRYCATCH
-                System.Diagnostics.Debug.Fail(value.Message);
-                #endif                
+                _Log.Error(value.Message, value);                  
                 
                 _Window.MessageBox().Show(value.Message, "Error").GetAwaiter().GetResult();
             }
