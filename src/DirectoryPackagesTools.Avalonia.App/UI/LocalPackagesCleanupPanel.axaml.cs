@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,7 +41,7 @@ namespace DirectoryPackagesTools
 
         #region data
 
-        private List<string> _DirectoriesToDelete;
+        private List<System.IO.DirectoryInfo> _DirectoriesToDelete;
 
         #endregion
 
@@ -50,21 +51,13 @@ namespace DirectoryPackagesTools
         {
             this.IsEnabled = false;
 
-            var rootDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+            var rootDir = new System.IO.DirectoryInfo(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"));
 
-            var toDelete = new List<string>();
+            var toDelete = new List<System.IO.DirectoryInfo>();
 
-            await _ProcessAsync(rootDir, toDelete, this).ConfigureAwait(true);
+            await _ProcessAsync(rootDir, toDelete, this).ConfigureAwait(true);            
 
-            string _toDisplatName(string fullPath)
-            {
-                var semver = System.IO.Path.GetFileName(fullPath);
-                fullPath = System.IO.Path.GetDirectoryName(fullPath);
-                var pkgName = System.IO.Path.GetFileName(fullPath);
-                return pkgName + "." + semver;
-            }
-
-            myPackagesToDelete.ItemsSource = toDelete.Select(_toDisplatName).ToList();
+            myPackagesToDelete.ItemsSource = toDelete.Select(item => new CachePackageInfo(item)).ToList();
 
             _DirectoriesToDelete = toDelete;
 
@@ -79,17 +72,17 @@ namespace DirectoryPackagesTools
 
             foreach(var d in _DirectoriesToDelete)
             {
-                System.IO.Directory.Delete(d, true);
+                d.Delete(true);
             }
 
             _DirectoriesToDelete = null;
         }
 
-        public static async Task _ProcessAsync(string packagesPath, List<string> toDelete, IProgress<int> progress)
+        public static async Task _ProcessAsync(System.IO.DirectoryInfo packagesPath, List<System.IO.DirectoryInfo> toDelete, IProgress<int> progress)
         {
-            if (!System.IO.Directory.Exists(packagesPath)) return;
+            if (!packagesPath.Exists) return;
 
-            var packagesDirs = System.IO.Directory.GetDirectories(packagesPath);
+            var packagesDirs = packagesPath.GetDirectories();
 
             for(int i=0; i < packagesDirs.Length; ++i)
             {
@@ -101,14 +94,14 @@ namespace DirectoryPackagesTools
             }
         }
 
-        private static async Task _ProcessPackageAsync(string packagePath, List<string> toDelete)
+        private static async Task _ProcessPackageAsync(System.IO.DirectoryInfo packagePath, List<System.IO.DirectoryInfo> toDelete)
         {
-            if (!System.IO.Directory.Exists(packagePath)) return;
+            if (!packagePath.Exists) return;
 
-            var versionPaths = System.IO.Directory.GetDirectories(packagePath);
+            var versionPaths = packagePath.GetDirectories();
 
             var pairs = versionPaths
-                .Select(path => (path, NuGetVersion.TryParse(System.IO.Path.GetFileName(path), out var version) ? version : null))
+                .Select(dinfo => (dinfo, NuGetVersion.TryParse(dinfo.Name, out var version) ? version : null))
                 .Where(item => item.Item2 != null)
                 .ToList();
 
@@ -126,7 +119,7 @@ namespace DirectoryPackagesTools
                     .Skip(take)
                     .ToList();
 
-                foreach (var item in items) toDelete.Add(item.path);
+                foreach (var item in items) toDelete.Add(item.dinfo);
 
                 take = 1;
             }
@@ -137,6 +130,28 @@ namespace DirectoryPackagesTools
             
         }
 
+
+        private static long _GetUsedDiskSpace(System.IO.DirectoryInfo directoryInfo)
+        {
+            return directoryInfo.EnumerateFiles("*", System.IO.SearchOption.AllDirectories).Select(item => item.Length).Sum();
+        }
+
         #endregion
+    }
+
+    class CachePackageInfo
+    {
+        private readonly System.IO.DirectoryInfo _Directory;
+
+        public CachePackageInfo(DirectoryInfo directory)
+        {
+            _Directory = directory;
+        }
+
+        public string PackageName => _Directory.Parent.Name;
+
+        public string PackageVersion => _Directory.Name;
+
+        public long PackageDiskSize => _Directory.EnumerateFiles("*", System.IO.SearchOption.AllDirectories).Select(item => item.Length).Sum();
     }
 }
