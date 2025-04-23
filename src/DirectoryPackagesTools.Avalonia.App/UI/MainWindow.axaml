@@ -66,7 +66,13 @@
           </DataTemplate>
 
           <DataTemplate x:DataType="local:RepositoriesCollectionMVVM">
-            <ItemsControl ItemsSource="{Binding}" />
+            <ItemsControl ItemsSource="{Binding}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <local:RepositoryView />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
           </DataTemplate>
 
         </TabControl.DataTemplates>

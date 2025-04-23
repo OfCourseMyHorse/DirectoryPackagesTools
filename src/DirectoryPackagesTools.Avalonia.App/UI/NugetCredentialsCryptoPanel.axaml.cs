@@ -64,6 +64,18 @@ partial class NugetCredentialsCryptoPanel : UserControl
         await this.MessageBox().Show(r ? "passwords concealed" : "no clear passwords found", "result");        
     }
 
+    private async void _OnClick_ClearPasswords(object sender, RoutedEventArgs e)
+    {
+        var finfo = await this.TryOpenForRead("Nuget.Config files", "*.config").CastResultTo<System.IO.FileInfo>();
+        if (finfo == null) return;
+
+        if (!await ConfirmAction("Clear passwords? (Cannot be reverted)")) return;
+
+        var r = CredentialsUtils.DecryptNugetConfigConcealedPasswords(finfo);
+
+        await this.MessageBox().Show(r ? "passwords cleared" : "no clear passwords found", "result");
+    }
+
     private async Task<bool> ConfirmAction(string msg)
     {
         var r = await this.MessageBox().Show(msg, "Confirm Action", MessageBoxButton.OKCancel, MessageBoxImage.Question);

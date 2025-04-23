@@ -261,25 +261,7 @@ namespace DirectoryPackagesTools
         public string Key { get; }
     }
 
-    public sealed class RepositoriesCollectionMVVM : KeyedViewMVVM, IEnumerable<SourceRepository>
-    {
-        internal RepositoriesCollectionMVVM(NuGetClient client) : base("Repositories")
-        {
-            _Client = client;
-        }
-
-        private readonly NuGetClient _Client;        
-
-        public IEnumerator<SourceRepository> GetEnumerator()
-        {
-            return _Client.Repositories.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _Client.Repositories.GetEnumerator();
-        }
-    }
+    
 
     public class PackagesGroupMVVM : KeyedViewMVVM
     {
