@@ -44,7 +44,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20241007" PrivateAssets="all" />
+    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20250422" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -62,7 +62,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="17.13.9" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.9.1" />
   </ItemGroup>  
   
 </Project>
