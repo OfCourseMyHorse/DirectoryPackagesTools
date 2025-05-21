@@ -11,13 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="DirectoryPackagesTools.cfg.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="DirectoryPackagesTools.cfg.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NuGet.Commands" Version="6.13.2" />
+  <ItemGroup>    
+    <PackageReference Include="NuGet.Commands" Version="6.14.0" />
     <PackageReference Include="Prism.Core" Version="9.0.537" />    
   </ItemGroup>
 
