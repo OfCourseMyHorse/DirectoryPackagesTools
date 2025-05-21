@@ -1,0 +1,55 @@
+{
+  "systemAuthors": [
+    "Microsoft",
+    "dotnetframework",
+    "dotnetfoundation",
+    "azure-sdk"
+  ],
+
+  "systemPackages": [
+    "System.*",
+    "Microsoft.*",
+    "Azure.*",
+    "Google.*",
+    "Xamarin.*",
+    "MathNet.*",
+    "MonoGame.*",
+    "Newtonsoft.*",
+    "log4net",
+    "DotNetZip",
+    "ClosedXML",
+    "Humanizer"
+  ],
+
+  "testPackages": [
+    "NUnit*",
+    "coverlet*",
+    "TestAttachments*",
+    "TestImages*",
+    "ErrorProne*",
+    "Microsoft.NET.Test.Sdk",
+    "NUnit3TestAdapter"
+  ],
+
+  "hiddenPrereleasePackages": [
+    "System.*",
+    "Xamarin.*",
+    "Microsoft.*",
+    "Prism.*",
+    "Avalonia*",
+    "Google.Protobuf",
+    "SkiaSharp",
+    "ClosedXML",
+    "Grpc.Tools",
+    "log4net",
+    "MathNet.Numerics",
+    "CommunityToolkit.Mvvm"
+  ],
+
+  "obsoletePackages": {
+    "log4net": "Not AOT ready, planned fix by 2026",
+    "CommandLineParser": "Seems abandoned, also not AOT ready, awaiting System.CommandLine new releases",
+    "Markdown.Avalonia*": "Seems abandoned, looking for alternatives..."
+  }
+
+}

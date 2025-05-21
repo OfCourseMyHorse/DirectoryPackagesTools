@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
-using NUGETPACKIDENTITY = NuGet.Packaging.Core.PackageIdentity;
 using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
-using NUGETPACKDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
-
 
 namespace DirectoryPackagesTools.Client
 {
@@ -17,25 +11,15 @@ namespace DirectoryPackagesTools.Client
     /// </summary>
     internal class PackageClassifier
     {
-        public static bool HasHiddenPrereleases(NUGETPACKMETADATA meta)
+        public static bool ShouldHidePrereleases(NUGETPACKMETADATA meta)
         {
             if (meta == null) return false;
 
             var name = meta.Identity.Id;
 
-            if (name.StartsWith("System.")) return true;
-            if (name.StartsWith("Xamarin.")) return true;
-            if (name.StartsWith("Microsoft.")) return true;
-            if (name.StartsWith("Prism.")) return true;
-            if (name.StartsWith("Avalonia.")) return true;
-            if (name == "Google.Protobuf") return true;
-            if (name == "SkiaSharp") return true;
-            if (name == "ClosedXML") return true;
-            if (name == "Grpc.Tools") return true;
-            if (name == "log4net") return true;
-            if (name == "MathNet.Numerics") return true;
-            if (name == "CommunityToolkit.Mvvm") return true;
+            if (name.IsPackageNameContainedInFilters(UserConfiguration.Default.HiddenPrereleasePackages)) return true;            
             if (IsUnitTestPackage(meta)) return true;
+
             return false;
         }
 
@@ -134,17 +118,16 @@ namespace DirectoryPackagesTools.Client
 
             var id = metadata.Identity.Id;            
 
-            if (SystemPackages.Contains(id)) return true;
-            if (SystemPrefixes.Any(p => id.StartsWith(p + "."))) return true;
+            if (id.IsPackageNameContainedInFilters(UserConfiguration.Default.SystemPackages)) return true;
 
             var authors = metadata?.Authors;
 
-            if (authors != null)
+            if (authors != null && UserConfiguration.Default.SystemAuthors != null)
             {
-                if (authors.Contains("Microsoft")) return true;
-                if (authors.Contains("dotnetframework")) return true;
-                if (authors.Contains("dotnetfoundation")) return true;
-                if (authors.Contains("azure-sdk")) return true;
+                foreach(var sysAuthor in UserConfiguration.Default.SystemAuthors)
+                {
+                    if (authors.Contains(sysAuthor)) return true;
+                }
             }
 
             return false;
@@ -152,21 +135,7 @@ namespace DirectoryPackagesTools.Client
 
         private static bool _IsTestPackage(string packageName)
         {
-            if (TestPackages.Contains(packageName)) return true;
-
-            packageName = packageName.ToLower();
-
-            if (TestPrefixes.Any(p => packageName.StartsWith(p.ToLower() + "."))) return true;
-
-            return false;
+            return packageName.IsPackageNameContainedInFilters(UserConfiguration.Default.TestPackages);
         }
-
-        private static readonly IReadOnlyList<string> SystemPrefixes = new[] { "System", "Microsoft", "Azure", "Google", "Xamarin", "MathNet", "MonoGame", "Newtonsoft" };
-
-        private static readonly IReadOnlyList<string> SystemPackages = new[] { "log4net", "DotNetZip", "ClosedXML", "Humanizer" };
-
-        private static readonly IReadOnlyList<string> TestPrefixes = new[] { "NUnit", "coverlet", "TestAttachments", "TestImages", "ErrorProne" };
-
-        private static readonly IReadOnlyList<string> TestPackages = new[] { "NUnit", "Microsoft.NET.Test.Sdk", "NUnit3TestAdapter" };
     }
 }

@@ -5,16 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
+using DirectoryPackagesTools.Client;
 
 using NUGETVERSION = NuGet.Versioning.NuGetVersion;
 using NUGETVERSIONRANGE = NuGet.Versioning.VersionRange;
 using NUGETPACKIDENTITY = NuGet.Packaging.Core.PackageIdentity;
 using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
 using NUGETPACKDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
-using NuGet.Protocol;
-
 
 namespace DirectoryPackagesTools
 {
@@ -32,11 +30,12 @@ namespace DirectoryPackagesTools
             // packages stored in a local source directory may report metadata as Null
             _Metadata = pinfo.Metadata;            
 
-            var hidePrereleases = PackageClassifier.HasHiddenPrereleases(_Metadata);
+            var hidePrereleases = PackageClassifier.ShouldHidePrereleases(_Metadata);
 
             _Dependencies = pinfo.Dependencies;
 
-            AllDeprecated = pinfo.AllDeprecated;            
+            AllDeprecated = pinfo.AllDeprecated;
+            DeprecationReason = pinfo?.DeprecationInfo?.Message + $"\r\nUse: {pinfo?.DeprecationInfo?.AlternatePackage}";
 
             _AvailableVersions = pinfo
                 .GetVersions()
@@ -116,6 +115,7 @@ namespace DirectoryPackagesTools
         #region Properties - version
 
         public bool AllDeprecated { get; }
+        public string DeprecationReason { get; }
 
         public IReadOnlyList<NUGETVERSIONRANGE> AvailableVersions { get; }
         public NUGETVERSIONRANGE NewestRelease { get; }
@@ -159,7 +159,7 @@ namespace DirectoryPackagesTools
 
         internal string GetPackageCategory(PackageClassifier classifier)
         {
-            if (AllDeprecated) return "⚠ Deprecated ⚠";
+            if (AllDeprecated) return "⚠ Deprecated ⚠";            
 
             return classifier.GetPackageCategory(_Metadata);
         }

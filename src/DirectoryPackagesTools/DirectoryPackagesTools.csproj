@@ -7,6 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="DirectoryPackagesTools.cfg.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="DirectoryPackagesTools.cfg.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NuGet.Commands" Version="6.13.2" />
     <PackageReference Include="Prism.Core" Version="9.0.537" />    
   </ItemGroup>
