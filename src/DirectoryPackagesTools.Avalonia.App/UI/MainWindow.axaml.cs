@@ -206,12 +206,7 @@ namespace DirectoryPackagesTools
         private async void MenuItem_ShowNugetPasswordsManagerDialog(object? sender, RoutedEventArgs e)
         {
             await NugetCredentialsCryptoPanel.ShowDialog(this);
-        }
-
-        private async void MenuItem_ShowLocalPackagesCleanupDialog(object? sender, RoutedEventArgs e)
-        {
-            await LocalPackagesCleanupPanel.ShowDialog(this);
-        }
+        }        
 
         private async void MenuItem_New(object? sender, RoutedEventArgs e)
         {
