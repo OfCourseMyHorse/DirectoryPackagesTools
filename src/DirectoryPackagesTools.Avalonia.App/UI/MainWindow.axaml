@@ -61,13 +61,10 @@
           </DataTemplate>
 
           <DataTemplate x:DataType="local:RepositoriesCollectionMVVM">
-            <ItemsControl ItemsSource="{Binding}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <local:RepositoryView />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <Grid RowDefinitions="auto *">
+              <ComboBox Grid.Row="0" x:Name="myRepoSelector" ItemsSource="{Binding}" x:DataType="local:RepositoryMVVM" DisplayMemberBinding="{Binding Name}" />  
+              <local:RepositoryView Grid.Row="1" DataContext="{Binding #myRepoSelector.SelectedValue}" />
+            </Grid>            
           </DataTemplate>
 
         </TabControl.DataTemplates>

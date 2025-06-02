@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using DirectoryPackagesTools.DOM;
 
 using NuGet.Packaging.Core;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
 using NUnit.Framework;
-using NUnit.Framework.Internal;
+
+using DirectoryPackagesTools.DOM;
 
 namespace DirectoryPackagesTools
 {
@@ -44,7 +44,7 @@ namespace DirectoryPackagesTools
                 Assert.That(p.PackageId, Is.Not.Null);
                 Assert.That(p.Version, Is.Not.Null);
 
-                TestContext.WriteLine($"{p.PackageId} {p.Version}");
+                TestContext.Out.WriteLine($"{p.PackageId} {p.Version}");
             }            
         }
 
@@ -59,7 +59,7 @@ namespace DirectoryPackagesTools
 
             foreach (var p in props.GetPackageReferences())
             {
-                TestContext.WriteLine($"{p.PackageId} {p.Version}");
+                TestContext.Out.WriteLine($"{p.PackageId} {p.Version}");
             }
         }
 
@@ -72,7 +72,33 @@ namespace DirectoryPackagesTools
 
             var views = props.GetPackageReferences().ToArray();
 
-            TestContext.WriteLine($"{views.Length}");
+            TestContext.Out.WriteLine($"{views.Length}");
+        }
+
+
+        [Test]
+        public async System.Threading.Tasks.Task ListPackages()
+        {
+            var nuClient = new Client.NuGetClient();
+
+            using (var context = nuClient.CreateContext(CancellationToken.None))
+            {
+                foreach (var r in context.Repositories)
+                {
+                    // if (r.IsNugetOrg || r.IsOfficial || r.IsVisualStudio) continue;
+
+                    TestContext.Out.WriteLine($"Repository {r.Source}");
+
+                    var filter = new SearchFilter(true);
+
+                    var result = await r.SearchAsync(filter, "", 0, 20);
+
+                    foreach (var foundPackage in result)
+                    {
+                        TestContext.Out.WriteLine($"{foundPackage.Identity}");
+                    }                    
+                }
+            }
         }
 
         [TestCase("DotNetZip")]
@@ -92,9 +118,9 @@ namespace DirectoryPackagesTools
 
                     var metas = await r.GetMetadataAsync(packageName);
 
-                    TestContext.WriteLine();
-                    TestContext.WriteLine($"--------------------------------------- From: " + r.Source.PackageSource);
-                    TestContext.WriteLine();
+                    TestContext.Out.WriteLine();
+                    TestContext.Out.WriteLine($"--------------------------------------- From: " + r.Source.PackageSource);
+                    TestContext.Out.WriteLine();
 
                     foreach (var v in versions)
                     {
@@ -102,28 +128,28 @@ namespace DirectoryPackagesTools
 
                         var isLocal = await r.ExistLocally(pid);                        
 
-                        TestContext.WriteLine($"{v} Exists Locally:{isLocal}");
-                        TestContext.WriteLine();
+                        TestContext.Out.WriteLine($"{v} Exists Locally:{isLocal}");
+                        TestContext.Out.WriteLine();
 
                         var depInfo = await r.GetDependencyInfoAsync(pid);
                         foreach (var dg in depInfo.DependencyGroups)
                         {
-                            TestContext.WriteLine($"       {dg.TargetFramework}");
+                            TestContext.Out.WriteLine($"       {dg.TargetFramework}");
 
                             foreach(var jj in dg.Packages)
                             {
-                                TestContext.WriteLine($"           {jj}");
+                                TestContext.Out.WriteLine($"           {jj}");
                             }
                         }
                     }                    
 
                     foreach(var meta in metas)
                     {
-                        TestContext.WriteLine(_ToJson(meta));
+                        TestContext.Out.WriteLine(_ToJson(meta));
 
                         var deprecation = await meta.GetDeprecationMetadataAsync();
 
-                        TestContext.WriteLine(_ToJson(deprecation));
+                        TestContext.Out.WriteLine(_ToJson(deprecation));
                     }                    
                 }                
             }            
