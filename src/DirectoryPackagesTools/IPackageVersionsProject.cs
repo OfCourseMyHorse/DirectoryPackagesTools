@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,10 +19,26 @@ namespace DirectoryPackagesTools
     /// </remarks>
     internal interface IPackageVersionsProject
     {
+        public static readonly IPackageVersionsProject Empty = new _EmptyPackageVersionsProject();
+
         System.IO.FileInfo File { get; }
         IEnumerable<IPackageReferenceVersion> GetPackageReferences();
-
         void Save(string path = null);
+    }
+
+    sealed class _EmptyPackageVersionsProject : IPackageVersionsProject
+    {
+        public FileInfo File => null;
+
+        public IEnumerable<IPackageReferenceVersion> GetPackageReferences()
+        {
+            yield break;
+        }
+
+        public void Save(string path = null)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,12 +7,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using NuGet.Protocol.Core.Types;
-using NuGet.Frameworks;
-
 using DirectoryPackagesTools.Client;
 using DirectoryPackagesTools.DOM;
-using System.Collections;
+
+using NuGet.Commands;
+using NuGet.Frameworks;
+using NuGet.Protocol.Core.Types;
 using NuGet.Protocol.Plugins;
 
 namespace DirectoryPackagesTools
@@ -35,6 +36,13 @@ namespace DirectoryPackagesTools
             {
                 XmlMSBuildProjectDOM.RemoveVersionsFromProjectsFiles(finfo.Directory);
             }
+        }
+
+        public static PackagesVersionsProjectMVVM FromDirectory(string directoryPath)
+        {
+            var client = new NuGetClient(directoryPath);
+
+            return new PackagesVersionsProjectMVVM(null, client, null);
         }
 
         public static async Task<PackagesVersionsProjectMVVM> LoadAsync(string filePath, IProgress<int> progress, CancellationToken ctoken)
@@ -145,9 +153,9 @@ namespace DirectoryPackagesTools
 
         private PackagesVersionsProjectMVVM(IPackageVersionsProject dom, NuGetClient client, PackageMVVM[] packages)
         {            
-            _Dom = dom;
+            _Dom = dom ?? IPackageVersionsProject.Empty;
             _Client = client;
-            _Packages = packages;
+            _Packages = packages ?? Array.Empty<PackageMVVM>();
         }
 
         #endregion

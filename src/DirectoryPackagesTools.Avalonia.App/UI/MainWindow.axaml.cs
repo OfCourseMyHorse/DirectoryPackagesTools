@@ -4,9 +4,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 
 namespace DirectoryPackagesTools
 {
@@ -130,6 +132,32 @@ namespace DirectoryPackagesTools
         #endregion
 
         #region API
+
+        public ICommand SelectContextDirectoryCmd => new Prism.Commands.DelegateCommand<Avalonia.Platform.Storage.IStorageFolder[]>(_SelectContextDirectory);
+
+        private async void _SelectContextDirectory(Avalonia.Platform.Storage.IStorageFolder[] folders)
+        {
+            var dir = folders[0].TryGetLocalPath();
+
+            #if !SUPRESSTRYCATCH
+            try {
+            #endif
+                var doc = PackagesVersionsProjectMVVM.FromDirectory(dir);
+
+                if (doc == null) return;
+
+                this.DataContext = doc;
+                this.Title = "Directory Packages Manager - " + dir;
+
+            #if !SUPRESSTRYCATCH
+            }
+            catch (OperationCanceledException) { await this.MessageBox().Show("Load cancelled."); }
+            catch (Exception ex)
+            {
+                await this.MessageBox().Show(ex.Message, "Error");
+            }
+            #endif
+        }
 
         private async void MenuItem_Load(object? sender, RoutedEventArgs e)
         {
