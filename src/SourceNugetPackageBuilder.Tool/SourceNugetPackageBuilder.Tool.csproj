@@ -44,7 +44,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20250422" PrivateAssets="all" />
+    <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20250430" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
