@@ -13,7 +13,27 @@
     </HeaderedContentControl>
 
     <HeaderedContentControl Grid.Row="1" Header="Packages">
-      <ListBox ItemsSource="{Binding PackagesAsync^}" DisplayMemberBinding="{Binding Identity.Id}" />  
+      <DataGrid ItemsSource="{Binding PackagesAsync^}"
+                AutoGenerateColumns="False"
+                SelectionMode="Single"
+                CanUserResizeColumns="True"
+                GridLinesVisibility="All" BorderThickness="1" BorderBrush="Gray">
+
+        <DataGrid.Columns>
+
+          <DataGridTextColumn Header="Package" MinWidth="250" Binding="{Binding Identity.Id}" IsReadOnly="True" />
+
+          <DataGridTextColumn Header="Version" MinWidth="200" Binding="{Binding Identity.Version}" IsReadOnly="True" />
+
+          <DataGridTextColumn Header="Project" MinWidth="250" Binding="{Binding ProjectUrl.OriginalString}" IsReadOnly="True" />
+
+          <DataGridTextColumn Header="Summary" MinWidth="250" Binding="{Binding Summary}" IsReadOnly="True" />
+
+          <DataGridTextColumn Header="tags" MinWidth="100" Binding="{Binding Tags}" IsReadOnly="True" />
+            
+        </DataGrid.Columns>
+        
+      </DataGrid>
     </HeaderedContentControl>    
   </Grid>  
   
