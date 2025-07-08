@@ -1,4 +1,6 @@
 ﻿using DirectoryPackagesTools.Client;
+
+using NuGet.Configuration;
 using NuGet.Protocol.Core.Types;
 
 using System;
@@ -13,67 +15,42 @@ namespace DirectoryPackagesTools
 {
     public sealed class RepositoriesCollectionMVVM : KeyedViewMVVM, IEnumerable<RepositoryMVVM>
     {
+        #region lifecycle
+
         internal RepositoriesCollectionMVVM(NuGetClient client) : base("Repositories")
         {
             _Client = client;
             _Context = _Client.CreateContext(CancellationToken.None);
+
+            Credentials = _Client.Settings.GetSection("packageSourceCredentials").Items.OfType<CredentialsItem>().ToList();
+            ApiKeys = _Client.Settings.GetSection("apikeys").Items.OfType<AddItem>().ToList();
         }
+
+        #endregion
+
+        #region properties
 
         private readonly NuGetClient _Client;
         private readonly NuGetClientContext _Context;
+        public IReadOnlyList<CredentialsItem> Credentials { get; }
+        public IReadOnlyList<AddItem> ApiKeys { get; }
 
-        public IEnumerator<RepositoryMVVM> GetEnumerator()
-        {
-            return _Client.Repositories.Select(item => new RepositoryMVVM(item, _Context)).GetEnumerator();
-        }
+        #endregion
+
+        #region API
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _Client.Repositories.Select(item => new RepositoryMVVM(item, _Context)).GetEnumerator();
+            return this.GetEnumerator();
         }
+
+        public IEnumerator<RepositoryMVVM> GetEnumerator()
+        {
+            return _Client.Repositories.Select(item => new RepositoryMVVM(item, _Context, Credentials, ApiKeys)).GetEnumerator();
+        }        
+
+        #endregion
     }
 
-    public class RepositoryMVVM
-    {
-        #region lifecycle
-        public RepositoryMVVM(SourceRepository repository, NuGetClientContext client)
-        {
-            _Repository = repository;
 
-            _RepoAPI = client.Repositories.FirstOrDefault(item => item.Source == repository);
-        }
-
-        #endregion
-
-        #region data
-
-        private NuGetClientContext _Client;
-        private SourceRepository _Repository;
-        private SourceRepositoryAPI _RepoAPI;
-
-        #endregion
-
-        #region Properties
-
-        public string Name => _Repository.PackageSource.Name;
-
-        public string ApiKey { get; set; }
-
-        public Task<IReadOnlyList<IPackageSearchMetadata>> PackagesAsync
-        {
-            get
-            {
-                if (_RepoAPI.IsNugetOrg || _RepoAPI.IsVisualStudio || _RepoAPI.IsOfficial) return Task.FromResult<IReadOnlyList<IPackageSearchMetadata>>(Array.Empty<IPackageSearchMetadata>());
-
-                return _RepoAPI.SearchAsync(new SearchFilter(true));
-            }
-        }
-
-        #endregion
-
-
-        // dotnet nuget push GraphicAssetProcessor.DotNetTool\bin\Release\GraphicAssetProcessor.DotNetTool.0.0.1-%VERSIONSUFFIX%.nupkg -s %GALLERY% -k %APIKEY% --force-english-output
-
-
-    }
 }

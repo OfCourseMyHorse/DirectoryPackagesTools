@@ -7,12 +7,27 @@
              x:Class="DirectoryPackagesTools.RepositoryView"
              x:DataType="l:RepositoryMVVM">
   
-  <Grid RowDefinitions="auto *">
-    <HeaderedContentControl Grid.Row="0" Header="Repo Settings">
-      <TextBox Text="{Binding ApiKey}" Watermark="Api Key" />
+  <Grid RowDefinitions="auto auto *">
+    
+    <HeaderedContentControl Grid.Row="0" Header="Credentials">
+      <Grid RowDefinitions="auto auto" ColumnDefinitions="auto auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="User Name:" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Credentials.Username}" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Password:" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="👁" ToolTip.Tip="{Binding CredentailsClearPassword}"  />
+      </Grid>
     </HeaderedContentControl>
 
-    <HeaderedContentControl Grid.Row="1" Header="Packages">
+    <HeaderedContentControl Grid.Row="1" Header="API Keys">
+      <Grid RowDefinitions="auto auto" ColumnDefinitions="auto auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Key:" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ApiKey.Key}" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="👁" ToolTip.Tip="{Binding ApiKey.Value}"  />
+      </Grid>
+    </HeaderedContentControl>
+
+    <HeaderedContentControl Grid.Row="2" Header="Packages">
       <DataGrid ItemsSource="{Binding PackagesAsync^}"
                 AutoGenerateColumns="False"
                 SelectionMode="Single"

@@ -26,12 +26,14 @@ namespace DirectoryPackagesTools.Client
 
         #region lifecycle
 
-        public NuGetClient() : this(null) { }
+        public NuGetClient() : this((string)null) { }
+
+        public NuGetClient(System.IO.DirectoryInfo dinfo) : this(dinfo.FullName) { }
 
         public NuGetClient(string root)
         {
-            var settings = Settings.LoadDefaultSettings(root);
-            var provider = new PackageSourceProvider(settings);
+            Settings = NuGet.Configuration.Settings.LoadDefaultSettings(root);
+            var provider = new PackageSourceProvider(Settings);
 
             _Repos = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
             Logger = NullLogger.Instance;
@@ -48,6 +50,8 @@ namespace DirectoryPackagesTools.Client
         #endregion
 
         #region properties
+
+        public ISettings Settings { get; }
 
         public IEnumerable<SourceRepository> Repositories => _Repos.GetRepositories();
 
