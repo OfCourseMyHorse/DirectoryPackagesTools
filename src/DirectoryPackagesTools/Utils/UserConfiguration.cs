@@ -11,7 +11,6 @@ namespace DirectoryPackagesTools.Utils
     /// <summary>
     /// Used by <see cref="PackageClassifier"/>
     /// </summary>
-    [JsonSerializable(typeof(UserConfiguration))]
     internal partial class UserConfiguration
     {
         #region singleton
