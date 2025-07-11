@@ -184,17 +184,7 @@ namespace DirectoryPackagesTools
         /// <summary>
         /// Gets all the packages grouped by category.
         /// </summary>
-        public IEnumerable<PackagesGroupMVVM> GroupedPackages
-        {
-            get
-            {
-                var classifier = new PackageClassifier(AllPackages.Select(item => item.Prefix));
-
-                return AllPackages
-                    .GroupBy(p => p.GetPackageCategory(classifier))
-                    .Select(item => new PackagesGroupMVVM(item.Key, item));
-            }
-        }
+        public IEnumerable<PackagesGroupMVVM> GroupedPackages => PackagesGroupMVVM.CreateGroups(AllPackages);       
 
         public IEnumerable<KeyedViewMVVM> Views => GroupedPackages.Cast<KeyedViewMVVM>().Append(Repositories);
 
@@ -270,14 +260,33 @@ namespace DirectoryPackagesTools
     }
 
     
-
+    /// <summary>
+    /// Represents a group of packages that share a given category (testing, logging, etc)
+    /// </summary>
     public class PackagesGroupMVVM : KeyedViewMVVM
     {
-        public PackagesGroupMVVM(string key, IEnumerable<PackageMVVM> values) : base(key)
+        #region lifecycle
+        public static IEnumerable<PackagesGroupMVVM> CreateGroups(IReadOnlyCollection<PackageMVVM> allPackages)
+        {
+            var classifier = new Utils.PackageClassifier(allPackages.Select(item => item.Prefix));
+
+            return allPackages
+                .GroupBy(p => p.GetPackageCategory(classifier))
+                .Select(item => new PackagesGroupMVVM(item.Key, item))
+                .ToList();
+        }
+
+        private PackagesGroupMVVM(string key, IEnumerable<PackageMVVM> values) : base(key)
         {            
             Packages = values.ToList();
-        }        
+        }
+        #endregion
+
+        #region data
         public IReadOnlyList<PackageMVVM> Packages { get; }
+
+        #endregion
+
     }
 }
 

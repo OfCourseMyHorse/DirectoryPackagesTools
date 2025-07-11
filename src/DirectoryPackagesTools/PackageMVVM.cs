@@ -13,6 +13,7 @@ using NUGETVERSIONRANGE = NuGet.Versioning.VersionRange;
 using NUGETPACKIDENTITY = NuGet.Packaging.Core.PackageIdentity;
 using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
 using NUGETPACKDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
+using DirectoryPackagesTools.Utils;
 
 namespace DirectoryPackagesTools
 {

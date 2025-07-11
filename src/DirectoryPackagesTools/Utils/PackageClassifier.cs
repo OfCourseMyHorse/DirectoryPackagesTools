@@ -4,7 +4,7 @@ using System.Linq;
 
 using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
 
-namespace DirectoryPackagesTools.Client
+namespace DirectoryPackagesTools.Utils
 {
     /// <summary>
     /// Helper class used to classify packages into usage categories

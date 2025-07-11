@@ -43,7 +43,8 @@
     "Grpc.Tools",
     "log4net",
     "MathNet.Numerics",
-    "CommunityToolkit.Mvvm"
+    "CommunityToolkit.Mvvm",
+    "PropertyTools.Wpf"
   ],
 
   "obsoletePackages": {

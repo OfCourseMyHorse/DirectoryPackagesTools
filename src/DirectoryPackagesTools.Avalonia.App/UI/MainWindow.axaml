@@ -17,7 +17,7 @@
         
         <MenuItem Header="File">
 
-          <MenuItem Header="Select Context Dir..." ToolTip.Tip="Opens a directory and evaluates its nuget context.">
+          <MenuItem Header="Select Context Dir..." ToolTip.Tip="Opens a directory and evaluates its nuget.config context.">
             <Interaction.Behaviors>
               <MenuItemOpenFolderPickerBehavior AllowMultiple="False" Command="{Binding #mySelf.SelectContextDirectoryCmd}" />
             </Interaction.Behaviors>
@@ -28,16 +28,16 @@
 
           <Separator />
           
-          <MenuItem Header="New..."        Click="MenuItem_New" ToolTip.Tip="Creates a new Directory.Build.props and optionally fixes all csproj files.">
+          <MenuItem Header="New..."        Click="MenuItem_New" ToolTip.Tip="Creates a new Directory.Packages.props and optionally fixes all csproj files.">
             <MenuItem.Icon> <TextBlock Text="✨" /> </MenuItem.Icon>
           </MenuItem>
-          <MenuItem Header="Open..."       Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Build.props.">
+          <MenuItem Header="Open..."       Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Packages.props.">
             <MenuItem.Icon> <TextBlock Text="📂" /> </MenuItem.Icon>
           </MenuItem>          
-          <MenuItem Header="Save"          Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Build.props." >
+          <MenuItem Header="Save"          Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Packages.props." >
             <MenuItem.Icon> <TextBlock Text="💾" /> </MenuItem.Icon>
           </MenuItem>
-          <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Build.props and opens a Commit dialog." >
+          <MenuItem Header="Save + Commit" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a Commit dialog." >
             <MenuItem.Icon> <TextBlock Text="📤" /> </MenuItem.Icon>
           </MenuItem>
           
