@@ -22,8 +22,11 @@ namespace DirectoryPackagesTools
             _Client = client;
             _Context = _Client.CreateContext(CancellationToken.None);
 
-            Credentials = _Client.Settings.GetSection("packageSourceCredentials").Items.OfType<CredentialsItem>().ToList();
-            ApiKeys = _Client.Settings.GetSection("apikeys").Items.OfType<AddItem>().ToList();
+            var credsSection = _Client.Settings.GetSection("packageSourceCredentials");
+            Credentials = credsSection != null ? credsSection.Items.OfType<CredentialsItem>().ToList() : null;
+
+            var apikSection = _Client.Settings.GetSection("packageSourceCredentials");
+            ApiKeys = apikSection != null ? apikSection.Items.OfType<AddItem>().ToList() : null;
         }
 
         #endregion
