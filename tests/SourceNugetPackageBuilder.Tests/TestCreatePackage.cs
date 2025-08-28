@@ -67,14 +67,16 @@ namespace DirectoryPackagesTools
         }
 
         [TestCase("SourcePackageExampleProject/SourcePackageExampleProject.csproj")]
-        [TestCase("D:\\Github\\(_Owned_)\\(_LIBS_)\\_GIT\\CodeSugar\\src\\CodeSugar.FileProviders.Sources\\CodeSugar.FileProviders.Sources.csproj")]
+        [TestCase("D:\\Github\\__Owned__\\__LIBS__\\_GIT\\CodeSugar\\src\\CodeSugar.FileProviders.Sources\\CodeSugar.FileProviders.csproj")]
         public async Task CreateSourcePackageFromProject(string prjPath)
         {
             var prjInfo = ResourceInfo.From(prjPath);
 
+            Assert.That(prjInfo.File.Exists);
+
             using (var testDir = new AttachmentDirectory())
             {
-                var ctx = new SourceNugetPackageBuilder.ContextLegacy();
+                var ctx = new SourceNugetPackageBuilder.Context();
                 ctx.SourceFiles = [prjInfo.File];
                 ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
                 ctx.IncludeCompileChecks = true;
