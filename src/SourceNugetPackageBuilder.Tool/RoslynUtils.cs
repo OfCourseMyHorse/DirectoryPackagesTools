@@ -83,7 +83,27 @@ namespace SourceNugetPackageBuilder
         }
     }
 
-    public static class NullableContextExtensions
+
+    /// <summary>
+    /// Validates source code files to ensure they're ready for source code packaging
+    /// </summary>
+    public static class SourceCodeValidator
+    {
+        public static Exception Validate(string sourceCode)
+        {
+            if (sourceCode == null) return new ArgumentNullException(nameof(sourceCode));
+
+            if (UsingDirectivesExtensions.GetUsingDirectives(sourceCode).Any(item => !item.Key.StartsWith("__")))
+            {
+                return new InvalidOperationException("using directives must begin with double underscore __ to prevent collisions with global usings");
+            }
+
+
+            return null;
+        }
+    }
+
+    static class NullableContextExtensions
     {
         public static bool IsInNullableContext(this CSharpSyntaxNode node, SemanticModel semanticModel)
         {
@@ -103,5 +123,22 @@ namespace SourceNugetPackageBuilder
         public static bool AnnotationsEnabled(this NullableContext context) => IsFlagSet(context, NullableContext.AnnotationsEnabled);
 
         private static bool IsFlagSet(this NullableContext context, NullableContext flag) => (context & flag) == flag;
+    }
+
+    static class UsingDirectivesExtensions
+    {
+        public static IEnumerable<KeyValuePair<string,string>> GetUsingDirectives(string sourceCode)
+        {
+            var tree = CSharpSyntaxTree.ParseText(sourceCode);
+            var root = tree.GetCompilationUnitRoot();
+
+            foreach (var usingDirective in root.DescendantNodes().OfType<UsingDirectiveSyntax>())
+            {
+                if (usingDirective.Alias != null)
+                {
+                    yield return new KeyValuePair<string, string>(usingDirective.Alias.Name.ToString(), usingDirective.Name.ToString());                    
+                }
+            }
+        }
     }
 }

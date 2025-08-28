@@ -74,7 +74,7 @@ namespace DirectoryPackagesTools
 
             using (var testDir = new AttachmentDirectory())
             {
-                var ctx = new SourceNugetPackageBuilder.Context();
+                var ctx = new SourceNugetPackageBuilder.ContextLegacy();
                 ctx.SourceFiles = [prjInfo.File];
                 ctx.VersionSuffix = "explicit-{SHORTDATE}-{SHORTTIME}";
                 ctx.IncludeCompileChecks = true;

@@ -176,7 +176,7 @@ namespace SourceNugetPackageBuilder
             Builder.ContentFiles.Add(manifest);
         }
 
-        private static PhysicalPackageFile CreatePhysicalPackageFile(System.IO.FileInfo finfo)
+        private static PhysicalPackageFile CreatePhysicalPackageFile(FileInfo finfo)
         {
             var pkgFile = new PhysicalPackageFile();
             pkgFile.SourcePath = finfo.FullName;
@@ -199,7 +199,7 @@ namespace SourceNugetPackageBuilder
 
         public void SavePackage()
         {
-            var writePath = OutDir.DefineFile($"{Builder.Id}.{Builder.Version}.nupkg");
+            var writePath = OutDir.DefineFileInfo($"{Builder.Id}.{Builder.Version}.nupkg");
             writePath.Directory.Create();
 
             using (var w = writePath.OpenWrite())
