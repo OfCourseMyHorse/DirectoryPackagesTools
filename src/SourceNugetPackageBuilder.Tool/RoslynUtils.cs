@@ -89,15 +89,24 @@ namespace SourceNugetPackageBuilder
     /// </summary>
     public static class SourceCodeValidator
     {
+        public static string RequieredUsingDirectivesPrefix = "_";
+
         public static Exception Validate(string sourceCode)
         {
             if (sourceCode == null) return new ArgumentNullException(nameof(sourceCode));
 
-            if (UsingDirectivesExtensions.GetUsingDirectives(sourceCode).Any(item => !item.Key.StartsWith("__")))
+            if (!sourceCode.Contains("#nullable disable"))
             {
-                return new InvalidOperationException("using directives must begin with double underscore __ to prevent collisions with global usings");
+                return new InvalidOperationException("must include #nullable disable at the beginning of the file");               
             }
 
+            if (!string.IsNullOrWhiteSpace(RequieredUsingDirectivesPrefix))
+            {
+                if (UsingDirectivesExtensions.GetUsingDirectives(sourceCode).Any(item => !item.Key.StartsWith(RequieredUsingDirectivesPrefix)))
+                {
+                    return new InvalidOperationException("using directives must begin with double underscore __ to prevent collisions with global usings");
+                }                
+            }
 
             return null;
         }

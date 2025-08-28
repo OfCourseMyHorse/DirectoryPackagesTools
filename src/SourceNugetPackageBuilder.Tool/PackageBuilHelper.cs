@@ -91,6 +91,16 @@ namespace SourceNugetPackageBuilder
                     .FindCompilableFiles(framework)
                     .ToList();
 
+                // validate
+
+                foreach (var finfo in files)
+                {
+                    var ex = SourceCodeValidator.Validate(finfo.ReadAllText());
+                    _Arguments.HandleSourceCodeValidationError(ex, finfo);
+                }
+
+                // add to package
+
                 foreach (var finfo in files)
                 {
                     _AddSourceCodeFile(factory, fw, finfo);

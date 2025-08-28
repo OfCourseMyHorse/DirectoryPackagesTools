@@ -2,11 +2,11 @@
   "profiles": {
     "SourceNugetPackageBuilder.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\Github\\(_Owned_)\\(_LIBS_)\\_GIT\\InteropTypes\\src\\InteropTypes.Tensors\\InteropTypes.Tensors.csproj\" --package-id pepito.Sources --include-compile-checks"
+      "commandLineArgs": "\"D:\\Github\\__Owned__\\__LIBS__\\_GIT\\InteropTypes\\src\\InteropTypes.Tensors\\InteropTypes.Tensors.csproj\" --package-id pepito.Sources --include-compile-checks"
     },
     "codesugar": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\Github\\(_Owned_)\\(_LIBS_)\\_GIT\\CodeSugar\\src\\CodeSugar.Sys.Sources\\CodeSugar.Sys.Sources.csproj\" --include-compile-checks"
+      "commandLineArgs": "\"D:\\Github\\__Owned__\\__LIBS__\\_GIT\\CodeSugar\\src\\CodeSugar.Sys.Sources\\CodeSugar.Sys.csproj\" --include-compile-checks"
     }
   }
 }

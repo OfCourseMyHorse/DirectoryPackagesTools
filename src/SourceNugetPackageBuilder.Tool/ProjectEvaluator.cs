@@ -53,6 +53,8 @@ namespace SourceNugetPackageBuilder
 
         public ProjectEvaluator(System.IO.FileInfo finfo)
         {
+            if (!finfo.PhysicallyExists()) throw new System.IO.FileNotFoundException(finfo?.FullName);
+
             _TargetFramework = null;
             _Project = new Project(finfo.FullName);
             ProjectPath = new System.IO.FileInfo(_Project.FullPath);

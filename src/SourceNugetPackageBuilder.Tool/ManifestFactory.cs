@@ -76,9 +76,9 @@ namespace SourceNugetPackageBuilder
 
         public string PackAsSourcesFolder => _Project.PackAsSourcesFolder;
 
-        public System.IO.FileInfo FindIcon() => _Project.FindIcon();
+        public FileInfo FindIcon() => _Project.FindIcon();
 
-        public IEnumerable<System.IO.FileInfo> FindCompilableFiles(string targetFrameworkMoniker)
+        public IEnumerable<FileInfo> FindCompilableFiles(string targetFrameworkMoniker)
         {
             if (!_FrameworkProject.TryGetValue(targetFrameworkMoniker, out var prj)) throw new KeyNotFoundException(targetFrameworkMoniker);
 

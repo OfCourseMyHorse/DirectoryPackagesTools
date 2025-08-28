@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.CommandLine;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SourceNugetPackageBuilder
 {
-    
+
     public class Arguments
     {
         #region command bindings
@@ -26,12 +28,15 @@ namespace SourceNugetPackageBuilder
                 _Version,
                 _VersionSuffix,
                 _IncludeCompileChecks,
+                _DisableErrorValidation
             ];
         }
 
         private static readonly System.CommandLine.RootCommand _Command;
         private static readonly Argument<System.IO.FileInfo[]> _SourceFiles = new Argument<System.IO.FileInfo[]>("SourceFiles") { Description = "Source files, which can be a solution or project files", Arity = ArgumentArity.ZeroOrMore };
         private static readonly Option<System.IO.DirectoryInfo> _OutputDirectory = new Option<System.IO.DirectoryInfo>("--output", "-o") { Description = "output directory" };
+
+        private static readonly Option<bool> _DisableErrorValidation = new Option<bool>("--disable-sources-validation") { Description = "Disables source code validation" };
 
         private static readonly Option<string> _AltPackageId = new Option<string>("--package-id") { Description = "Alternative package ID (default is project name)" };
         private static readonly Option<bool> _AppendSourceSuffix = new Option<bool>("--append-sources-suffix") { Description = "appends .Sources to package Id" };
@@ -52,7 +57,11 @@ namespace SourceNugetPackageBuilder
             var result = ParseCommand(args);
 
             SourceFiles = result.GetValue(_SourceFiles).ToImmutableArray();
+
+            DisableErrorValidation = result.GetValue(_DisableErrorValidation);
+
             OutputDirectory = result.GetValue(_OutputDirectory);
+
             Version = result.GetValue(_Version)?.TrimStart();
             VersionSuffix = result.GetValue(_VersionSuffix)?.TrimStart();
             AltPackageId = result.GetValue(_AltPackageId)?.TrimStart();
@@ -60,14 +69,14 @@ namespace SourceNugetPackageBuilder
             IncludeCompileChecks = result.GetValue(_IncludeCompileChecks);
         }
 
-        
-
         #endregion
 
         #region arguments
 
         // [Value(0, Required = true, HelpText = "Source files, which can be a solution or project files")]
         public ImmutableArray<System.IO.FileInfo> SourceFiles { get; set; }
+
+        public bool DisableErrorValidation { get; set; }
 
         // [Option('o', "output", Required = false, HelpText = "output directory")]
         public System.IO.DirectoryInfo OutputDirectory { get; set; }
@@ -87,9 +96,26 @@ namespace SourceNugetPackageBuilder
         // [Option("include-compile-checks", Required = false, HelpText = "includes a build.targets file that checks for common csproj mistakes")]
         public bool IncludeCompileChecks { get; set; }
 
-        #endregion        
+        #endregion
+
+        #region API
+
+        public void HandleSourceCodeValidationError(Exception ex, FileInfo sourceCodePath)
+        {
+            if (ex == null) return;
+
+            if (DisableErrorValidation)
+            {
+                Console.Error.WriteLine($"{sourceCodePath.FullName} : {ex.Message}");
+                return;
+            }                
+                
+            throw new ArgumentException(sourceCodePath.FullName, ex);            
+        }
+
+        #endregion
     }
-    
+
     public class Context : Arguments
     {
         #region API
@@ -121,8 +147,7 @@ namespace SourceNugetPackageBuilder
                     .Where(item => item.IsPackableAsSources)
                     .ToList();
             }
-
-            /*
+            
             foreach (var f in factories)
             {
                 Console.Write($"Packing as sources: {f.ProjectPath.Name}...");
@@ -137,7 +162,7 @@ namespace SourceNugetPackageBuilder
                 Console.WriteLine("Completed");
 
                 await Task.Yield();
-            }*/
+            }
         }
 
         #endregion
