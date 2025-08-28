@@ -27,8 +27,15 @@
 
           <MenuItem Icon="✨" Header="New..."        Click="MenuItem_New" ToolTip.Tip="Creates a new Directory.Packages.props and optionally fixes all csproj files." />
           <MenuItem Icon="📂" Header="Open..."       Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Packages.props." />
+					<MenuItem Icon="♻" Header="Reload"       Click="MenuItem_Reload" ToolTip.Tip="Opens an existing Directory.Packages.props." />
           <MenuItem Icon="💾" Header="Save"          Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Packages.props." />
-          <MenuItem Icon="📤" Header="Save + Commit" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a Commit dialog." />
+					<MenuItem Icon="💾" Header="Save and...">
+						<MenuItem Icon="📤" Header="Commit changes" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a Commit dialog." />
+						<MenuItem Icon="▷◀" Header="Open Solution" Click="MenuItem_SaveAndOpenSln" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a the solution." />
+					</MenuItem>
+					
+					
+          
           
         </MenuItem>
         <!--

@@ -172,6 +172,14 @@ namespace DirectoryPackagesTools
             await _LoadDocumentAsync(finfo.FullName).ConfigureAwait(false);
         }
 
+        private async void MenuItem_Reload(object? sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
+            {
+                await _LoadDocumentAsync(mvvm.DocumentPath).ConfigureAwait(false);
+            }            
+        }
+
         private async Task _LoadDocumentAsync(string documentPath)
         {
             using var ctx = BeginTask();
@@ -209,16 +217,39 @@ namespace DirectoryPackagesTools
 
             var finfo = MVVMContext?.File;
             if (finfo == null) return;
+            var dinfo = finfo.Directory;
+            if (dinfo == null) return;
 
-            if (finfo.Directory.CommitToVersionControl()) Avalonia.Application.Current.TryShutDown();
+            if (dinfo.CommitToVersionControl()) Avalonia.Application.Current?.TryShutDown();
+        }
+
+        private void MenuItem_SaveAndOpenSln(object? sender, RoutedEventArgs e)
+        {
+            MenuItem_Save(sender, e);
+
+            var finfo = MVVMContext?.File;
+            if (finfo == null) return;
+            var dinfo = finfo.Directory;
+            if (dinfo == null) return;
+
+            var sln = dinfo.EnumerateFiles("*.sln").FirstOrDefault();
+            if (sln == null) return;
+
+            var psi = new System.Diagnostics.ProcessStartInfo(sln.FullName);
+            psi.UseShellExecute = true;
+            System.Diagnostics.Process.Start(psi);
+
+            Avalonia.Application.Current?.TryShutDown();
         }
 
         private void MenuItem_OpenCommandLine(object? sender, RoutedEventArgs e)
         {
             var finfo = MVVMContext?.File;
             if (finfo == null) return;
+            var dinfo = finfo.Directory;
+            if (dinfo == null) return;
 
-            _OpenCommandLine(finfo.Directory);
+            _OpenCommandLine(dinfo);
         }
 
         private static void _OpenCommandLine(DirectoryInfo dinfo)
