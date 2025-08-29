@@ -1,0 +1,7 @@
+{
+  "Title": "Directory Packages Toolkit",
+  "ExecutablePath": "bin/publish/DirectoryPackagesTools.Avalonia.App.exe",
+  "ProjectPath": "DirectoryPackagesTools.Avalonia.App.csproj",
+  "IconPath": "icon.ico",
+  "Description": "Application used to update nuget packages of Directory.Packages.Props"
+}
