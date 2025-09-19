@@ -22,9 +22,9 @@
         
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" IsVisible="{Binding NeedsUpdate}">
           <TextBlock Text=" "/>
-          <Button Content="{Binding NewestRelease, Converter={StaticResource asShortText}}" Background="LightGreen" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestRelease}" />
+          <Button Content="{Binding NewestRelease, Converter={StaticResource asShortText}}" Background="LightGreen" Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding NewestRelease}" />
           <TextBlock Text=" "/>
-          <Button Content="{Binding NewestPrerelease, Converter={StaticResource asShortText}}" Background="LightPink" Command="{Binding ApplyVersionCmd}" CommandParameter="{Binding NewestPrerelease}" />
+          <Button Content="{Binding NewestPrerelease, Converter={StaticResource asShortText}}" Background="LightPink" Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding NewestPrerelease}" />
         </StackPanel>
         
       </StackPanel>

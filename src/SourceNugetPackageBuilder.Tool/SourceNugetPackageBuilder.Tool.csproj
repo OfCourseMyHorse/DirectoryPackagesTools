@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="CompileChecks_targets.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="CompileChecks_targets.xml" Pack="false" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- https://developercommunity.visualstudio.com/t/visual-studio-2022-nuget-solutions-tab-keeps-reloa/1574510#T-N1688294 -->

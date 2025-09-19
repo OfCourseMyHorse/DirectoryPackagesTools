@@ -18,7 +18,7 @@ namespace DirectoryPackagesTools.Client
 {
     using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;
 
-    public class NuGetClient : Prism.Mvvm.BindableBase
+    public class NuGetClient : BaseMVVM
     {
         // https://learn.microsoft.com/en-us/nuget/reference/nuget-client-sdk
         // https://github.com/NuGet/Samples/blob/main/NuGetProtocolSamples/Program.cs
@@ -140,23 +140,7 @@ namespace DirectoryPackagesTools.Client
             return bag.Distinct().ToArray();
         }
 
-        /// <summary>
-        /// Updates the versions of all the packages found in <paramref name="packages"/>
-        /// </summary>
-        /// <param name="packages">The package versions to be updated</param>
-        /// <param name="progress">reports progress to the client</param>
-        /// <param name="token"></param>        
-        public async Task FillVersionsAsync(IReadOnlyList<NuGetPackageInfo> packages, IProgress<int> progress)
-        {
-            var percent = new _ProgressCounter(progress, packages.Count);
-
-            foreach (var package in packages)
-            {                
-                await package.UpdateAsync(this).ConfigureAwait(true);
-
-                percent.Report(package.Id);                                
-            }
-        }
+        
 
         public async Task<IReadOnlyList<IPackageSearchMetadata>> GetMetadataAsync(params PackageIdentity[] packages)
         {

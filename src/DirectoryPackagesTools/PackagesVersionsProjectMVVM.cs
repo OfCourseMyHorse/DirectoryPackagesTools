@@ -24,7 +24,7 @@ namespace DirectoryPackagesTools
     /// This is the MVVM of a Directory.Packages.props project
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{DocumentPath}")]
-    public class PackagesVersionsProjectMVVM : Prism.Mvvm.BindableBase
+    public class PackagesVersionsProjectMVVM : BaseMVVM
     {
         #region lifecycle
 
@@ -129,7 +129,7 @@ namespace DirectoryPackagesTools
 
             using(var ctx = client.CreateContext(ctoken))
             {
-                await ctx.FillVersionsAsync(tmp, progress);
+                await NuGetPackageInfo.FillAsync(tmp, ctx, progress);
             }
 
             var mvvms = new List<PackageMVVM>();
@@ -211,8 +211,9 @@ namespace DirectoryPackagesTools
                 FrameworkConstants.CommonFrameworks.NetStandard14,
                 FrameworkConstants.CommonFrameworks.NetStandard15,
                 FrameworkConstants.CommonFrameworks.NetStandard16,
-                FrameworkConstants.CommonFrameworks.NetStandard17,                
+                FrameworkConstants.CommonFrameworks.NetStandard17,
                 FrameworkConstants.CommonFrameworks.NetStandard20,
+
                 FrameworkConstants.CommonFrameworks.Net45,
                 FrameworkConstants.CommonFrameworks.Net451,
                 FrameworkConstants.CommonFrameworks.Net452,
@@ -222,7 +223,7 @@ namespace DirectoryPackagesTools
                 FrameworkConstants.CommonFrameworks.Net463,
                 FrameworkConstants.CommonFrameworks.Net47,
                 FrameworkConstants.CommonFrameworks.Net471,
-                FrameworkConstants.CommonFrameworks.Net472,
+                FrameworkConstants.CommonFrameworks.Net472,                
             };
 
 
@@ -249,13 +250,9 @@ namespace DirectoryPackagesTools
     }    
 
 
-    public abstract class KeyedViewMVVM
+    public abstract class KeyedViewMVVM : BaseMVVM
     {
-        protected KeyedViewMVVM(string key)
-        {
-            Key = key;
-        }
-
+        protected KeyedViewMVVM(string key) { Key = key; }
         public string Key { get; }
     }
 

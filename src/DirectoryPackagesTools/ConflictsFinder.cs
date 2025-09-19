@@ -16,6 +16,9 @@ using DirectoryPackagesTools.Client;
 
 namespace DirectoryPackagesTools
 {
+    /// <summary>
+    /// Used to identify dependency conflicts in a package dependency tree
+    /// </summary>
     class ConflictsFinder
     {
         public ConflictsFinder(NuGetClientContext context, params NuGetFramework[] frameworks)

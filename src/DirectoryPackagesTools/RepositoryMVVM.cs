@@ -15,7 +15,7 @@ namespace DirectoryPackagesTools
     /// Represents a Nuget Gallery repository.
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Name}")]
-    public class RepositoryMVVM
+    public class RepositoryMVVM : BaseMVVM
     {
         #region lifecycle
         public RepositoryMVVM(SourceRepository repository, NuGetClientContext client, IEnumerable<CredentialsItem> credentials, IEnumerable<AddItem> apiKeys)
@@ -42,11 +42,10 @@ namespace DirectoryPackagesTools
         #region data
 
         private NuGetClientContext _Client;
+
         private SourceRepository _Repository;
         private SourceRepositoryAPI _RepoAPI;
-
         public CredentialsItem Credentials { get; }
-
         public AddItem ApiKey { get; }
 
         public string CredentailsClearPassword
@@ -60,16 +59,13 @@ namespace DirectoryPackagesTools
 
                 return EncryptionUtility.DecryptString(pw);
             }
-                
-
         }
 
         #endregion
 
         #region Properties
 
-        public string Name => _Repository.PackageSource.Name;
-        
+        public string Name => _Repository.PackageSource.Name;        
 
         public Task<IReadOnlyList<IPackageSearchMetadata>> PackagesAsync
         {

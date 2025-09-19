@@ -19,7 +19,7 @@
 
           <MenuItem Icon="📂" Header="Select Context Dir..." ToolTip.Tip="Opens a directory and evaluates its nuget.config context.">
             <Interaction.Behaviors>
-              <MenuItemOpenFolderPickerBehavior AllowMultiple="False" Command="{Binding #mySelf.SelectContextDirectoryCmd}" />
+              <MenuItemOpenFolderPickerBehavior AllowMultiple="False" Command="{Binding #mySelf.SelectContextDirectoryCommand}" />
             </Interaction.Behaviors>
           </MenuItem>
 

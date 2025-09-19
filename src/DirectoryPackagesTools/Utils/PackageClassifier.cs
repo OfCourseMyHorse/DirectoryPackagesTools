@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using NUGETPACKMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
+
 
 namespace DirectoryPackagesTools.Utils
 {

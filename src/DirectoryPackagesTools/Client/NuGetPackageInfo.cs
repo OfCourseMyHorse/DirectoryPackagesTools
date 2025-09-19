@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using NuGet.Packaging.Core;
+using NuGet.Protocol.Plugins;
 using NuGet.Versioning;
 
-using NPMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
-using NPDEPRECATION = NuGet.Protocol.PackageDeprecationMetadata;
 using NPDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
+using NPDEPRECATION = NuGet.Protocol.PackageDeprecationMetadata;
+using NPMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
 
 namespace DirectoryPackagesTools.Client
 {
@@ -20,46 +22,46 @@ namespace DirectoryPackagesTools.Client
     public class NuGetPackageInfo
     {
         #region lifecycle
-        public NuGetPackageInfo(string id, VersionRange version)
-        {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            _CurrVersion = version ?? throw new ArgumentException($"Invalid version for package {id}", nameof(version));
 
-            _PackageId = new PackageIdentity(Id, _CurrVersion.MinVersion);
+        /// <summary>
+        /// Updates the versions of all the packages found in <paramref name="packages"/>
+        /// </summary>
+        /// <param name="packages">The package versions to be updated</param>
+        /// <param name="progress">reports progress to the client</param>
+        /// <param name="token"></param>        
+        public static async Task FillAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClientContext context, IProgress<int> progress)
+        {
+            var percent = new _ProgressCounter(progress, packages.Count);
+
+            foreach (var package in packages)
+            {
+                await package.UpdateAsync(context);
+
+                percent.Report(package.Id);
+            }
         }
 
-        #endregion
-
-        #region data
-
-        public string Id { get; }
-
-        private VersionRange _CurrVersion;
-        private PackageIdentity _PackageId;
-
-        private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion,_Extras> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, _Extras>();
-
-        public NPMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
-
-        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
-
-        public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
-
-        public NPDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
-
-        #endregion
-
-        #region API
-
-        public IReadOnlyList<NuGetVersion> GetVersions()
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, VersionRange currentVersion, CancellationToken ctoken)
         {
-            var allDeprecated = this.AllDeprecated;
+            using (var ctx = client.CreateContext(ctoken))
+            {
+                return await CreateAsync(ctx, id, currentVersion);
+            }
+        }
 
-            return _Versions
-                .Where(item => allDeprecated || item.Value.DeprecationInfo == null)
-                .Select(item => item.Key)
-                .OrderBy(item => item)
-                .ToList();
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClientContext context, string id, VersionRange currentVersion)
+        {
+            var instance = new NuGetPackageInfo(id,currentVersion);
+            await instance.UpdateAsync(context);
+            return instance;
+        }        
+
+        public NuGetPackageInfo(string id, VersionRange currentVersion)
+        {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            _CurrVersion = currentVersion ?? throw new ArgumentException($"Invalid version for package {id}", nameof(currentVersion));
+
+            _PackageId = new PackageIdentity(Id, _CurrVersion.MinVersion);
         }
 
         public async Task UpdateAsync(NuGetClientContext client)
@@ -96,7 +98,7 @@ namespace DirectoryPackagesTools.Client
                     // get all metadatas
                     var mmm = await repo.GetMetadataAsync(this.Id).ConfigureAwait(false);
 
-                    foreach(var metaData in mmm)
+                    foreach (var metaData in mmm)
                     {
                         if (!_Versions.TryGetValue(metaData.Identity.Version, out var extras)) continue;
 
@@ -116,7 +118,7 @@ namespace DirectoryPackagesTools.Client
                                 extras.Dependencies = deps;
                             }
                         }
-                        
+
                     }
                 }
                 catch (Exception ex)
@@ -125,6 +127,42 @@ namespace DirectoryPackagesTools.Client
                 }
             }
         }
+
+        #endregion
+
+        #region data
+
+        public string Id { get; }
+
+        private VersionRange _CurrVersion;
+        private PackageIdentity _PackageId;
+
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion,_Extras> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, _Extras>();
+
+        public NPMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
+
+        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
+
+        public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
+
+        public NPDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
+
+        #endregion
+
+        #region API
+
+        public IReadOnlyList<NuGetVersion> GetVersions()
+        {
+            var allDeprecated = this.AllDeprecated;
+
+            return _Versions
+                .Where(item => allDeprecated || item.Value.DeprecationInfo == null)
+                .Select(item => item.Key)
+                .OrderBy(item => item)
+                .ToList();
+        }
+
+        
 
         #endregion
 

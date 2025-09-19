@@ -10,6 +10,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 
+using CommunityToolkit.Mvvm.Input;
+
 namespace DirectoryPackagesTools
 {
     public partial class MainWindow : Window
@@ -131,11 +133,10 @@ namespace DirectoryPackagesTools
 
         #endregion
 
-        #region API
+        #region API        
 
-        public ICommand SelectContextDirectoryCmd => new Prism.Commands.DelegateCommand<Avalonia.Platform.Storage.IStorageFolder[]>(_SelectContextDirectory);
-
-        private async void _SelectContextDirectory(Avalonia.Platform.Storage.IStorageFolder[] folders)
+        [RelayCommand]
+        public async void SelectContextDirectory(Avalonia.Platform.Storage.IStorageFolder[] folders)
         {
             var dir = folders[0].TryGetLocalPath();
 
