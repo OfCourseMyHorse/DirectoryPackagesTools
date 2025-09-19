@@ -121,16 +121,9 @@ namespace DirectoryPackagesTools
         {
             var locals = dom
                 .GetPackageReferences()
-                .ToList();            
+                .ToList();
 
-            var tmp = locals
-                .Select(kvp => new NuGetPackageInfo(kvp.PackageId, kvp.Version))
-                .ToArray();
-
-            using(var ctx = client.CreateContext(ctoken))
-            {
-                await NuGetPackageInfo.FillAsync(tmp, ctx, progress);
-            }
+            var tmp = await NuGetPackageInfo.CreateAsync(locals, client, progress, ctoken);
 
             var mvvms = new List<PackageMVVM>();
 
@@ -138,7 +131,7 @@ namespace DirectoryPackagesTools
             {
                 var package = locals.First(item => item.PackageId == pinfo.Id);                
 
-                var mvvm = new PackageMVVM(package, pinfo);
+                var mvvm = new PackageMVVM(package, pinfo, client);
 
                 mvvms.Add(mvvm);
             }

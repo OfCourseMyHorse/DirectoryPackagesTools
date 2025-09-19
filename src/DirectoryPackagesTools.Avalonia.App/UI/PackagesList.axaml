@@ -17,7 +17,18 @@
 
     <DataTemplate x:Key="myPackageVersionsSelector" x:DataType="local:PackageMVVM">
       <StackPanel Orientation="Horizontal">
-        <ComboBox VerticalAlignment="Center" ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding Version, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox VerticalAlignment="Center" x:Name="myVersions"
+                  ItemsSource="{Binding AvailableVersions}"
+                  SelectedValue="{Binding Version, Mode=OneWay}" >
+
+          <Interaction.Behaviors>
+            <EventTriggerBehavior EventName="SelectionChanged" >
+              <InvokeCommandAction Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding #myVersions.SelectedValue}"/>
+            </EventTriggerBehavior>
+          </Interaction.Behaviors>
+          
+          </ComboBox>
+        
         <TextBlock VerticalAlignment="Center" Text=" 🔒" IsVisible="{Binding Version.HasUpperBound}" ToolTip.Tip="Version is locked, removed '[' - ']' from SemVer to unlock" />
         
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" IsVisible="{Binding NeedsUpdate}">

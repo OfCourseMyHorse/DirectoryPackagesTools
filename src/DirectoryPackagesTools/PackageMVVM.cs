@@ -20,8 +20,10 @@ namespace DirectoryPackagesTools
     public partial class PackageMVVM : BaseMVVM
     {
         #region lifecycle
-        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageInfo pinfo)
+        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageInfo pinfo, NuGetClient client)
         {
+            _Client = client;
+
             _LocalReference = local;
 
             _RawAvailableVersions = pinfo
@@ -103,6 +105,8 @@ namespace DirectoryPackagesTools
 
         #region data - nuget
 
+        private readonly NuGetClient _Client;
+
         private readonly IReadOnlyList<NUGETVERSION> _RawAvailableVersions;        
 
         private NUGETPACKMETADATA _Metadata;
@@ -138,10 +142,11 @@ namespace DirectoryPackagesTools
         
         public NUGETVERSIONRANGE NewestRelease { get; }
         public NUGETVERSIONRANGE NewestPrerelease { get; }
+
         public NUGETVERSIONRANGE Version
         {
             get => _LocalReference.Version;
-            set
+            private set
             {
                 if (value == null) return;
                 _LocalReference.Version = value;
@@ -189,9 +194,11 @@ namespace DirectoryPackagesTools
         [RelayCommand]
         public async Task ApplyVersionAsync(NUGETVERSIONRANGE ver)
         {
-            await Task.Yield();
+            var pinfo = new NuGetPackageInfo(_LocalReference.PackageId, ver);
 
-            // ToDo: we need to create a new NuGetPackageInfo with the selected version and call  _ApplyPackageInfo
+            await pinfo.UpdateAsync(_Client);
+
+            _ApplyPackageInfo(pinfo);
 
             this.Version = ver;
         }

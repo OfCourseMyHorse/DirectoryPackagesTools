@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,9 +10,7 @@ using NuGet.Packaging.Core;
 using NuGet.Protocol.Plugins;
 using NuGet.Versioning;
 
-using NPDEPENDENCIES = NuGet.Protocol.Core.Types.FindPackageByIdDependencyInfo;
-using NPDEPRECATION = NuGet.Protocol.PackageDeprecationMetadata;
-using NPMETADATA = NuGet.Protocol.Core.Types.IPackageSearchMetadata;
+
 
 namespace DirectoryPackagesTools.Client
 {
@@ -23,13 +22,34 @@ namespace DirectoryPackagesTools.Client
     {
         #region lifecycle
 
+        internal static async Task<NuGetPackageInfo[]> CreateAsync(IReadOnlyList<IPackageReferenceVersion> locals, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
+        {
+            var tmp = locals
+                .Select(kvp => new NuGetPackageInfo(kvp.PackageId, kvp.Version))
+                .ToArray();
+
+            await UpdateAsync(tmp, client, progress, ctoken);
+
+            return tmp;
+        }
+
+        public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
+        {
+            ctoken ??= CancellationToken.None;
+
+            using(var cyx = client.CreateContext(ctoken))
+            {
+                await UpdateAsync(packages, cyx, progress);
+            }
+        }
+
         /// <summary>
         /// Updates the versions of all the packages found in <paramref name="packages"/>
         /// </summary>
         /// <param name="packages">The package versions to be updated</param>
         /// <param name="progress">reports progress to the client</param>
         /// <param name="token"></param>        
-        public static async Task FillAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClientContext context, IProgress<int> progress)
+        public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClientContext context, IProgress<int> progress)
         {
             var percent = new _ProgressCounter(progress, packages.Count);
 
@@ -41,8 +61,10 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
-        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, VersionRange currentVersion, CancellationToken ctoken)
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, VersionRange currentVersion, CancellationToken? ctoken = null)
         {
+            ctoken ??= CancellationToken.None;
+
             using (var ctx = client.CreateContext(ctoken))
             {
                 return await CreateAsync(ctx, id, currentVersion);
@@ -62,6 +84,14 @@ namespace DirectoryPackagesTools.Client
             _CurrVersion = currentVersion ?? throw new ArgumentException($"Invalid version for package {id}", nameof(currentVersion));
 
             _PackageId = new PackageIdentity(Id, _CurrVersion.MinVersion);
+        }
+
+        public async Task UpdateAsync(NuGetClient client, CancellationToken? ctoken = null)
+        {
+            ctoken ??= CancellationToken.None;
+
+            using var ctx = client.CreateContext(ctoken);
+            await UpdateAsync(ctx);
         }
 
         public async Task UpdateAsync(NuGetClientContext client)
@@ -139,13 +169,13 @@ namespace DirectoryPackagesTools.Client
 
         private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion,_Extras> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, _Extras>();
 
-        public NPMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
+        public NUGETPACKMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
 
-        public NPDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
+        public NUGETPACKDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
 
         public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
 
-        public NPDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
+        public NUGETPACKDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
 
         #endregion
 
@@ -170,11 +200,11 @@ namespace DirectoryPackagesTools.Client
 
         class _Extras
         {
-            public NPMETADATA Metadata { get; set; }
+            public NUGETPACKMETADATA Metadata { get; set; }
 
-            public NPDEPRECATION DeprecationInfo { get; set; }
+            public NUGETPACKDEPRECATION DeprecationInfo { get; set; }
 
-            public NPDEPENDENCIES Dependencies { get; set; }
+            public NUGETPACKDEPENDENCIES Dependencies { get; set; }
         }
 
         #endregion
