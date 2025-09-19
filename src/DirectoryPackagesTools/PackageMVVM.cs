@@ -194,6 +194,8 @@ namespace DirectoryPackagesTools
         [RelayCommand]
         public async Task ApplyVersionAsync(NUGETVERSIONRANGE ver)
         {
+            if (ver == null) return;
+
             var pinfo = new NuGetPackageInfo(_LocalReference.PackageId, ver);
 
             await pinfo.UpdateAsync(_Client);

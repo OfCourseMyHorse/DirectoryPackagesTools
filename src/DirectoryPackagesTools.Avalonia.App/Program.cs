@@ -18,13 +18,16 @@ namespace DirectoryPackagesTools
             _Log.Info("Application start");
             log4net.LogManager.Flush(1000);
 
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
             #if !SUPRESSTRYCATCH
+
+            #if !DEBUG
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            #endif
+
             try {
             #endif
 
-                BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 
             #if !SUPRESSTRYCATCH
             } catch(Exception ex)

@@ -11,9 +11,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!--
+    
     <DefineConstants>TRACE;SUPRESSTRYCATCH</DefineConstants>
-    -->
+    
   </PropertyGroup>
 
   <PropertyGroup>
