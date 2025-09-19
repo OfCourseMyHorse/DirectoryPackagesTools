@@ -129,7 +129,7 @@ namespace DirectoryPackagesTools
 
             foreach (var pinfo in tmp)
             {
-                var package = locals.First(item => item.PackageId == pinfo.Id);                
+                var package = locals.First(item => item.PackageId == pinfo.Parent.Id);                
 
                 var mvvm = new PackageMVVM(package, pinfo, client);
 

@@ -20,19 +20,20 @@ namespace DirectoryPackagesTools
     public partial class PackageMVVM : BaseMVVM
     {
         #region lifecycle
-        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageInfo pinfo, NuGetClient client)
+        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageVersionInfo pinfo, NuGetClient client)
         {
             _Client = client;
 
             _LocalReference = local;
 
             _RawAvailableVersions = pinfo
+                .Parent
                 .GetVersions()
-                .Where(item => _ShowOutOfOrderVersion(pinfo.Id, item))
+                .Where(item => _ShowOutOfOrderVersion(pinfo.Parent.Id, item))
                 .OrderByDescending(item => item)
                 .ToArray();
 
-            AllDeprecated = pinfo.AllDeprecated;            
+            AllDeprecated = pinfo.Parent.AllDeprecated;            
 
             _DefineVisibleAvailableVersions(local.Version.MinVersion.IsPrerelease);
 
@@ -83,7 +84,7 @@ namespace DirectoryPackagesTools
             return true;
         }
 
-        private void _ApplyPackageInfo(NuGetPackageInfo pinfo)
+        private void _ApplyPackageInfo(NuGetPackageVersionInfo pinfo)
         {
             // packages stored in a local source directory may report metadata as Null
             _Metadata = pinfo.Metadata;
@@ -196,11 +197,11 @@ namespace DirectoryPackagesTools
         {
             if (ver == null) return;
 
-            var pinfo = new NuGetPackageInfo(_LocalReference.PackageId, ver);
+            var pinfo = new NuGetPackageInfo(_LocalReference.PackageId);
 
             await pinfo.UpdateAsync(_Client);
 
-            _ApplyPackageInfo(pinfo);
+            _ApplyPackageInfo(pinfo[ver.MinVersion]);
 
             this.Version = ver;
         }

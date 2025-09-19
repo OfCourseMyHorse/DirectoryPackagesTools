@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,24 +23,26 @@ namespace DirectoryPackagesTools.Client
     {
         #region lifecycle
 
-        internal static async Task<NuGetPackageInfo[]> CreateAsync(IReadOnlyList<IPackageReferenceVersion> locals, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
+        internal static async Task<NuGetPackageVersionInfo[]> CreateAsync(IReadOnlyList<IPackageReferenceVersion> locals, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
         {
             var tmp = locals
-                .Select(kvp => new NuGetPackageInfo(kvp.PackageId, kvp.Version))
+                .Select(kvp => new NuGetPackageInfo(kvp.PackageId))
                 .ToArray();
 
             await UpdateAsync(tmp, client, progress, ctoken);
 
-            return tmp;
+            return locals
+                .Select(kvp => tmp.FirstOrDefault(item => item.Id == kvp.PackageId)[kvp.Version.MinVersion])
+                .ToArray();
         }
 
         public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
         {
             ctoken ??= CancellationToken.None;
 
-            using(var cyx = client.CreateContext(ctoken))
+            using (var ctx = client.CreateContext(ctoken))
             {
-                await UpdateAsync(packages, cyx, progress);
+                await UpdateAsync(packages, ctx, progress);
             }
         }
 
@@ -61,29 +64,26 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
-        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, VersionRange currentVersion, CancellationToken? ctoken = null)
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, CancellationToken? ctoken = null)
         {
             ctoken ??= CancellationToken.None;
 
             using (var ctx = client.CreateContext(ctoken))
             {
-                return await CreateAsync(ctx, id, currentVersion);
+                return await CreateAsync(ctx, id);
             }
         }
 
-        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClientContext context, string id, VersionRange currentVersion)
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClientContext context, string id)
         {
-            var instance = new NuGetPackageInfo(id,currentVersion);
+            var instance = new NuGetPackageInfo(id);
             await instance.UpdateAsync(context);
             return instance;
-        }        
+        }
 
-        public NuGetPackageInfo(string id, VersionRange currentVersion)
+        public NuGetPackageInfo(string id)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
-            _CurrVersion = currentVersion ?? throw new ArgumentException($"Invalid version for package {id}", nameof(currentVersion));
-
-            _PackageId = new PackageIdentity(Id, _CurrVersion.MinVersion);
         }
 
         public async Task UpdateAsync(NuGetClient client, CancellationToken? ctoken = null)
@@ -96,18 +96,21 @@ namespace DirectoryPackagesTools.Client
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
-            var pid = new PackageIdentity(Id, _CurrVersion.MinVersion);
-
             foreach (var repo in client.Repositories)
             {
                 if (!repo.IsNugetOrg && !repo.IsVisualStudio)
                 {
-                    if (pid.Id.StartsWith("System.")) continue;
-                    if (pid.Id.StartsWith("Microsoft.")) continue;
+                    if (Id.StartsWith("System.")) continue;
+                    if (Id.StartsWith("Microsoft.")) continue;
                 }
 
-                try // get package information from the current repo. A package can have different dependencies, metadata and versions on different repos
+                // get package information from the current repo.
+                // A package can have different dependencies, metadata and versions on different repos
+
+                #if !DEBUG
+                try
                 {
+                #endif
                     // get all versions
                     var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);
                     if (vvv == null || vvv.Length == 0) continue;
@@ -118,43 +121,21 @@ namespace DirectoryPackagesTools.Client
                     {
                         if (!_Versions.ContainsKey(v))
                         {
-                            _Versions[v] = new _Extras();
+                            _Versions[v] = new NuGetPackageVersionInfo(this, v);
                             newVersionsAdded = true;
                         }
                     }
 
                     if (!newVersionsAdded) continue; // nothing to do
 
-                    // get all metadatas
-                    var mmm = await repo.GetMetadataAsync(this.Id).ConfigureAwait(false);
+                    await NuGetPackageVersionInfo.UpdateMetadatas(_Versions, repo);
 
-                    foreach (var metaData in mmm)
-                    {
-                        if (!_Versions.TryGetValue(metaData.Identity.Version, out var extras)) continue;
-
-                        extras.Metadata = metaData;
-                        extras.DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
-                    }
-
-                    // get dependencies ONLY for the current version                    
-
-                    if (Dependencies == null)
-                    {
-                        var deps = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
-                        if (deps != null)
-                        {
-                            if (_Versions.TryGetValue(_PackageId.Version, out var extras))
-                            {
-                                extras.Dependencies = deps;
-                            }
-                        }
-
-                    }
-                }
-                catch (Exception ex)
+            #if !DEBUG
+            } catch (Exception ex)
                 {
-                    System.Diagnostics.Trace.WriteLine($"{repo.Source} + {pid.Id} = \r\n{ex.Message}");
+                    System.Diagnostics.Trace.WriteLine($"{repo.Source} + {Id} = \r\n{ex.Message}");
                 }
+            #endif
             }
         }
 
@@ -164,18 +145,16 @@ namespace DirectoryPackagesTools.Client
 
         public string Id { get; }
 
-        private VersionRange _CurrVersion;
-        private PackageIdentity _PackageId;
 
-        private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion,_Extras> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, _Extras>();
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, NuGetPackageVersionInfo> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, NuGetPackageVersionInfo>();
 
-        public NUGETPACKMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
+        // public NUGETPACKMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
 
-        public NUGETPACKDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
+        // public NUGETPACKDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
 
         public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
 
-        public NUGETPACKDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
+        // public NUGETPACKDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
 
         #endregion
 
@@ -192,23 +171,91 @@ namespace DirectoryPackagesTools.Client
                 .ToList();
         }
 
-        
-
-        #endregion
-
-        #region nested type
-
-        class _Extras
+        public NuGetPackageVersionInfo this[NUGETVERSION version]
         {
-            public NUGETPACKMETADATA Metadata { get; set; }
-
-            public NUGETPACKDEPRECATION DeprecationInfo { get; set; }
-
-            public NUGETPACKDEPENDENCIES Dependencies { get; set; }
+            get
+            {
+                return _Versions.TryGetValue(version, out var exact)
+                    ? exact
+                    : new NuGetPackageVersionInfo(this, version); // non existant version
+            }
         }
 
         #endregion
     }
 
+    /// <summary>
+    /// Represents the exact version of a package
+    /// </summary>
+    [System.Diagnostics.DebuggerDisplay("{Parent.Id} {Version}")]
+    public class NuGetPackageVersionInfo
+    {
+        #region lifecycle
 
+        internal static async Task UpdateMetadatas(IReadOnlyDictionary<NUGETVERSION, NuGetPackageVersionInfo> versions, SourceRepositoryAPI repo)
+        {
+            var ids = versions.Values.Select(item => item.Parent.Id).Distinct();
+
+            foreach (var id in ids)
+            {
+                var mmm = await repo.GetMetadataAsync(id);
+
+                foreach (var metaData in mmm)
+                {
+                    if (!versions.TryGetValue(metaData.Identity.Version, out var extras)) continue;
+
+                    await extras.UpdateAsync(metaData);
+                }
+
+                // get dependencies ONLY for the current version                    
+
+                /*
+                if (Dependencies == null)
+                {
+                    if (versions.TryGetValue(_PackageId.Version, out var extras))
+                    {
+                        await extras.UpdateDependenciesAsync(repo);
+                    }
+                }*/
+            }
+        }
+
+        public NuGetPackageVersionInfo(NuGetPackageInfo parent, NUGETVERSION version)
+        {
+            Parent = parent;
+            Version = version;
+        }
+
+        #endregion
+
+        #region data
+
+        public NuGetPackageInfo Parent { get; }
+        public NuGetVersion Version { get; }
+
+        public NUGETPACKMETADATA Metadata { get; private set; }
+
+        public NUGETPACKDEPRECATION DeprecationInfo { get; private set; }
+
+        public NUGETPACKDEPENDENCIES Dependencies { get; private set; }
+
+        #endregion
+
+        #region API
+
+        internal async Task UpdateAsync(NUGETPACKMETADATA metaData)
+        {
+            Metadata = metaData;
+            DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
+        }
+
+        internal async Task UpdateDependenciesAsync(SourceRepositoryAPI repo)
+        {
+            var pid = new PackageIdentity(Parent.Id, Version);
+
+            this.Dependencies = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
+        }
+
+        #endregion
+    }
 }
