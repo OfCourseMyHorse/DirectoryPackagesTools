@@ -91,15 +91,14 @@ namespace DirectoryPackagesTools.Client
 
         public async Task UpdateAsync(NuGetClient client, CancellationToken? ctoken = null)
         {
-            ctoken ??= CancellationToken.None;
+            _Client = client;
 
-            using var ctx = client.CreateContext(ctoken);
+            using var ctx = client.CreateContext(ctoken ?? CancellationToken.None);
             await UpdateAsync(ctx);
         }
 
         public async Task UpdateAsync(NuGetClientContext client)
-        {
-            
+        {            
             var repos = _CachedRepos.Count == 0
 
                 // First call will scan all repos
@@ -168,6 +167,8 @@ namespace DirectoryPackagesTools.Client
 
         #region data
 
+        private NuGetClient _Client;
+
         public string Id { get; }
 
         /// <summary>
@@ -208,6 +209,20 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
+        internal async Task ForEachRepository(Func<SourceRepositoryAPI, Task<bool>> callback, CancellationToken? token = null)
+        {
+            if (_Client == null) return;
+
+            using var ctx = _Client.CreateContext(token ?? CancellationToken.None);
+
+            foreach (var repo in ctx.FilterRepositories(_CachedRepos.Keys.ToImmutableHashSet()))
+            {
+                var result = await callback.Invoke(repo);
+
+                if (!result) break;
+            }
+        }
+
         #endregion
     }
 
@@ -221,7 +236,13 @@ namespace DirectoryPackagesTools.Client
 
         internal static async Task UpdateMetadatas(IReadOnlyDictionary<NUGETVERSION, NuGetPackageVersionInfo> versions, SourceRepositoryAPI repo)
         {
-            var ids = versions.Values.Select(item => item.Parent.Id).Distinct();
+            var ids = versions
+                .Values
+                .Select(item => item.Parent.Id)
+                .Distinct();
+
+            // we need the metadata straight away because we need to retrieve the tags
+            // which are used for initial package classification.
 
             foreach (var id in ids)
             {
@@ -232,18 +253,7 @@ namespace DirectoryPackagesTools.Client
                     if (!versions.TryGetValue(metaData.Identity.Version, out var extras)) continue;
 
                     await extras.UpdateAsync(metaData);
-                }
-
-                // get dependencies ONLY for the current version                    
-
-                /*
-                if (Dependencies == null)
-                {
-                    if (versions.TryGetValue(_PackageId.Version, out var extras))
-                    {
-                        await extras.UpdateDependenciesAsync(repo);
-                    }
-                }*/
+                }                
             }
         }
 
@@ -251,6 +261,8 @@ namespace DirectoryPackagesTools.Client
         {
             Parent = parent;
             Version = version;
+
+            _Dependencies = new AsyncLazy<NUGETPACKDEPENDENCIES>(_GetDependenciesAsync);
         }
 
         #endregion
@@ -263,7 +275,7 @@ namespace DirectoryPackagesTools.Client
         public NUGETPACKMETADATA Metadata { get; private set; }
         public NUGETPACKDEPRECATION DeprecationInfo { get; private set; }
 
-        private readonly AsyncLazy<NUGETPACKDEPENDENCIES> _Dependencies;
+        private readonly AsyncLazy<NUGETPACKDEPENDENCIES> _Dependencies;        
 
         #endregion
 
@@ -275,22 +287,26 @@ namespace DirectoryPackagesTools.Client
             DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
         }
 
-        internal async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync(NuGetClient client, CancellationToken? token = null)
+        public async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync() => await _Dependencies;
+
+        private async Task<NUGETPACKDEPENDENCIES> _GetDependenciesAsync()
         {
-            token ??= CancellationToken.None;
-
-            using var ctx = client.CreateContext(token);
-
             var pid = new PackageIdentity(Parent.Id, Version);
 
-            foreach (var repo in ctx.FilterRepositories(Parent._CachedRepos.Keys.ToImmutableHashSet()))
+            NUGETPACKDEPENDENCIES result = null;
+
+            async Task<bool> perRepo(SourceRepositoryAPI repo)
             {
-                 var deps = await repo.GetDependencyInfoAsync(pid);
-                if (deps != null) return deps;
+                result ??= await repo.GetDependencyInfoAsync(pid);
+                return result != null;
             }
 
-            return null;
-        }
+            await Parent.ForEachRepository(perRepo);            
+
+            //System.Diagnostics.Debug.Assert(result != null);
+
+            return result;
+        }        
 
         #endregion
     }

@@ -36,15 +36,14 @@ namespace DirectoryPackagesTools.Client
             var provider = new PackageSourceProvider(Settings);
 
             _Repos = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
-            Logger = NullLogger.Instance;
+            Logger = NullLogger.Instance;            
         }
 
         #endregion
 
         #region data
 
-        private SourceRepositoryProvider _Repos;
-
+        private SourceRepositoryProvider _Repos;        
         public ILogger Logger { get; }
 
         #endregion
@@ -59,13 +58,24 @@ namespace DirectoryPackagesTools.Client
 
         #endregion
 
-        #region API        
+        #region API
+
+        internal async Task ForEachRepository(Func<SourceRepositoryAPI, Task<bool>> callback, IReadOnlyCollection<string> cachedRepos = null, CancellationToken? token = null)
+        {
+            using var ctx = CreateContext(token ?? CancellationToken.None);
+
+            foreach (var repo in ctx.FilterRepositories(cachedRepos ?? Array.Empty<string>()))
+            {
+                var result = await callback.Invoke(repo);
+
+                if (!result) break;
+            }
+        }
 
         public NuGetClientContext CreateContext(CancellationToken? token)
         {
             token ??= CancellationToken.None;
-
-            return new NuGetClientContext(this._Repos, this.Logger, token.Value);
+            return new NuGetClientContext(this._Repos, this.Logger, token.Value);            
         }        
 
         #endregion
@@ -83,6 +93,8 @@ namespace DirectoryPackagesTools.Client
 
         internal NuGetClientContext(SourceRepositoryProvider repos, ILogger logger, CancellationToken token)
         {
+            
+
             _Repos = repos;
             Logger = logger;
             _Cache = NullSourceCacheContext.Instance;
@@ -97,15 +109,20 @@ namespace DirectoryPackagesTools.Client
 
         public void Dispose()
         {
+            _OnDispose?.Invoke();
+            _OnDispose = null;
+
             _Cache?.Dispose();
             _Cache = null;
 
-            _Repos = null;
+            _Repos = null;            
         }
 
         #endregion
 
         #region data
+
+        private Action _OnDispose;
 
         internal CancellationToken _Token;
         internal SourceCacheContext _Cache;
@@ -126,6 +143,25 @@ namespace DirectoryPackagesTools.Client
 
         #region API
 
+        /// <summary>
+        /// Gets all versions found in all registered repositories
+        /// </summary>
+        /// <param name="packageId">the package it for which we're querying the versions</param>
+        /// <returns></returns>
+        public async Task<NuGetVersion[]> GetVersionsAsync(string packageId)
+        {
+            var bag = new NUGETVERSIONSBAG();
+
+            foreach (var r in Repositories)
+            {
+                var vvv = await r.GetVersionsAsync(packageId);
+
+                foreach (var v in vvv) bag.Add(v);
+            }
+
+            return bag.Distinct().ToArray();
+        }
+
         public IEnumerable<SourceRepositoryAPI> FilterRepositories(IReadOnlyCollection<string> repoNames)
         {
             if (repoNames.Count == 0) return Repositories;
@@ -133,44 +169,9 @@ namespace DirectoryPackagesTools.Client
             return repoNames
                 .Select(n => Repositories.FirstOrDefault(item => item.Source.PackageSource.Name == n))
                 .Where(item => item != null);
-
-        }
-
-        public async Task<NuGetVersion[]> GetVersionsAsync(string packageId)
-        {
-            var bag = new NUGETVERSIONSBAG();
-
-            foreach(var r in Repositories)
-            {
-                var vvv = await r.GetVersionsAsync(packageId);
-                
-                foreach(var v in vvv) bag.Add(v);
-            }
-
-            return bag.Distinct().ToArray();
-        }
+        }        
 
         
-
-        public async Task<IReadOnlyList<IPackageSearchMetadata>> GetMetadataAsync(params PackageIdentity[] packages)
-        {
-            var result = new List<IPackageSearchMetadata>();
-
-            foreach(var package in packages)
-            {
-                foreach (var api in Repositories)
-                {
-                    var data = await api.GetMetadataAsync(package);
-                    if (data != null)
-                    {
-                        result.Add(data);
-                        break;
-                    }                        
-                }
-            }
-
-            return result;
-        }
 
         public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package)
         {

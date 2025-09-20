@@ -149,7 +149,7 @@ namespace DirectoryPackagesTools
 
         public NUGETPACKMETADATA Metadata => _CurrentVersion.Metadata;
 
-        public Task<string> FrameworksAsync => _GetFrameworksAsync();        
+        public Task<string> FrameworksAsync => _GetFrameworksReportAsync();        
 
         #endregion
 
@@ -213,16 +213,28 @@ namespace DirectoryPackagesTools
             _ProjectsUsingThis.Add(prj);
         }
 
-        private async Task<string> _GetFrameworksAsync()
+        private async Task<string> _GetFrameworksReportAsync()
         {
-            var dependencies = await _CurrentVersion.GetDependenciesAsync(_Client);
-            if (dependencies == null) return "Unknown";
+            #if !DEBUG
+            try {
+            #endif
 
-            var fff = dependencies
-                .DependencyGroups
-                .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
+                var dependencies = await _CurrentVersion.GetDependenciesAsync();
+                if (dependencies == null) return "Unknown";
 
-            return string.Join(" ", fff);
+                var fff = dependencies
+                    .DependencyGroups
+                    .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
+
+                return string.Join(" ", fff);
+
+            #if !DEBUG
+            }
+            catch(Exception ex)
+            {
+                return $"ERROR: {ex.Message}";
+            }
+            #endif
         }
 
         #endregion
