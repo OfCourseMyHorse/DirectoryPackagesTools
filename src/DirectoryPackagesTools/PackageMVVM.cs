@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 
-using DirectoryPackagesTools.DOM;
-using DirectoryPackagesTools.Client;
-using DirectoryPackagesTools.Utils;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
+using DirectoryPackagesTools.Client;
+using DirectoryPackagesTools.DOM;
+using DirectoryPackagesTools.Utils;
 
 namespace DirectoryPackagesTools
 {
@@ -20,46 +21,44 @@ namespace DirectoryPackagesTools
     public partial class PackageMVVM : BaseMVVM
     {
         #region lifecycle
-        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageVersionInfo pinfo, NuGetClient client)
+        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageVersionInfo currver, NuGetClient client)
         {
+            System.Diagnostics.Debug.Assert(local.PackageId == currver.Parent.Id);
+            System.Diagnostics.Debug.Assert(local.Version.MinVersion == currver.Version);            
+
             _Client = client;
 
             _LocalReference = local;
+            _CurrentVersion = currver;            
 
-            _RawAvailableVersions = pinfo
+            _RawAvailableVersions = currver
                 .Parent
                 .GetVersions()
-                .Where(item => _ShowOutOfOrderVersion(pinfo.Parent.Id, item))
+                .Where(item => _ShowOutOfOrderVersion(currver.Parent.Id, item))
                 .OrderByDescending(item => item)
-                .ToArray();
+                .ToArray();            
 
-            AllDeprecated = pinfo.Parent.AllDeprecated;            
+            var hidePrereleases = PackageClassifier.ShouldHidePrereleases(Metadata);
+            if (local.Version.MinVersion.IsPrerelease) hidePrereleases = false;
+            _AvailableVersions = new Lazy<IReadOnlyList<NUGETVERSIONRANGE>>(() => _CreateVersionsView(_RawAvailableVersions, !hidePrereleases));
 
-            _DefineVisibleAvailableVersions(local.Version.MinVersion.IsPrerelease);
+            AllDeprecated = currver.Parent.AllDeprecated;            
 
             NewestRelease = _GetNewestVersionAvailable(false);
-            NewestPrerelease = _GetNewestVersionAvailable(true);
+            NewestPrerelease = _GetNewestVersionAvailable(true);            
+
+            _ApplyPackageInfo(currver);            
 
             // remove preprelease from stable packages            
-            if (PackageClassifier.IsUnitTestPackage(_Metadata)) NewestPrerelease = null;
-
-            _ApplyPackageInfo(pinfo);            
+            if (PackageClassifier.IsUnitTestPackage(Metadata)) NewestPrerelease = null;
         }        
 
-        private void _DefineVisibleAvailableVersions(bool showPrerelease)
+        private static IReadOnlyList<NUGETVERSIONRANGE> _CreateVersionsView(IReadOnlyList<NUGETVERSION> versions, bool showPrerelease)
         {
-            var hidePrereleases = PackageClassifier.ShouldHidePrereleases(_Metadata);
-
-            var versions = _RawAvailableVersions;
-
-
             // if all are pre-releases, don't hide.
-            if (versions.All(item => item.IsPrerelease)) hidePrereleases = false;
+            if (versions.All(item => item.IsPrerelease)) showPrerelease = true;                 
 
-            // if current version is a pre-release, don't hide.
-            if (showPrerelease) hidePrereleases = false;            
-
-            if (hidePrereleases)
+            if (!showPrerelease) // hide prereleases
             {
                 versions = versions
                     .Where(item => !item.IsPrerelease)
@@ -67,7 +66,7 @@ namespace DirectoryPackagesTools
                     .ToArray();
             }
 
-            AvailableVersions = versions.Select(item => new NUGETVERSIONRANGE(item)).ToList();            
+            return versions.Select(item => new NUGETVERSIONRANGE(item)).ToList();            
         }
 
         /// <summary>
@@ -87,11 +86,7 @@ namespace DirectoryPackagesTools
         private void _ApplyPackageInfo(NuGetPackageVersionInfo pinfo)
         {
             // packages stored in a local source directory may report metadata as Null
-            _Metadata = pinfo.Metadata;
-
-            _Dependencies = pinfo.Dependencies;
-
-            DeprecationReason = pinfo?.DeprecationInfo?.Message + $"\r\nUse: {pinfo?.DeprecationInfo?.AlternatePackage}";
+            _CurrentVersion = pinfo;            
         }
 
         #endregion
@@ -108,10 +103,11 @@ namespace DirectoryPackagesTools
 
         private readonly NuGetClient _Client;
 
-        private readonly IReadOnlyList<NUGETVERSION> _RawAvailableVersions;        
+        private readonly IReadOnlyList<NUGETVERSION> _RawAvailableVersions;
 
-        private NUGETPACKMETADATA _Metadata;
-        private NUGETPACKDEPENDENCIES _Dependencies;
+        private readonly Lazy<IReadOnlyList<NUGETVERSIONRANGE>> _AvailableVersions;
+
+        private NuGetPackageVersionInfo _CurrentVersion;
 
         #endregion
 
@@ -123,41 +119,24 @@ namespace DirectoryPackagesTools
         public string Name => _LocalReference.PackageId;
 
         /// <summary>
-        /// Gets all the versions available for this package
-        /// </summary>        
-        [ObservableProperty]
-        private IReadOnlyList<NUGETVERSIONRANGE> availableVersions;
-
-        /// <summary>
         /// Gets the first name of the package. Ex: 'Microsoft', 'System'
         /// </summary>
         public string Prefix => _LocalReference.PackagePrefix;
 
-        #endregion        
+        public IReadOnlyList<NUGETVERSIONRANGE> AvailableVersions => _AvailableVersions.Value;
+
+        #endregion
 
         #region Properties - version
 
         public bool AllDeprecated { get; }
-        public string DeprecationReason { get; private set; }
+        public string DeprecationReason => _CurrentVersion?.DeprecationInfo?.Message + $"\r\nUse: {_CurrentVersion?.DeprecationInfo?.AlternatePackage}";
 
-        
+
         public NUGETVERSIONRANGE NewestRelease { get; }
         public NUGETVERSIONRANGE NewestPrerelease { get; }
 
-        public NUGETVERSIONRANGE Version
-        {
-            get => _LocalReference.Version;
-            private set
-            {
-                if (value == null) return;
-                _LocalReference.Version = value;
-                OnPropertyChanged(nameof(Version));
-                OnPropertyChanged(nameof(VersionIsUpToDate));
-                OnPropertyChanged(nameof(NeedsUpdate));
-                OnPropertyChanged(nameof(Metadata));
-                OnPropertyChanged(nameof(Frameworks));
-            }
-        }        
+        public NUGETVERSIONRANGE Version => _LocalReference.Version;
 
         public bool VersionIsUpToDate => Version.MinVersion == AvailableVersions.FirstOrDefault()?.MinVersion;
         public bool NeedsUpdate => !VersionIsUpToDate && !Version.HasUpperBound;
@@ -168,21 +147,9 @@ namespace DirectoryPackagesTools
 
         public IEnumerable<System.IO.FileInfo> DependantProjects => _ProjectsUsingThis.Select(item => item.File);
 
-        public NUGETPACKMETADATA Metadata => _Metadata;
+        public NUGETPACKMETADATA Metadata => _CurrentVersion.Metadata;
 
-        public string Frameworks
-        {
-            get
-            {
-                if (_Dependencies == null) return "Unknown";
-
-                var fff = _Dependencies
-                    .DependencyGroups
-                    .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
-
-                return string.Join(" ", fff);
-            }
-        }
+        public Task<string> FrameworksAsync => _GetFrameworksAsync();        
 
         #endregion
 
@@ -195,7 +162,7 @@ namespace DirectoryPackagesTools
         [RelayCommand]
         public async Task ApplyVersionAsync(NUGETVERSIONRANGE ver)
         {
-            if (ver == null) return;
+            if (ver == null) return;            
 
             var pinfo = new NuGetPackageInfo(_LocalReference.PackageId);
 
@@ -203,22 +170,30 @@ namespace DirectoryPackagesTools
 
             _ApplyPackageInfo(pinfo[ver.MinVersion]);
 
-            this.Version = ver;
+            _LocalReference.Version = ver;
+
+            OnPropertyChanged(nameof(Version));
+            OnPropertyChanged(nameof(VersionIsUpToDate));
+            OnPropertyChanged(nameof(NeedsUpdate));
+            OnPropertyChanged(nameof(Metadata));
+            OnPropertyChanged(nameof(FrameworksAsync));
         }
 
         internal string GetPackageCategory(PackageClassifier classifier)
         {
             if (AllDeprecated) return "⚠ Deprecated ⚠";            
 
-            return classifier.GetPackageCategory(_Metadata);
+            return classifier.GetPackageCategory(_CurrentVersion.Metadata);
         }
 
         private NUGETVERSIONRANGE _GetNewestVersionAvailable(bool isPrerelease)
         {
-            var v = AvailableVersions
-            .Where(item => item.MinVersion.IsPrerelease == isPrerelease)
-            .OrderByDescending(item => item.MinVersion)
-            .FirstOrDefault();
+            var vvv = AvailableVersions.ToList();
+
+            var v = vvv
+                .Where(item => item.MinVersion.IsPrerelease == isPrerelease)
+                .OrderByDescending(item => item.MinVersion)
+                .FirstOrDefault();
 
             return v == null ? null : new NUGETVERSIONRANGE(v.MinVersion);
         }
@@ -233,10 +208,22 @@ namespace DirectoryPackagesTools
         /// <summary>
         /// Adds a project that depends on this package
         /// </summary>        
-        internal void _AddDependent(XmlMSBuildProjectDOM prj)
+        internal void _AddProjectDependent(XmlMSBuildProjectDOM prj)
         {
             _ProjectsUsingThis.Add(prj);
-        }        
+        }
+
+        private async Task<string> _GetFrameworksAsync()
+        {
+            var dependencies = await _CurrentVersion.GetDependenciesAsync(_Client);
+            if (dependencies == null) return "Unknown";
+
+            var fff = dependencies
+                .DependencyGroups
+                .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
+
+            return string.Join(" ", fff);
+        }
 
         #endregion
     }

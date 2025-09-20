@@ -109,7 +109,7 @@ namespace DirectoryPackagesTools
                     foreach (var pkg in csproj.GetPackageReferences())
                     {
                         var dst = packages.FirstOrDefault(item => item.Name == pkg.PackageId);
-                        dst._AddDependent(csproj);
+                        dst._AddProjectDependent(csproj);
                     }
                 }
             }

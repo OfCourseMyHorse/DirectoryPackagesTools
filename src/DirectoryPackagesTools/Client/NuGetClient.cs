@@ -126,6 +126,16 @@ namespace DirectoryPackagesTools.Client
 
         #region API
 
+        public IEnumerable<SourceRepositoryAPI> FilterRepositories(IReadOnlyCollection<string> repoNames)
+        {
+            if (repoNames.Count == 0) return Repositories;
+
+            return repoNames
+                .Select(n => Repositories.FirstOrDefault(item => item.Source.PackageSource.Name == n))
+                .Where(item => item != null);
+
+        }
+
         public async Task<NuGetVersion[]> GetVersionsAsync(string packageId)
         {
             var bag = new NUGETVERSIONSBAG();

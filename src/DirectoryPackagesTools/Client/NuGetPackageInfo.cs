@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -7,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using NuGet.Common;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Plugins;
 using NuGet.Versioning;
@@ -16,7 +19,7 @@ using NuGet.Versioning;
 namespace DirectoryPackagesTools.Client
 {
     /// <summary>
-    /// Metadata information associated to a package
+    /// Metadata information associated to a package ID
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Id}")]
     public class NuGetPackageInfo
@@ -96,10 +99,24 @@ namespace DirectoryPackagesTools.Client
 
         public async Task UpdateAsync(NuGetClientContext client)
         {
-            foreach (var repo in client.Repositories)
-            {
+            
+            var repos = _CachedRepos.Count == 0
+
+                // First call will scan all repos
+                ? client.Repositories
+
+                // subsequent calls will use cached repos
+                : _CachedRepos
+                    .Keys
+                    .Select(repoName => client.Repositories.FirstOrDefault(repo => repo.Source.PackageSource.Name == repoName))
+                    .ToArray();
+
+            foreach (var repo in repos)
+            {                
                 if (!repo.IsNugetOrg && !repo.IsVisualStudio)
                 {
+                    // these packages are expected to be found only locally or in Nuget.Org,
+                    // if found in other repos it's because they're betas (Microsoft.) or spoof attempts
                     if (Id.StartsWith("System.")) continue;
                     if (Id.StartsWith("Microsoft.")) continue;
                 }
@@ -108,35 +125,43 @@ namespace DirectoryPackagesTools.Client
                 // A package can have different dependencies, metadata and versions on different repos
 
                 #if !DEBUG
-                try
-                {
+                try {
                 #endif
-                    // get all versions
-                    var vvv = await repo.GetVersionsAsync(this.Id).ConfigureAwait(false);
-                    if (vvv == null || vvv.Length == 0) continue;
 
-                    bool newVersionsAdded = false;
+                await _UpdateAsync(repo);
 
-                    foreach (var v in vvv)
-                    {
-                        if (!_Versions.ContainsKey(v))
-                        {
-                            _Versions[v] = new NuGetPackageVersionInfo(this, v);
-                            newVersionsAdded = true;
-                        }
-                    }
-
-                    if (!newVersionsAdded) continue; // nothing to do
-
-                    await NuGetPackageVersionInfo.UpdateMetadatas(_Versions, repo);
-
-            #if !DEBUG
-            } catch (Exception ex)
+                #if !DEBUG
+                } catch (Exception ex)
                 {
                     System.Diagnostics.Trace.WriteLine($"{repo.Source} + {Id} = \r\n{ex.Message}");
                 }
-            #endif
+                #endif
             }
+        }
+
+        private async Task _UpdateAsync(SourceRepositoryAPI repo)
+        {
+            // get all versions
+            var vvv = await repo.GetVersionsAsync(this.Id);
+            if (vvv == null || vvv.Length == 0) return;
+
+            // cache repo
+            _CachedRepos[repo.Source.PackageSource.Name] = true;
+
+            bool newVersionsAdded = false;
+
+            foreach (var v in vvv)
+            {
+                if (!_Versions.ContainsKey(v))
+                {
+                    _Versions[v] = new NuGetPackageVersionInfo(this, v);
+                    newVersionsAdded = true;
+                }
+            }
+
+            if (!newVersionsAdded) return; // nothing to do
+
+            await NuGetPackageVersionInfo.UpdateMetadatas(_Versions, repo);            
         }
 
         #endregion
@@ -145,16 +170,18 @@ namespace DirectoryPackagesTools.Client
 
         public string Id { get; }
 
+        /// <summary>
+        /// List of Repo names where we've found info from this package
+        /// </summary>
+        internal readonly ConcurrentDictionary<string,bool> _CachedRepos = new ConcurrentDictionary<string,bool>();
 
         private readonly System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, NuGetPackageVersionInfo> _Versions = new System.Collections.Concurrent.ConcurrentDictionary<NuGetVersion, NuGetPackageVersionInfo>();
 
-        // public NUGETPACKMETADATA Metadata => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Metadata : null;
+        #endregion
 
-        // public NUGETPACKDEPRECATION DeprecationInfo => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.DeprecationInfo : null;        
+        #region properties
 
         public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
-
-        // public NUGETPACKDEPENDENCIES Dependencies => _Versions.TryGetValue(_PackageId.Version, out var extras) ? extras.Dependencies : null;
 
         #endregion
 
@@ -185,7 +212,7 @@ namespace DirectoryPackagesTools.Client
     }
 
     /// <summary>
-    /// Represents the exact version of a package
+    /// Metadata information of an exact version of a package
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Parent.Id} {Version}")]
     public class NuGetPackageVersionInfo
@@ -234,10 +261,9 @@ namespace DirectoryPackagesTools.Client
         public NuGetVersion Version { get; }
 
         public NUGETPACKMETADATA Metadata { get; private set; }
-
         public NUGETPACKDEPRECATION DeprecationInfo { get; private set; }
 
-        public NUGETPACKDEPENDENCIES Dependencies { get; private set; }
+        private readonly AsyncLazy<NUGETPACKDEPENDENCIES> _Dependencies;
 
         #endregion
 
@@ -249,11 +275,21 @@ namespace DirectoryPackagesTools.Client
             DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
         }
 
-        internal async Task UpdateDependenciesAsync(SourceRepositoryAPI repo)
+        internal async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync(NuGetClient client, CancellationToken? token = null)
         {
+            token ??= CancellationToken.None;
+
+            using var ctx = client.CreateContext(token);
+
             var pid = new PackageIdentity(Parent.Id, Version);
 
-            this.Dependencies = await repo.GetDependencyInfoAsync(pid).ConfigureAwait(false);
+            foreach (var repo in ctx.FilterRepositories(Parent._CachedRepos.Keys.ToImmutableHashSet()))
+            {
+                 var deps = await repo.GetDependencyInfoAsync(pid);
+                if (deps != null) return deps;
+            }
+
+            return null;
         }
 
         #endregion
