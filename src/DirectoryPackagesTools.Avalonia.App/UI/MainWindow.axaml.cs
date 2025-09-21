@@ -170,14 +170,14 @@ namespace DirectoryPackagesTools
 
             if (finfo == null) return;
             
-            await _LoadDocumentAsync(finfo.FullName).ConfigureAwait(false);
+            await _LoadDocumentAsync(finfo.FullName);
         }
 
         private async void MenuItem_Reload(object? sender, RoutedEventArgs e)
         {
             if (this.DataContext is PackagesVersionsProjectMVVM mvvm)
             {
-                await _LoadDocumentAsync(mvvm.DocumentPath).ConfigureAwait(false);
+                await _LoadDocumentAsync(mvvm.DocumentPath);
             }            
         }
 
@@ -189,8 +189,7 @@ namespace DirectoryPackagesTools
             try {
             #endif
                 var doc = await PackagesVersionsProjectMVVM
-                    .LoadAsync(documentPath, ctx, ctx.Token)
-                    .ConfigureAwait(true);
+                    .LoadAsync(documentPath, ctx, ctx.Token);
 
                 if (doc == null) return;
 
@@ -301,8 +300,7 @@ namespace DirectoryPackagesTools
             using var ctx = BeginTask();
 
             await MVVMContext
-                .RefreshPackageDependenciesAsync(ctx, ctx.Token)
-                .ConfigureAwait(true);
+                .RefreshPackageDependenciesAsync(ctx, ctx.Token);
         }
 
         private async Task<bool> ConfirmAction(string msg)
