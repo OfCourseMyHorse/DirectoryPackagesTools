@@ -143,7 +143,7 @@ namespace DirectoryPackagesTools
             #if !SUPRESSTRYCATCH
             try {
             #endif
-                var doc = PackagesVersionsProjectMVVM.FromDirectory(dir);
+                var doc = PackagesVersionsProjectMVVM.FromDirectory(new System.IO.DirectoryInfo(dir));
 
                 if (doc == null) return;
 

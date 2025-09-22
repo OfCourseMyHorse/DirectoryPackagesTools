@@ -19,8 +19,7 @@ namespace DirectoryPackagesTools
 
         internal RepositoriesCollectionMVVM(NuGetClient client) : base("Repositories")
         {
-            _Client = client;
-            _Context = _Client.CreateContext(CancellationToken.None);
+            _Client = client;            
 
             var credsSection = _Client.Settings.GetSection("packageSourceCredentials");
             Credentials = credsSection != null ? credsSection.Items.OfType<CredentialsItem>().ToList() : null;
@@ -33,8 +32,7 @@ namespace DirectoryPackagesTools
 
         #region properties
 
-        private readonly NuGetClient _Client;
-        private readonly NuGetClientContext _Context;
+        private readonly NuGetClient _Client;        
         public IReadOnlyList<CredentialsItem> Credentials { get; }
         public IReadOnlyList<AddItem> ApiKeys { get; }
 
@@ -49,7 +47,7 @@ namespace DirectoryPackagesTools
 
         public IEnumerator<RepositoryMVVM> GetEnumerator()
         {
-            return _Client.Repositories.Select(item => new RepositoryMVVM(item, _Context, Credentials, ApiKeys)).GetEnumerator();
+            return _Client.Repositories.Select(item => new RepositoryMVVM(item.Source, _Client, Credentials, ApiKeys)).GetEnumerator();
         }        
 
         #endregion

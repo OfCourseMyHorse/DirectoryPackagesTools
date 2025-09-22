@@ -38,9 +38,9 @@ namespace DirectoryPackagesTools
             }
         }
 
-        public static PackagesVersionsProjectMVVM FromDirectory(string directoryPath)
+        public static PackagesVersionsProjectMVVM FromDirectory(System.IO.DirectoryInfo directory)
         {
-            var client = new NuGetClient(directoryPath);
+            var client = new NuGetClient(directory);
 
             return new PackagesVersionsProjectMVVM(null, client, null);
         }
@@ -96,7 +96,7 @@ namespace DirectoryPackagesTools
 
             // retrieve versions from nuget repositories.
 
-            var client = new NuGetClient(xdom.File.Directory.FullName);
+            var client = new NuGetClient(xdom.File.Directory);
 
             var packages = await _GetPackagesAsync(xdom, client, progress, ctoken);
 
@@ -131,7 +131,7 @@ namespace DirectoryPackagesTools
             {
                 var package = locals.First(item => item.PackageId == pinfo.Parent.Id);                
 
-                var mvvm = new PackageMVVM(package, pinfo, client);
+                var mvvm = new PackageMVVM(package, pinfo, client, ()=> { foreach (var m in mvvms) m.RaiseVersionChanged(); } );
 
                 mvvms.Add(mvvm);
             }
@@ -220,23 +220,20 @@ namespace DirectoryPackagesTools
             };
 
 
-            using (var ctx = _Client.CreateContext(ctoken))
+            var conflictsFinder = new ConflictsFinder(_Client, fff);
+
+            // populate
+
+            for (int i = 0; i < _Packages.Length; i++)
             {
-                var conflictsFinder = new ConflictsFinder(ctx, fff);
+                progress?.Report(i * 100 / _Packages.Length);
 
-                // populate
-
-                for (int i=0; i < _Packages.Length; i++)
-                {
-                    progress?.Report(i*100 / _Packages.Length);
-
-                    await conflictsFinder.AddPackageAsync(_Packages[i].GetCurrentIdentity());                    
-                }
-
-                // run
-
-                conflictsFinder.FindConflicts();
+                await conflictsFinder.AddPackageAsync(_Packages[i].GetCurrentIdentity());
             }
+
+            // run
+
+            conflictsFinder.FindConflicts();
         }
 
         #endregion

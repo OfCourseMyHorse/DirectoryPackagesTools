@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json.Linq;
+
 using NuGet.Commands;
 using NuGet.Common;
 using NuGet.Configuration;
@@ -16,7 +18,12 @@ using NuGet.Versioning;
 
 namespace DirectoryPackagesTools.Client
 {
-    public class NuGetClient : BaseMVVM
+    using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;
+
+    /// <summary>
+    /// Entry point for all nuget APIs
+    /// </summary>
+    public class NuGetClient
     {
         // https://learn.microsoft.com/en-us/nuget/reference/nuget-client-sdk
         // https://github.com/NuGet/Samples/blob/main/NuGetProtocolSamples/Program.cs
@@ -24,25 +31,33 @@ namespace DirectoryPackagesTools.Client
 
         #region lifecycle
 
-        public NuGetClient() : this((string)null) { }
+        public NuGetClient() : this(null) { }        
 
-        public NuGetClient(System.IO.DirectoryInfo dinfo) : this(dinfo.FullName) { }
-
-        public NuGetClient(string root)
+        public NuGetClient(System.IO.DirectoryInfo dinfo, ILogger logger = null)
         {
-            Settings = NuGet.Configuration.Settings.LoadDefaultSettings(root);
-            var provider = new PackageSourceProvider(Settings);
+            dinfo ??= new System.IO.DirectoryInfo(Environment.CurrentDirectory);
 
-            _Repos = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
-            Logger = NullLogger.Instance;            
+            Logger = logger ?? ProgressLogger.Instance;            
+
+            Settings = NuGet.Configuration.Settings.LoadDefaultSettings(dinfo.FullName);
+            var provider = new PackageSourceProvider(Settings);
+            _ReposProvider = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
+
+            _Repos = new Lazy<SourceRepository[]>(() => _ReposProvider.GetRepositories().ToArray());
+            _RepoAPIs = new Lazy<NuGetRepository[]>(() => _Repos.Value.Select(item => new NuGetRepository(item, null, Logger)).ToArray());
         }
 
         #endregion
 
         #region data
 
-        private SourceRepositoryProvider _Repos;        
         public ILogger Logger { get; }
+
+        private readonly SourceRepositoryProvider _ReposProvider;
+
+        private Lazy<SourceRepository[]> _Repos;
+
+        private Lazy<NuGetRepository[]> _RepoAPIs;        
 
         #endregion
 
@@ -50,19 +65,17 @@ namespace DirectoryPackagesTools.Client
 
         public ISettings Settings { get; }
 
-        public IEnumerable<SourceRepository> Repositories => _Repos.GetRepositories();
-
-        public TimeSpan LastOperationTime { get; private set; }
+        public IReadOnlyList<NuGetRepository> Repositories => _RepoAPIs.Value;        
 
         #endregion
 
         #region API
 
-        internal async Task ForEachRepository(Func<SourceRepositoryAPI, Task<bool>> callback, IReadOnlyCollection<string> cachedRepos = null, CancellationToken? token = null)
+        internal async Task ForEachRepository(Func<NuGetRepository, Task<bool>> callback, IReadOnlyCollection<string> cachedRepos = null, CancellationToken? token = null)
         {
-            using var ctx = CreateContext(token ?? CancellationToken.None);
+            await Task.Yield(); // ensure async
 
-            foreach (var repo in ctx.FilterRepositories(cachedRepos ?? Array.Empty<string>()))
+            foreach (var repo in FilterRepositories(cachedRepos ?? Array.Empty<string>()))
             {
                 var result = await callback.Invoke(repo);
 
@@ -70,11 +83,48 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
-        public NuGetClientContext CreateContext(CancellationToken? token)
+        /// <summary>
+        /// Gets all versions found in all registered repositories
+        /// </summary>
+        /// <param name="packageId">the package it for which we're querying the versions</param>
+        /// <returns></returns>
+        public async Task<NuGetVersion[]> GetVersionsAsync(string packageId)
         {
-            token ??= CancellationToken.None;
-            return new NuGetClientContext(this._Repos, this.Logger, token.Value);            
-        }        
+            await Task.Yield(); // ensure async
+
+            var bag = new NUGETVERSIONSBAG();
+
+            foreach (var r in Repositories)
+            {
+                var vvv = await r.GetVersionsAsync(packageId);
+
+                foreach (var v in vvv) bag.Add(v);
+            }
+
+            return bag.Distinct().ToArray();
+        }
+
+        public IEnumerable<NuGetRepository> FilterRepositories(IReadOnlyCollection<string> repoNames)
+        {
+            if (repoNames.Count == 0) return Repositories;
+
+            return repoNames
+                .Select(n => Repositories.FirstOrDefault(item => item.Source.PackageSource.Name == n))
+                .Where(item => item != null);
+        }
+
+        public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package)
+        {
+            await Task.Yield(); // ensure async
+
+            foreach (var api in Repositories)
+            {
+                var dinfo = await api.GetDependencyInfoAsync(package);
+                if (dinfo != null) return dinfo;
+            }
+
+            return null;
+        }
 
         #endregion
     }    
