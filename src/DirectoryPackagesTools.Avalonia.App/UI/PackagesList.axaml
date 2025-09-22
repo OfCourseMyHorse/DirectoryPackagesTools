@@ -8,38 +8,11 @@
 
   <UserControl.Resources>
 
-    
     <local:VersionRangeShortTextConverter x:Key="asShortText" />
     
     <ContextMenu x:Key="myPackageNameMenu">      
       <MenuItem Header="Open in NuGet.Org" Click="MenuItem_Click" />      
-    </ContextMenu>
-
-    <DataTemplate x:Key="myPackageVersionsSelector" x:DataType="local:PackageMVVM">
-      <StackPanel Orientation="Horizontal">
-        <ComboBox VerticalAlignment="Center" x:Name="myVersions"
-                  ItemsSource="{Binding AvailableVersions}"
-                  SelectedValue="{Binding Version, Mode=OneWay}" >
-
-          <Interaction.Behaviors>
-            <EventTriggerBehavior EventName="SelectionChanged" >
-              <InvokeCommandAction Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding #myVersions.SelectedValue}"/>
-            </EventTriggerBehavior>
-          </Interaction.Behaviors>
-          
-          </ComboBox>
-        
-        <TextBlock VerticalAlignment="Center" Text=" 🔒" IsVisible="{Binding Version.HasUpperBound}" ToolTip.Tip="Version is locked, removed '[' - ']' from SemVer to unlock" />
-        
-        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" IsVisible="{Binding NeedsUpdate}">
-          <TextBlock Text=" "/>
-          <Button Content="{Binding NewestRelease, Converter={StaticResource asShortText}}" Background="LightGreen" Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding NewestRelease}" />
-          <TextBlock Text=" "/>
-          <Button Content="{Binding NewestPrerelease, Converter={StaticResource asShortText}}" Background="LightPink" Command="{Binding ApplyVersionCommand}" CommandParameter="{Binding NewestPrerelease}" />
-        </StackPanel>
-        
-      </StackPanel>
-    </DataTemplate>
+    </ContextMenu>    
 
     <DataTemplate x:Key="myDependantProjects" x:DataType="local:PackageMVVM">
       <ItemsControl ItemsSource="{Binding DependantProjects}">
@@ -103,10 +76,16 @@
         </DataGridTextColumn>
         
         <DataGridTextColumn Header="Version" MinWidth="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" />        
-        <DataGridTemplateColumn Header="Available Versions" Width="350" CellTemplate="{StaticResource ResourceKey=myPackageVersionsSelector}" />
+        <DataGridTemplateColumn Header="Available Versions" Width="450" >
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="local:PackageMVVM">
+              <local:PackageVersionSelectorView />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
 
         <DataGridTemplateColumn IsVisible="false" Header="Used By Projects" MinWidth="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
-        <DataGridTextColumn IsVisible="false" Header="Frameworks" MinWidth="180" Binding="{Binding FrameworksAsync^}" />
+        <DataGridTextColumn IsVisible="false" Header="Frameworks" MinWidth="180" Binding="{Binding FrameworksAsync^, FallbackValue=⏳}" />
         <DataGridTextColumn IsVisible="false" Header="Tags" MinWidth="180" Binding="{Binding Metadata.Tags}" />
         <DataGridTextColumn IsVisible="false" Header="Summary" MinWidth="600" Binding="{Binding Metadata.Summary}" />
         <DataGridTextColumn IsVisible="false" Header="Description" MinWidth="600" Binding="{Binding Metadata.Description}" />

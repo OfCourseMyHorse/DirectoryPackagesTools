@@ -15,11 +15,13 @@ namespace DirectoryPackagesTools
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is String text) return text;
-
-            if (value is VersionRange versionRange) return versionRange.ToShortString();
-
-            return value?.ToString() ?? string.Empty;
+            switch (value)
+            {
+                case string text: return text;
+                case NuGetVersion version: return version.ToNormalizedString();
+                case VersionRange versionRange: return versionRange.ToShortString();
+                default: return value?.ToString() ?? string.Empty;
+            }
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

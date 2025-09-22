@@ -21,13 +21,13 @@ namespace DirectoryPackagesTools
     /// </summary>
     class ConflictsFinder
     {
-        public ConflictsFinder(NuGetClientContext context, params NuGetFramework[] frameworks)
+        public ConflictsFinder(NuGetClient context, params NuGetFramework[] frameworks)
         {
             _Context = context;
             _Frameworks = frameworks;
         }
 
-        private readonly NuGetClientContext _Context;
+        private readonly NuGetClient _Context;
 
         private readonly NuGetFramework[] _Frameworks;
 

@@ -41,12 +41,7 @@ namespace DirectoryPackagesTools.Client
 
         public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClient client, IProgress<int> progress, CancellationToken? ctoken = null)
         {
-            ctoken ??= CancellationToken.None;
-
-            using (var ctx = client.CreateContext(ctoken))
-            {
-                await UpdateAsync(packages, ctx, progress);
-            }
+            await UpdateAsync(packages, client, progress);
         }
 
         /// <summary>
@@ -55,32 +50,22 @@ namespace DirectoryPackagesTools.Client
         /// <param name="packages">The package versions to be updated</param>
         /// <param name="progress">reports progress to the client</param>
         /// <param name="token"></param>        
-        public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClientContext context, IProgress<int> progress)
+        public static async Task UpdateAsync(IReadOnlyList<NuGetPackageInfo> packages, NuGetClient client, IProgress<int> progress)
         {
             var percent = new _ProgressCounter(progress, packages.Count);
 
             foreach (var package in packages)
             {
-                await package.UpdateAsync(context);
+                await package.UpdateAsync(client);
 
                 percent.Report(package.Id);
             }
-        }
+        }        
 
-        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id, CancellationToken? ctoken = null)
-        {
-            ctoken ??= CancellationToken.None;
-
-            using (var ctx = client.CreateContext(ctoken))
-            {
-                return await CreateAsync(ctx, id);
-            }
-        }
-
-        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClientContext context, string id)
+        public static async Task<NuGetPackageInfo> CreateAsync(NuGetClient client, string id)
         {
             var instance = new NuGetPackageInfo(id);
-            await instance.UpdateAsync(context);
+            await instance.UpdateAsync(client);
             return instance;
         }
 
@@ -89,16 +74,12 @@ namespace DirectoryPackagesTools.Client
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
-        public async Task UpdateAsync(NuGetClient client, CancellationToken? ctoken = null)
+        
+
+        public async Task UpdateAsync(NuGetClient client)
         {
             _Client = client;
 
-            using var ctx = client.CreateContext(ctoken ?? CancellationToken.None);
-            await UpdateAsync(ctx);
-        }
-
-        public async Task UpdateAsync(NuGetClientContext client)
-        {            
             var repos = _CachedRepos.Count == 0
 
                 // First call will scan all repos
@@ -138,7 +119,7 @@ namespace DirectoryPackagesTools.Client
             }
         }
 
-        private async Task _UpdateAsync(SourceRepositoryAPI repo)
+        private async Task _UpdateAsync(NuGetRepository repo)
         {
             // get all versions
             var vvv = await repo.GetVersionsAsync(this.Id);
@@ -184,6 +165,26 @@ namespace DirectoryPackagesTools.Client
 
         public bool AllDeprecated => _Versions.Values.All(item => item.DeprecationInfo != null);
 
+        public NuGetPackageVersionInfo this[NUGETVERSIONRANGE range]
+        {
+            get
+            {
+                var key = _Versions.Keys.OrderByDescending(item => item).FirstOrDefault(range.Satisfies);
+                return this[key];
+            }
+        }
+
+        public NuGetPackageVersionInfo this[NUGETVERSION version]
+        {
+            get
+            {
+                if (version == null) return null;
+                return _Versions.TryGetValue(version, out var exact)
+                    ? exact
+                    : new NuGetPackageVersionInfo(this, version); // non existant version
+            }
+        }
+
         #endregion
 
         #region API
@@ -197,25 +198,34 @@ namespace DirectoryPackagesTools.Client
                 .Select(item => item.Key)
                 .OrderBy(item => item)
                 .ToList();
-        }
+        }        
 
-        public NuGetPackageVersionInfo this[NUGETVERSION version]
+        /// <summary>
+        /// Returns the first non null value found in the list of repos
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="callback"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        internal async Task<T> GetFirstAsync<T>(Func<NuGetRepository, Task<T>> callback, CancellationToken? token = null) where T:class
         {
-            get
+            if (_Client == null) return null;
+
+            foreach (var repo in _Client.FilterRepositories(_CachedRepos.Keys.ToImmutableHashSet()))
             {
-                return _Versions.TryGetValue(version, out var exact)
-                    ? exact
-                    : new NuGetPackageVersionInfo(this, version); // non existant version
+                var result = await callback.Invoke(repo);
+
+                if (result != null) return result;
             }
+
+            return null;
         }
 
-        internal async Task ForEachRepository(Func<SourceRepositoryAPI, Task<bool>> callback, CancellationToken? token = null)
+        internal async Task ForEachRepository(Func<NuGetRepository, Task<bool>> callback, CancellationToken? token = null)
         {
-            if (_Client == null) return;
+            if (_Client == null) return;            
 
-            using var ctx = _Client.CreateContext(token ?? CancellationToken.None);
-
-            foreach (var repo in ctx.FilterRepositories(_CachedRepos.Keys.ToImmutableHashSet()))
+            foreach (var repo in _Client.FilterRepositories(_CachedRepos.Keys.ToImmutableHashSet()))
             {
                 var result = await callback.Invoke(repo);
 
@@ -234,7 +244,7 @@ namespace DirectoryPackagesTools.Client
     {
         #region lifecycle
 
-        internal static async Task UpdateMetadatas(IReadOnlyDictionary<NUGETVERSION, NuGetPackageVersionInfo> versions, SourceRepositoryAPI repo)
+        internal static async Task UpdateMetadatas(IReadOnlyDictionary<NUGETVERSION, NuGetPackageVersionInfo> versions, NuGetRepository repo)
         {
             var ids = versions
                 .Values
@@ -291,21 +301,11 @@ namespace DirectoryPackagesTools.Client
 
         private async Task<NUGETPACKDEPENDENCIES> _GetDependenciesAsync()
         {
-            var pid = new PackageIdentity(Parent.Id, Version);
+            await Task.Yield();
 
-            NUGETPACKDEPENDENCIES result = null;
+            var pid = new PackageIdentity(Parent.Id, Version);            
 
-            async Task<bool> perRepo(SourceRepositoryAPI repo)
-            {
-                result ??= await repo.GetDependencyInfoAsync(pid);
-                return result != null;
-            }
-
-            await Parent.ForEachRepository(perRepo);            
-
-            //System.Diagnostics.Debug.Assert(result != null);
-
-            return result;
+            return await Parent.GetFirstAsync( async repo => await repo.GetDependencyInfoAsync(pid));
         }        
 
         #endregion

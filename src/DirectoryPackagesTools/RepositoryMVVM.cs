@@ -18,7 +18,7 @@ namespace DirectoryPackagesTools
     public class RepositoryMVVM : BaseMVVM
     {
         #region lifecycle
-        public RepositoryMVVM(SourceRepository repository, NuGetClientContext client, IEnumerable<CredentialsItem> credentials, IEnumerable<AddItem> apiKeys)
+        public RepositoryMVVM(SourceRepository repository, NuGetClient client, IEnumerable<CredentialsItem> credentials, IEnumerable<AddItem> apiKeys)
         {
             _Repository = repository;
 
@@ -41,10 +41,10 @@ namespace DirectoryPackagesTools
 
         #region data
 
-        private NuGetClientContext _Client;
+        private NuGetClient _Client;
 
         private SourceRepository _Repository;
-        private SourceRepositoryAPI _RepoAPI;
+        private NuGetRepository _RepoAPI;
         public CredentialsItem Credentials { get; }
         public AddItem ApiKey { get; }
 

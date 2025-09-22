@@ -5,7 +5,6 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DirectoryPackagesTools.Client;
@@ -21,15 +20,16 @@ namespace DirectoryPackagesTools
     public partial class PackageMVVM : BaseMVVM
     {
         #region lifecycle
-        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageVersionInfo currver, NuGetClient client)
+        internal PackageMVVM(IPackageReferenceVersion local, NuGetPackageVersionInfo currver, NuGetClient client, Action updateAllVersions)
         {
             System.Diagnostics.Debug.Assert(local.PackageId == currver.Parent.Id);
-            System.Diagnostics.Debug.Assert(local.Version.MinVersion == currver.Version);            
+            System.Diagnostics.Debug.Assert(local.Version.MinVersion == currver.Version);
+            _LocalReference = local;
+            _CurrentVersion = currver;
+
+            _UpdateAllPackagesVersions = updateAllVersions;
 
             _Client = client;
-
-            _LocalReference = local;
-            _CurrentVersion = currver;            
 
             _RawAvailableVersions = currver
                 .Parent
@@ -40,7 +40,7 @@ namespace DirectoryPackagesTools
 
             var hidePrereleases = PackageClassifier.ShouldHidePrereleases(Metadata);
             if (local.Version.MinVersion.IsPrerelease) hidePrereleases = false;
-            _AvailableVersions = new Lazy<IReadOnlyList<NUGETVERSIONRANGE>>(() => _CreateVersionsView(_RawAvailableVersions, !hidePrereleases));
+            _AvailableVersions = new Lazy<IReadOnlyList<NUGETVERSION>>(() => _CreateVersionsView(_RawAvailableVersions, !hidePrereleases));
 
             AllDeprecated = currver.Parent.AllDeprecated;            
 
@@ -53,7 +53,7 @@ namespace DirectoryPackagesTools
             if (PackageClassifier.IsUnitTestPackage(Metadata)) NewestPrerelease = null;
         }        
 
-        private static IReadOnlyList<NUGETVERSIONRANGE> _CreateVersionsView(IReadOnlyList<NUGETVERSION> versions, bool showPrerelease)
+        private static IReadOnlyList<NUGETVERSION> _CreateVersionsView(IReadOnlyList<NUGETVERSION> versions, bool showPrerelease)
         {
             // if all are pre-releases, don't hide.
             if (versions.All(item => item.IsPrerelease)) showPrerelease = true;                 
@@ -66,7 +66,7 @@ namespace DirectoryPackagesTools
                     .ToArray();
             }
 
-            return versions.Select(item => new NUGETVERSIONRANGE(item)).ToList();            
+            return versions.ToList();            
         }
 
         /// <summary>
@@ -86,12 +86,14 @@ namespace DirectoryPackagesTools
         private void _ApplyPackageInfo(NuGetPackageVersionInfo pinfo)
         {
             // packages stored in a local source directory may report metadata as Null
-            _CurrentVersion = pinfo;            
+            _CurrentVersion = pinfo;
         }
 
         #endregion
 
         #region data - project
+
+        private Action _UpdateAllPackagesVersions;
 
         private readonly IPackageReferenceVersion _LocalReference;
 
@@ -105,7 +107,7 @@ namespace DirectoryPackagesTools
 
         private readonly IReadOnlyList<NUGETVERSION> _RawAvailableVersions;
 
-        private readonly Lazy<IReadOnlyList<NUGETVERSIONRANGE>> _AvailableVersions;
+        private readonly Lazy<IReadOnlyList<NUGETVERSION>> _AvailableVersions;
 
         private NuGetPackageVersionInfo _CurrentVersion;
 
@@ -123,7 +125,7 @@ namespace DirectoryPackagesTools
         /// </summary>
         public string Prefix => _LocalReference.PackagePrefix;
 
-        public IReadOnlyList<NUGETVERSIONRANGE> AvailableVersions => _AvailableVersions.Value;
+        public IReadOnlyList<NUGETVERSION> AvailableVersions => _AvailableVersions.Value;
 
         #endregion
 
@@ -133,13 +135,25 @@ namespace DirectoryPackagesTools
         public string DeprecationReason => _CurrentVersion?.DeprecationInfo?.Message + $"\r\nUse: {_CurrentVersion?.DeprecationInfo?.AlternatePackage}";
 
 
-        public NUGETVERSIONRANGE NewestRelease { get; }
-        public NUGETVERSIONRANGE NewestPrerelease { get; }
+        public NUGETVERSION NewestRelease { get; }
+        public NUGETVERSION NewestPrerelease { get; }
 
-        public NUGETVERSIONRANGE Version => _LocalReference.Version;
+        public NUGETVERSION Version => _LocalReference.Version.MinVersion;
 
-        public bool VersionIsUpToDate => Version.MinVersion == AvailableVersions.FirstOrDefault()?.MinVersion;
-        public bool NeedsUpdate => !VersionIsUpToDate && !Version.HasUpperBound;
+        public bool CanUpdate => !VersionIsUpToDate && !IsLocked;
+
+        public bool VersionIsUpToDate
+        {
+            get
+            {
+                var v = _LocalReference.Version;
+                if (NewestRelease != null && v.MinVersion == NewestRelease) return true;
+                if (NewestPrerelease != null && v.MinVersion == NewestPrerelease) return true;
+                return false;
+            }
+        }
+
+        public bool IsLocked => _LocalReference.Version.HasUpperBound;        
 
         #endregion
 
@@ -149,34 +163,59 @@ namespace DirectoryPackagesTools
 
         public NUGETPACKMETADATA Metadata => _CurrentVersion.Metadata;
 
-        public Task<string> FrameworksAsync => _GetFrameworksReportAsync();        
+        public Task<string> FrameworksAsync => _GetFrameworksReportAsync();
 
         #endregion
 
         #region API
 
+        private bool _SetVersionFeedback;
+
         /// <summary>
         /// Sets the new version for this package
         /// </summary>
-        /// <param name="ver"></param>
+        /// <param name="rver"></param>
         [RelayCommand]
-        public async Task ApplyVersionAsync(NUGETVERSIONRANGE ver)
+        public void SetVersion(NUGETVERSION rver)
         {
-            if (ver == null) return;            
+            if (rver == null) return;
 
-            var pinfo = new NuGetPackageInfo(_LocalReference.PackageId);
+            if (_SetVersionFeedback) return;
 
-            await pinfo.UpdateAsync(_Client);
+            var lver = _LocalReference.Version;            
 
-            _ApplyPackageInfo(pinfo[ver.MinVersion]);
+            if (lver.MinVersion == rver)
+            {
+                OnPropertyChanged(nameof(Version));
+                return; // nothing to do
+            }            
 
-            _LocalReference.Version = ver;
+            var pinfo = _CurrentVersion.Parent;            
+
+            _LocalReference.Version = new NUGETVERSIONRANGE(rver);
+            _ApplyPackageInfo(pinfo[rver]);
+
+            if (_UpdateAllPackagesVersions != null) _UpdateAllPackagesVersions.Invoke();
+            else RaiseVersionChanged();
+        }
+
+        internal void RaiseVersionChanged()
+        {
+            if (_CurrentVersion.Version != _LocalReference.Version.MinVersion)
+            {
+                _CurrentVersion = _CurrentVersion.Parent[_LocalReference.Version.MinVersion];
+            }
+
+            _SetVersionFeedback = true;
 
             OnPropertyChanged(nameof(Version));
             OnPropertyChanged(nameof(VersionIsUpToDate));
-            OnPropertyChanged(nameof(NeedsUpdate));
+            OnPropertyChanged(nameof(CanUpdate));
+            OnPropertyChanged(nameof(IsLocked));
             OnPropertyChanged(nameof(Metadata));
             OnPropertyChanged(nameof(FrameworksAsync));
+
+            _SetVersionFeedback = false;
         }
 
         internal string GetPackageCategory(PackageClassifier classifier)
@@ -186,23 +225,21 @@ namespace DirectoryPackagesTools
             return classifier.GetPackageCategory(_CurrentVersion.Metadata);
         }
 
-        private NUGETVERSIONRANGE _GetNewestVersionAvailable(bool isPrerelease)
+        private NUGETVERSION _GetNewestVersionAvailable(bool isPrerelease)
         {
             var vvv = AvailableVersions.ToList();
 
             var v = vvv
-                .Where(item => item.MinVersion.IsPrerelease == isPrerelease)
-                .OrderByDescending(item => item.MinVersion)
+                .Where(item => item.IsPrerelease == isPrerelease)
+                .OrderByDescending(item => item)
                 .FirstOrDefault();
 
-            return v == null ? null : new NUGETVERSIONRANGE(v.MinVersion);
+            return v;
         }
 
         public NUGETPACKIDENTITY GetCurrentIdentity()
         {
-            var version = Version.MinVersion;
-
-            return new NUGETPACKIDENTITY(Name, version);
+            return new NUGETPACKIDENTITY(Name, Version);
         }
 
         /// <summary>
@@ -217,7 +254,7 @@ namespace DirectoryPackagesTools
         {
             #if !DEBUG
             try {
-            #endif
+            #endif                
 
                 var dependencies = await _CurrentVersion.GetDependenciesAsync();
                 if (dependencies == null) return "Unknown";
@@ -226,7 +263,9 @@ namespace DirectoryPackagesTools
                     .DependencyGroups
                     .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
 
-                return string.Join(" ", fff);
+                var result = string.Join(" ", fff);
+
+                return result;
 
             #if !DEBUG
             }
