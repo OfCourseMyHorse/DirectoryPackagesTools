@@ -16,7 +16,7 @@ namespace SourceNugetPackageBuilder
 
             MSBuildLocator.RegisterInstance(instance);
 
-            await Context.RunCommandAsync(args).ConfigureAwait(false);
+            await Context.RunCommandAsync(args);
         }
     }
 }

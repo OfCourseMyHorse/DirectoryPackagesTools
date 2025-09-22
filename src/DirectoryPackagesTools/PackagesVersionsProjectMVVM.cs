@@ -98,7 +98,7 @@ namespace DirectoryPackagesTools
 
             var client = new NuGetClient(xdom.File.Directory.FullName);
 
-            var packages = await _GetPackagesAsync(xdom, client, progress, ctoken).ConfigureAwait(false);
+            var packages = await _GetPackagesAsync(xdom, client, progress, ctoken);
 
             // add dependencies
 

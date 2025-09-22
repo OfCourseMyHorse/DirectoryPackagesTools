@@ -83,7 +83,7 @@ namespace DirectoryPackagesTools
 
                 ctx.OutputDirectory = testDir.Directory;
 
-                await ctx.RunAsync().ConfigureAwait(false);
+                await ctx.RunAsync();
             }            
         }
     }

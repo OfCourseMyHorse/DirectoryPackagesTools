@@ -284,7 +284,7 @@ namespace DirectoryPackagesTools.Client
         internal async Task UpdateAsync(NUGETPACKMETADATA metaData)
         {
             Metadata = metaData;
-            DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
+            DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync();
         }
 
         public async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync() => await _Dependencies;
@@ -298,7 +298,7 @@ namespace DirectoryPackagesTools.Client
             async Task<bool> perRepo(SourceRepositoryAPI repo)
             {
                 result ??= await repo.GetDependencyInfoAsync(pid);
-                return result != null;
+                return result == null;
             }
 
             await Parent.ForEachRepository(perRepo);            

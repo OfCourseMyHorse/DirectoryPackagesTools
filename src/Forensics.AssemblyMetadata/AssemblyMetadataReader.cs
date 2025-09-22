@@ -69,7 +69,7 @@ namespace NuGetPe.AssemblyMetadata
                     using var reader = new AssemblyDebugParser(peStream, pdbStream);
                     return reader.GetDebugData();
 
-                }, cts.Token).ConfigureAwait(false);
+                }, cts.Token);
             }
             finally
             {
