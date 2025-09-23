@@ -29,7 +29,7 @@
                IsVisible="{Binding IsLocked}"
                ToolTip.Tip="Version is locked, removed '[' - ']' from SemVer to unlock" />
 
-    <StackPanel IsVisible="{Binding CanUpdate}">
+    <StackPanel IsVisible="{Binding CanUpdate}" Orientation="Horizontal">
       
       <Button Margin="4,0,4,0"
               IsVisible="{Binding NewestRelease, Converter={x:Static ObjectConverters.IsNotNull}}"
