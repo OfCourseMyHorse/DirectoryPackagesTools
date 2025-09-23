@@ -32,11 +32,15 @@ namespace DirectoryPackagesTools.Client
             _Cache = cache ?? NullSourceCacheContext.Instance;
             _Repo = repo;
             _Logger = logger ?? ProgressLogger.Instance;
+
+            _Semaphore = new SemaphoreSlim(1);
         }
 
         #endregion
 
         #region data
+
+        private readonly SemaphoreSlim _Semaphore;
 
         private readonly SourceRepository _Repo;
         private readonly SourceCacheContext _Cache;
@@ -99,6 +103,23 @@ namespace DirectoryPackagesTools.Client
         #endregion
 
         #region API
+
+        private async Task<T> _ThrottleAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken? token = null)
+        {
+            token ??= CancellationToken.None;
+
+            if (!await _Semaphore.WaitAsync(20000, token.Value)) return default;
+
+            try
+            {
+                // we do need to run in a thread to prevent UI freezing
+                return await Task.Run(async ()=> await action.Invoke(token.Value));
+            }
+            finally
+            {
+                _Semaphore.Release();
+            }
+        }
 
         public async Task<IReadOnlyList<IPackageSearchMetadata>> SearchAsync(SearchFilter filter, string searchTerm = null, CancellationToken? token = null)
         {
@@ -191,29 +212,32 @@ namespace DirectoryPackagesTools.Client
 
         public async Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity package, CancellationToken? token = null)
         {
-            await Task.Yield(); // ensure async
-
-            var resPM = await _GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>();
-
-            return await resPM.GetMetadataAsync(package, _Cache, _Logger, token ?? CancellationToken.None);
+            return await _ThrottleAsync( async t =>
+            {
+                var resPM = await _GetAPIAsync<NuGet.Protocol.Core.Types.PackageMetadataResource>();
+                return await resPM.GetMetadataAsync(package, _Cache, _Logger, t);
+            }, token);
         }
 
         public async Task<FindPackageByIdDependencyInfo> GetDependencyInfoAsync(PackageIdentity package, CancellationToken? token = null)
         {
-            await Task.Yield(); // ensure async
+            return await _ThrottleAsync(async t =>
+            {
+                // on average, this takes 200ms , but with the ONNXRuntime packages it can take up to full 4 seconds.
 
-            var resPID = await _GetAPIAsync<FindPackageByIdResource>();
+                var resPID = await _GetAPIAsync<FindPackageByIdResource>();
+                return await resPID.GetDependencyInfoAsync(package.Id, package.Version, _Cache, _Logger, t);
 
-            return await resPID.GetDependencyInfoAsync(package.Id, package.Version, _Cache, _Logger, token ?? CancellationToken.None);
+            }, token);
         }
 
         public async Task<SourcePackageDependencyInfo> GetPackageDependenciesAsync(PackageIdentity package, NuGetFramework framework, CancellationToken? token = null)
         {
-            await Task.Yield(); // ensure async
-
-            var dependencyInfoResource = await _GetAPIAsync<DependencyInfoResource>();
-
-            return await dependencyInfoResource.ResolvePackage(package, framework, _Cache, _Logger, token ?? CancellationToken.None);
+            return await _ThrottleAsync(async t =>
+            {
+                var dependencyInfoResource = await _GetAPIAsync<DependencyInfoResource>();
+                return await dependencyInfoResource.ResolvePackage(package, framework, _Cache, _Logger, t);
+            }, token);
         }
 
         #endregion                    

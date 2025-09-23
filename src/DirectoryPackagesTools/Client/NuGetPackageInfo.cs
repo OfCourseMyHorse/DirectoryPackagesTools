@@ -285,7 +285,7 @@ namespace DirectoryPackagesTools.Client
         public NUGETPACKMETADATA Metadata { get; private set; }
         public NUGETPACKDEPRECATION DeprecationInfo { get; private set; }
 
-        private readonly AsyncLazy<NUGETPACKDEPENDENCIES> _Dependencies;        
+        private AsyncLazy<NUGETPACKDEPENDENCIES> _Dependencies;        
 
         #endregion
 
@@ -297,12 +297,18 @@ namespace DirectoryPackagesTools.Client
             DeprecationInfo ??= await metaData.GetDeprecationMetadataAsync().ConfigureAwait(false);
         }
 
-        public async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync() => await _Dependencies;
+        public async Task<NUGETPACKDEPENDENCIES> GetDependenciesAsync()
+        {
+            var result = await _Dependencies;
+
+            // if we couldn't get the value, reenqueue
+            if (result == null) _Dependencies = new AsyncLazy<NUGETPACKDEPENDENCIES>(_Dependencies);
+
+            return result;
+        }
 
         private async Task<NUGETPACKDEPENDENCIES> _GetDependenciesAsync()
         {
-            await Task.Yield();
-
             var pid = new PackageIdentity(Parent.Id, Version);            
 
             return await Parent.GetFirstAsync( async repo => await repo.GetDependencyInfoAsync(pid));
