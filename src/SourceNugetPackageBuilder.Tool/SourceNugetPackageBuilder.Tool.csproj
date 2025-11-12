@@ -43,7 +43,7 @@
   </PropertyGroup>  
 
   <ItemGroup>    
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
+		<PackageReference Include="System.CommandLine" Version="2.0.0" />
     <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20250721" PrivateAssets="all" />
   </ItemGroup>
 
@@ -52,17 +52,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.14.0">
+    <PackageReference Include="NuGet.CommandLine" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuGet.Commands" Version="6.14.0" />
-    <PackageReference Include="NuGet.Packaging" Version="6.14.0" />    
+    <PackageReference Include="NuGet.Commands" Version="7.0.0" />
+    <PackageReference Include="NuGet.Packaging" Version="7.0.0" />    
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.14.8" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Build" Version="17.14.28" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.10.12" />
   </ItemGroup>  
   
 </Project>

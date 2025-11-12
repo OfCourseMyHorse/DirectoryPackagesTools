@@ -81,22 +81,19 @@ namespace DirectoryPackagesTools
         {
             var nuClient = new Client.NuGetClient();
 
-            using (var context = nuClient.CreateContext(CancellationToken.None))
+            foreach (var r in nuClient.Repositories)
             {
-                foreach (var r in context.Repositories)
+                // if (r.IsNugetOrg || r.IsOfficial || r.IsVisualStudio) continue;
+
+                TestContext.Out.WriteLine($"Repository {r.Source}");
+
+                var filter = new SearchFilter(true);
+
+                var result = await r.SearchAsync(filter, "", 0, 20);
+
+                foreach (var foundPackage in result)
                 {
-                    // if (r.IsNugetOrg || r.IsOfficial || r.IsVisualStudio) continue;
-
-                    TestContext.Out.WriteLine($"Repository {r.Source}");
-
-                    var filter = new SearchFilter(true);
-
-                    var result = await r.SearchAsync(filter, "", 0, 20);
-
-                    foreach (var foundPackage in result)
-                    {
-                        TestContext.Out.WriteLine($"{foundPackage.Identity}");
-                    }                    
+                    TestContext.Out.WriteLine($"{foundPackage.Identity}");
                 }
             }
         }
@@ -108,51 +105,48 @@ namespace DirectoryPackagesTools
         {
             var nuClient = new Client.NuGetClient();
 
-            using(var context = nuClient.CreateContext(CancellationToken.None))
+            foreach (var r in nuClient.Repositories)
             {
-                foreach(var r in context.Repositories)
+                var versions = await r.GetVersionsAsync(packageName);
+
+                if (versions == null || versions.Length == 0) continue;
+
+                var metas = await r.GetMetadataAsync(packageName);
+
+                TestContext.Out.WriteLine();
+                TestContext.Out.WriteLine($"--------------------------------------- From: " + r.Source.PackageSource);
+                TestContext.Out.WriteLine();
+
+                foreach (var v in versions)
                 {
-                    var versions = await r.GetVersionsAsync(packageName);
+                    var pid = new PackageIdentity(packageName, v);
 
-                    if (versions == null || versions.Length == 0) continue;
+                    var isLocal = await r.ExistLocally(pid);
 
-                    var metas = await r.GetMetadataAsync(packageName);
-
-                    TestContext.Out.WriteLine();
-                    TestContext.Out.WriteLine($"--------------------------------------- From: " + r.Source.PackageSource);
+                    TestContext.Out.WriteLine($"{v} Exists Locally:{isLocal}");
                     TestContext.Out.WriteLine();
 
-                    foreach (var v in versions)
+                    var depInfo = await r.GetDependencyInfoAsync(pid);
+                    foreach (var dg in depInfo.DependencyGroups)
                     {
-                        var pid = new PackageIdentity(packageName, v);                        
+                        TestContext.Out.WriteLine($"       {dg.TargetFramework}");
 
-                        var isLocal = await r.ExistLocally(pid);                        
-
-                        TestContext.Out.WriteLine($"{v} Exists Locally:{isLocal}");
-                        TestContext.Out.WriteLine();
-
-                        var depInfo = await r.GetDependencyInfoAsync(pid);
-                        foreach (var dg in depInfo.DependencyGroups)
+                        foreach (var jj in dg.Packages)
                         {
-                            TestContext.Out.WriteLine($"       {dg.TargetFramework}");
-
-                            foreach(var jj in dg.Packages)
-                            {
-                                TestContext.Out.WriteLine($"           {jj}");
-                            }
+                            TestContext.Out.WriteLine($"           {jj}");
                         }
-                    }                    
+                    }
+                }
 
-                    foreach(var meta in metas)
-                    {
-                        TestContext.Out.WriteLine(_ToJson(meta));
+                foreach (var meta in metas)
+                {
+                    TestContext.Out.WriteLine(_ToJson(meta));
 
-                        var deprecation = await meta.GetDeprecationMetadataAsync();
+                    var deprecation = await meta.GetDeprecationMetadataAsync();
 
-                        TestContext.Out.WriteLine(_ToJson(deprecation));
-                    }                    
-                }                
-            }            
+                    TestContext.Out.WriteLine(_ToJson(deprecation));
+                }
+            }
         }
 
         private static string _ToJson(Object obj)
