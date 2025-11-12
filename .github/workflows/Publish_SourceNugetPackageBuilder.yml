@@ -6,22 +6,30 @@ jobs:
   build:
     runs-on: ubuntu-latest    
     timeout-minutes: 5
+
     steps:
     - name: define version suffix      
       run: echo "VERSIONSUFFIX=Preview-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4 
       with: # https://github.com/actions/setup-dotnet/issues/562
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
+
     - name: Install dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build -c Release --version-suffix ${{ env.VERSIONSUFFIX }}
+
 #    - name: Test
 #      run: dotnet test -c Release --no-build
+
     - name: Pack nugets
       run: dotnet pack -c Release --no-build --output .
+
     - name: Push to NuGet
       run: dotnet nuget push "*.nupkg" --api-key ${{secrets.PUSH_TO_NUGET_ORG}} --source https://api.nuget.org/v3/index.json
