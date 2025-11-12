@@ -31,6 +31,8 @@ namespace SourceNugetPackageBuilder
                 case "net6.0-android": fw += "31.0"; break;
                 case "net7.0-android": fw += "33.0"; break;
                 case "net8.0-android": fw += "34.0"; break;
+                case "net9.0-android": fw += "35.0"; break;
+                case "net10.0-android": fw += "36.0"; break;
 
                 case "unsupported": throw new ArgumentException("unsupported", nameof(fw));
             }
