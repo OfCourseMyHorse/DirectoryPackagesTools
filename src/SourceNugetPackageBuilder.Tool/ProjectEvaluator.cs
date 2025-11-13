@@ -208,7 +208,7 @@ namespace SourceNugetPackageBuilder
             if (item == null) return null;
             if (string.IsNullOrWhiteSpace(item.EvaluatedInclude)) return null;
             if (System.IO.Path.IsPathRooted(item.EvaluatedInclude)) return new System.IO.FileInfo(item.EvaluatedInclude);
-            return ProjectPath.Directory.DefineFile(item.EvaluatedInclude);
+            return ProjectPath.Directory.DefineFileInfo(item.EvaluatedInclude);
         }
 
         #endregion

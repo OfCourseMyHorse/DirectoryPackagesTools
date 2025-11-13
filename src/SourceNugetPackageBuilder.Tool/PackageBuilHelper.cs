@@ -18,7 +18,7 @@ namespace SourceNugetPackageBuilder
         public PackageBuilHelper(ManifestFactory factory, Arguments args)
         {
             _Arguments = args;
-            OutDir = args.OutputDirectory ?? factory.ProjectPath.Directory.DefineDirectory("bin");
+            OutDir = args.OutputDirectory ?? factory.ProjectPath.Directory.DefineDirectoryInfo("bin");
 
             var config = _CreateManifestMetadata(factory, args);
             
@@ -110,7 +110,7 @@ namespace SourceNugetPackageBuilder
 
         public void AddCompileChecks()
         {
-            var path = new System.IO.DirectoryInfo(AppContext.BaseDirectory).DefineFile("CompileChecks_targets.xml");
+            var path = new System.IO.DirectoryInfo(AppContext.BaseDirectory).DefineFileInfo("CompileChecks_targets.xml");
             if (!path.Exists) return;
 
             var f = CreatePhysicalPackageFile(path);
