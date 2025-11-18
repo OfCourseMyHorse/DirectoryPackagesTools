@@ -312,7 +312,7 @@ namespace DirectoryPackagesTools.Client
             var pid = new PackageIdentity(Parent.Id, Version);            
 
             return await Parent.GetFirstAsync( async repo => await repo.GetDependencyInfoAsync(pid));
-        }        
+        }
 
         #endregion
     }

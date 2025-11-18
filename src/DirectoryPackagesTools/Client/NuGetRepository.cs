@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using NuGet.Common;
 using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
@@ -154,7 +155,7 @@ namespace DirectoryPackagesTools.Client
             var api = await _GetAPIAsync<PackageSearchResource>();
 
             return await api.SearchAsync(searchTerm, filter, skip, take, _Logger, token ?? CancellationToken.None);
-        }
+        }        
 
         #endregion
 
@@ -237,6 +238,50 @@ namespace DirectoryPackagesTools.Client
             {
                 var dependencyInfoResource = await _GetAPIAsync<DependencyInfoResource>();
                 return await dependencyInfoResource.ResolvePackage(package, framework, _Cache, _Logger, t);
+            }, token);
+        }
+
+        public async Task<IPackageDownloader> GetPackageDownloaderAsync(PackageIdentity package, CancellationToken? token = null)
+        {
+            return await _ThrottleAsync(async t =>
+            {
+                var api = await _GetAPIAsync<FindPackageByIdResource>();
+                if (api == null) return null;
+
+                return await api.GetPackageDownloaderAsync(package, _Cache, _Logger, t);
+            }, token);
+        }
+
+        public async Task<System.IO.Compression.ZipArchive> DownloadPackageToZipAsync(PackageIdentity package, CancellationToken? token = null)
+        {
+            var m = await DownloadPackageToStreamAsync(package, token);
+            if (m == null) return null;
+
+            return new System.IO.Compression.ZipArchive(m, System.IO.Compression.ZipArchiveMode.Read);
+        }
+
+        public async Task<PackageArchiveReader> DownloadPackageToPackageArchiveReaderAsync(PackageIdentity package, CancellationToken? token = null)
+        {
+            var m = await DownloadPackageToStreamAsync(package, token);
+            if (m == null) return null;
+
+            return new PackageArchiveReader(m);
+        }
+
+        public async Task<System.IO.MemoryStream> DownloadPackageToStreamAsync(PackageIdentity package, CancellationToken? token = null)
+        {
+            return await _ThrottleAsync(async t =>
+            {
+                var api = await _GetAPIAsync<FindPackageByIdResource>();
+                if (api == null) return null;
+
+                var m = new System.IO.MemoryStream();
+
+                if (await api.CopyNupkgToStreamAsync(package.Id, package.Version, m, _Cache, _Logger, t)) return m;
+
+                m.Dispose();
+                return null;
+
             }, token);
         }
 

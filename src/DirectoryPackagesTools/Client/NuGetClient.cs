@@ -11,6 +11,7 @@ using NuGet.Commands;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
@@ -121,6 +122,19 @@ namespace DirectoryPackagesTools.Client
             {
                 var dinfo = await api.GetDependencyInfoAsync(package);
                 if (dinfo != null) return dinfo;
+            }
+
+            return null;
+        }
+
+        public async Task<PackageArchiveReader> DownloadPackageArchiveReaderAsync(PackageIdentity package)
+        {
+            await Task.Yield(); // ensure async
+
+            foreach (var api in Repositories)
+            {
+                var pkg = await api.DownloadPackageToPackageArchiveReaderAsync(package);
+                if (pkg != null) return pkg;
             }
 
             return null;

@@ -101,6 +101,7 @@ namespace DirectoryPackagesTools
         [TestCase("DotNetZip")]
         [TestCase("System.Numerics.Vectors")]
         [TestCase("InteropTypes.Tensors.ONNX.Sources")]
+        [TestCase("SourceNugetPackageBuilder.Tool")] // dotnet tool
         public async System.Threading.Tasks.Task GetPackageInfo(string packageName)
         {
             var nuClient = new Client.NuGetClient();
@@ -119,7 +120,7 @@ namespace DirectoryPackagesTools
 
                 foreach (var v in versions)
                 {
-                    var pid = new PackageIdentity(packageName, v);
+                    var pid = new PackageIdentity(packageName, v);                    
 
                     var isLocal = await r.ExistLocally(pid);
 
@@ -127,6 +128,7 @@ namespace DirectoryPackagesTools
                     TestContext.Out.WriteLine();
 
                     var depInfo = await r.GetDependencyInfoAsync(pid);
+
                     foreach (var dg in depInfo.DependencyGroups)
                     {
                         TestContext.Out.WriteLine($"       {dg.TargetFramework}");
@@ -136,6 +138,47 @@ namespace DirectoryPackagesTools
                             TestContext.Out.WriteLine($"           {jj}");
                         }
                     }
+
+                    foreach (var dg in depInfo.FrameworkReferenceGroups)
+                    {
+                        TestContext.Out.WriteLine($"       {dg.TargetFramework}");
+
+                        foreach (var jj in dg.Items)
+                        {
+                            TestContext.Out.WriteLine($"           {jj}");
+                        }
+                    }
+
+                    using var package = await r.DownloadPackageToPackageArchiveReaderAsync(pid);
+
+                    var frameworks = package.GetFrameworks().ToArray();
+
+                    foreach (var jj in frameworks)
+                    {
+                        TestContext.Out.WriteLine($"           {jj}");
+                    }
+
+
+
+
+
+                    /*
+                    using var downloader = await r.GetPackageDownloaderAsync(pid);
+                    if (downloader != null)
+                    {
+                        var frameworks = await downloader.ContentReader.GetFrameworkItemsAsync(CancellationToken.None);
+
+                        foreach (var dg in frameworks)
+                        {
+                            TestContext.Out.WriteLine($"       {dg.TargetFramework}");
+
+                            foreach (var jj in dg.Items)
+                            {
+                                TestContext.Out.WriteLine($"           {jj}");
+                            }
+                        }
+                    }*/
+
                 }
 
                 foreach (var meta in metas)

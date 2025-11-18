@@ -259,9 +259,24 @@ namespace DirectoryPackagesTools
                 var dependencies = await _CurrentVersion.GetDependenciesAsync();
                 if (dependencies == null) return "Unknown";
 
-                var fff = dependencies
-                    .DependencyGroups
-                    .Select(item => item.TargetFramework.GetShortFolderName().Replace("netstandard", "netstd"));
+                var frameworks = dependencies.DependencyGroups.Select(item => item.TargetFramework)
+                    .Concat(dependencies.FrameworkReferenceGroups.Select(item => item.TargetFramework))
+                    .Distinct();                
+            
+
+                var fff = frameworks
+                    .Select(item => item.GetShortFolderName().Replace("netstandard", "netstd"))
+                    .ToList();
+
+                if (!fff.Any())
+                {
+                    using var pkg = await _Client.DownloadPackageArchiveReaderAsync(GetCurrentIdentity());
+
+                    if (pkg != null)
+                    {
+                        fff = pkg.GetFrameworks().ToList();
+                    }                
+                }
 
                 var result = string.Join(" ", fff);
 
