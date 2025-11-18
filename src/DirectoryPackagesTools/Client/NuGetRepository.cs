@@ -30,7 +30,7 @@ namespace DirectoryPackagesTools.Client
         {
             ArgumentNullException.ThrowIfNull(repo);
 
-            _Cache = cache ?? NullSourceCacheContext.Instance;
+            _Cache = cache ?? NuGetClient.GlobalCache;
             _Repo = repo;
             _Logger = logger ?? ProgressLogger.Instance;
 

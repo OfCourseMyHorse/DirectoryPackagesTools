@@ -17,7 +17,7 @@ using NuGet.Versioning;
 
 namespace DirectoryPackagesTools.Client
 {
-    using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;
+    using NUGETVERSIONSBAG = System.Collections.Concurrent.ConcurrentBag<NuGetVersion>;    
 
     /// <summary>
     /// Entry point for all nuget APIs
@@ -27,6 +27,12 @@ namespace DirectoryPackagesTools.Client
         // https://learn.microsoft.com/en-us/nuget/reference/nuget-client-sdk
         // https://github.com/NuGet/Samples/blob/main/NuGetProtocolSamples/Program.cs
         // https://martinbjorkstrom.com/posts/2018-09-19-revisiting-nuget-client-libraries
+
+        #region static
+
+        public static SourceCacheContext GlobalCache { get; set; } = NullSourceCacheContext.Instance;
+
+        #endregion
 
         #region lifecycle
 

@@ -3,6 +3,8 @@
 using Avalonia;
 using Avalonia.Dialogs;
 
+using DirectoryPackagesTools.Client;
+
 namespace DirectoryPackagesTools
 {
     internal class Program
@@ -27,7 +29,12 @@ namespace DirectoryPackagesTools
             try {
             #endif
 
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            using var cache = new NuGet.Protocol.Core.Types.SourceCacheContext();
+            cache.DirectDownload = true;
+
+            NuGetClient.GlobalCache = cache;
+
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);            
 
             #if !SUPRESSTRYCATCH
             } catch(Exception ex)

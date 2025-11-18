@@ -51,12 +51,27 @@ namespace DirectoryPackagesTools
                                                 .ToList();
             }
 
-            if (!frameworkSpecificGroups.Any())
+            if (!frameworkSpecificGroups.Any()) // tools
             {
                 frameworkSpecificGroups = packageArchive.GetToolItems()
                                                 .Select(item => item.TargetFramework)
                                                 .Distinct()
                                                 .ToList();
+            }
+
+            if (!frameworkSpecificGroups.Any()) // source code only
+            {
+                const string csPath = "contentFiles/cs";
+
+                var csFiles = packageArchive.GetFiles(csPath);
+
+                var fff = csFiles
+                    .Select(item => System.IO.Path.GetDirectoryName(item.Substring(csPath.Length + 1)))
+                    .Where(item => !item.Contains('/')) // todo: parse full string
+                    .Distinct()
+                    .ToList();
+
+                frameworkSpecificGroups = fff.Select(n => new NuGet.Frameworks.NuGetFramework(n)).ToList();
             }
 
             // Convert TFMs to a readable format
@@ -66,6 +81,6 @@ namespace DirectoryPackagesTools
                 .Distinct();
 
             return frameworks;
-        }
+        }        
     }
 }

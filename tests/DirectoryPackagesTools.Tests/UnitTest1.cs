@@ -102,6 +102,7 @@ namespace DirectoryPackagesTools
         [TestCase("System.Numerics.Vectors")]
         [TestCase("InteropTypes.Tensors.ONNX.Sources")]
         [TestCase("SourceNugetPackageBuilder.Tool")] // dotnet tool
+        [TestCase("CodeSugar.Sys.IO.Sources")] // source code only
         public async System.Threading.Tasks.Task GetPackageInfo(string packageName)
         {
             var nuClient = new Client.NuGetClient();
