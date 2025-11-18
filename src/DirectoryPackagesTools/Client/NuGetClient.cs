@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json.Linq;
-
 using NuGet.Commands;
 using NuGet.Common;
 using NuGet.Configuration;
@@ -34,7 +32,7 @@ namespace DirectoryPackagesTools.Client
 
         public NuGetClient() : this(null) { }        
 
-        public NuGetClient(System.IO.DirectoryInfo dinfo, ILogger logger = null)
+        public NuGetClient(System.IO.DirectoryInfo dinfo, SourceCacheContext cache = null, ILogger logger = null)
         {
             dinfo ??= new System.IO.DirectoryInfo(Environment.CurrentDirectory);
 
@@ -42,15 +40,15 @@ namespace DirectoryPackagesTools.Client
 
             Settings = NuGet.Configuration.Settings.LoadDefaultSettings(dinfo.FullName);
             var provider = new PackageSourceProvider(Settings);
-            _ReposProvider = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());
+            _ReposProvider = new SourceRepositoryProvider(provider, Repository.Provider.GetCoreV3());            
 
             _Repos = new Lazy<SourceRepository[]>(() => _ReposProvider.GetRepositories().ToArray());
-            _RepoAPIs = new Lazy<NuGetRepository[]>(() => _Repos.Value.Select(item => new NuGetRepository(item, null, Logger)).ToArray());
+            _RepoAPIs = new Lazy<NuGetRepository[]>(() => _Repos.Value.Select(item => new NuGetRepository(item, cache, Logger)).ToArray());
         }
 
         #endregion
 
-        #region data
+        #region data        
 
         public ILogger Logger { get; }
 
