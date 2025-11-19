@@ -15,11 +15,11 @@ namespace SourceNugetPackageBuilder
     {
         #region command bindings
 
-        // https://learn.microsoft.com/en-us/dotnet/standard/commandline/
+        // https://learn.microsoft.com/en-us/dotnet/standard/commandline/        
 
-        static Arguments()
+        protected static System.CommandLine.RootCommand CreateRootCommand()
         {
-            _Command =
+            System.CommandLine.RootCommand root =
             [
                 _SourceFiles,
                 _OutputDirectory,
@@ -30,9 +30,12 @@ namespace SourceNugetPackageBuilder
                 _IncludeCompileChecks,
                 _DisableErrorValidation
             ];
-        }
 
-        private static readonly System.CommandLine.RootCommand _Command;
+            root.Description = "Bundles a souce code project into a 'sources only' NuGet package";
+
+            return root;
+        }
+        
         private static readonly Argument<System.IO.FileInfo[]> _SourceFiles = new Argument<System.IO.FileInfo[]>("SourceFiles") { Description = "Source files, which can be a solution or project files", Arity = ArgumentArity.ZeroOrMore };
         private static readonly Option<System.IO.DirectoryInfo> _OutputDirectory = new Option<System.IO.DirectoryInfo>("--output", "-o") { Description = "output directory" };
 
@@ -43,19 +46,14 @@ namespace SourceNugetPackageBuilder
         private static readonly Option<string> _Version = new Option<string>("--package-version", "-v") { Description = "package version" };
         private static readonly Option<string> _VersionSuffix = new Option<string>("--version-suffix", "-v") { Description = "package prerelease version suffix" };
 
-        private static readonly Option<bool> _IncludeCompileChecks = new Option<bool>("--include-compile-checks") { Description = "includes a build.targets file that checks for common csproj mistakes" };
+        private static readonly Option<bool> _IncludeCompileChecks = new Option<bool>("--include-compile-checks") { Description = "includes a build.targets file that checks for common csproj mistakes" };        
 
-        private static ParseResult ParseCommand(string[] args)
+        #endregion
+
+        #region arguments
+
+        protected void ApplyParseResult(ParseResult result)
         {
-            var cfg = new ParserConfiguration();
-            var result = _Command.Parse(args, cfg);
-            return result;
-        }
-
-        public void SetArguments(params string[] args)
-        {
-            var result = ParseCommand(args);
-
             SourceFiles = result.GetValue(_SourceFiles).ToImmutableArray();
 
             DisableErrorValidation = result.GetValue(_DisableErrorValidation);
@@ -68,10 +66,6 @@ namespace SourceNugetPackageBuilder
             AppendSourceSuffix = result.GetValue(_AppendSourceSuffix);
             IncludeCompileChecks = result.GetValue(_IncludeCompileChecks);
         }
-
-        #endregion
-
-        #region arguments
 
         // [Value(0, Required = true, HelpText = "Source files, which can be a solution or project files")]
         public ImmutableArray<System.IO.FileInfo> SourceFiles { get; set; }
@@ -120,12 +114,14 @@ namespace SourceNugetPackageBuilder
     {
         #region API
 
-        public static async Task RunCommandAsync(params string[] args)
+        public static async Task RunAsync(params string[] args)
         {
             var ctx = new Context();
-            ctx.SetArguments(args);
 
-            await ctx.RunAsync();
+            var rootCmd = CreateRootCommand();
+            rootCmd.SetAction(async r => { ctx.ApplyParseResult(r); await ctx.RunAsync(); });
+
+            await rootCmd.Parse(args).InvokeAsync();            
         }
 
         public async Task RunAsync()
@@ -135,6 +131,7 @@ namespace SourceNugetPackageBuilder
                 var currDir = new System.IO.DirectoryInfo(Environment.CurrentDirectory);
                 var defaultFile = currDir.EnumerateFiles("*.sln").FirstOrDefault();
                 defaultFile ??= currDir.EnumerateFiles("*.csproj").FirstOrDefault();
+                if (defaultFile == null) return;
                 SourceFiles = new[] { defaultFile }.ToImmutableArray();
             }
 

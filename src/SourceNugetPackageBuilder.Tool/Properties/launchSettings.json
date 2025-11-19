@@ -1,5 +1,9 @@
 {
   "profiles": {
+    "NoArgs": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
     "SourceNugetPackageBuilder.Tool": {
       "commandName": "Project",
       "commandLineArgs": "\"D:\\Github\\__Owned__\\__LIBS__\\_GIT\\InteropTypes\\src\\InteropTypes.Tensors\\InteropTypes.Tensors.csproj\" --package-id pepito.Sources --include-compile-checks"

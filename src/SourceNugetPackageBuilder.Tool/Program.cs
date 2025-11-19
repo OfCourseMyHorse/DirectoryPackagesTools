@@ -12,11 +12,11 @@ namespace SourceNugetPackageBuilder
             var instance = MSBuildLocator
                 .QueryVisualStudioInstances()
                 .OrderByDescending(instance => instance.Version)
-                .First();
+                .First();            
 
-            MSBuildLocator.RegisterInstance(instance);
+            MSBuildLocator.RegisterInstance(instance);            
 
-            await Context.RunCommandAsync(args);
+            await Context.RunAsync(args);
         }
     }
 }
