@@ -1,88 +1,87 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="using:DirectoryPackagesTools"        
-        mc:Ignorable="d"
-        x:Class="DirectoryPackagesTools.MainWindow"
-        Title="Directory Packages Tools"
-        x:DataType="local:PackagesVersionsProjectMVVM"
-        x:Name="mySelf">
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="using:DirectoryPackagesTools"
+		mc:Ignorable="d"
+		x:Class="DirectoryPackagesTools.MainWindow"
+		Title="Directory Packages Tools"
+		x:DataType="local:PackagesVersionsProjectMVVM"
+		x:Name="mySelf">
 
-  <Grid RowDefinitions="* Auto">   
+	<Grid RowDefinitions="* Auto">
 
-    <DockPanel x:Name="myClientArea">
-      
-      <Menu DockPanel.Dock="Top">        
-        
-        <MenuItem Header="File">
+		<DockPanel x:Name="myClientArea">
 
-          <MenuItem Icon="📂" Header="Select Context Dir..." ToolTip.Tip="Opens a directory and evaluates its nuget.config context.">
-            <Interaction.Behaviors>
-              <MenuItemOpenFolderPickerBehavior AllowMultiple="False" Command="{Binding #mySelf.SelectContextDirectoryCommand}" />
-            </Interaction.Behaviors>
-          </MenuItem>
+			<Menu DockPanel.Dock="Top">
 
-          <Separator />
+			<MenuItem Header="File">
 
-          <MenuItem Icon="✨" Header="New..."        Click="MenuItem_New" ToolTip.Tip="Creates a new Directory.Packages.props and optionally fixes all csproj files." />
-          <MenuItem Icon="📂" Header="Open..."       Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Packages.props." />
-					<MenuItem Icon="♻" Header="Reload"       Click="MenuItem_Reload" ToolTip.Tip="Opens an existing Directory.Packages.props." />
-          <MenuItem Icon="💾" Header="Save"          Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Packages.props." />
-					<MenuItem Icon="💾" Header="Save and...">
-						<MenuItem Icon="📤" Header="Commit changes" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a Commit dialog." />
-						<MenuItem Icon="▷◀" Header="Open Solution" Click="MenuItem_SaveAndOpenSln" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a the solution." />
-					</MenuItem>
-					
-					
-          
-          
-        </MenuItem>
-        <!--
-                <MenuItem Header="Services">
-                    <MenuItem Header="Query package dependencies" Click="_MenuItem_QueryPackageDependencies" />                    
-                </MenuItem>
-                -->
-        <MenuItem Header="Tools">          
-          <MenuItem Header="Restore versions to projects" Click="_MenuItem_RestoreVersionsToProjects" ToolTip.Tip="Attempts to restore back the PackageReference Versions in the csproj files, so Directory.Packages.props can be removed" />
-          <Separator />
-          <MenuItem Icon="🖥" Header="Open Command Line..." Click="MenuItem_OpenCommandLine" />
-          <Separator />
-          <MenuItem Icon="🔐" Header="Nuget Password Clear/Encryption converter" Click="MenuItem_ShowNugetPasswordsManagerDialog" />
-        </MenuItem>
-        <MenuItem Header="Help">
-          <MenuItem Icon="❓" Header="About..." Click="_MenuItem_About" />
-        </MenuItem>
-      </Menu>
+				<MenuItem Icon="📂" Header="Select Context Dir..." ToolTip.Tip="Opens a directory and evaluates its nuget.config context.">
+					<Interaction.Behaviors>
+						<MenuItemOpenFolderPickerBehavior AllowMultiple="False" Pick="SelectContextDirectory_Pick" />
+					</Interaction.Behaviors>
+				</MenuItem>
 
-      <TabControl ItemsSource="{Binding Views}" DisplayMemberBinding="{Binding Key}" >
+				<Separator />
 
-        <TabControl.DataTemplates>
+				<MenuItem Icon="✨" Header="New..."   Click="MenuItem_New" ToolTip.Tip="Creates a new Directory.Packages.props and optionally fixes all csproj files." />
+				<MenuItem Icon="📂" Header="Open..."  Click="MenuItem_Load" ToolTip.Tip="Opens an existing Directory.Packages.props." />
+				<MenuItem Icon="♻" Header="Reload"   Click="MenuItem_Reload" ToolTip.Tip="Opens an existing Directory.Packages.props." />
+				<MenuItem Icon="💾" Header="Save"     Click="MenuItem_Save" ToolTip.Tip="Saves an existing Directory.Packages.props." />
+				<MenuItem Icon="💾" Header="Save and...">
+					<MenuItem Icon="📤" Header="Commit changes" Click="MenuItem_SaveAndCommit" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a Commit dialog." />
+					<MenuItem Icon="▷◀" Header="Open Solution" Click="MenuItem_SaveAndOpenSln" ToolTip.Tip="Saves an existing Directory.Packages.props and opens a the solution." />
+				</MenuItem>
 
-          <DataTemplate x:DataType="local:PackagesGroupMVVM">
-            <local:PackagesList PackagesSource="{Binding Packages}" />
-          </DataTemplate>
+			</MenuItem>
+				<!--
+				<MenuItem Header="Services">
+				<MenuItem Header="Query package dependencies" Click="_MenuItem_QueryPackageDependencies" />
+				</MenuItem>
+				-->
+				<MenuItem Header="Tools">
+					<MenuItem Header="Restore versions to projects" Click="_MenuItem_RestoreVersionsToProjects" ToolTip.Tip="Attempts to restore back the PackageReference Versions in the csproj files, so Directory.Packages.props can be removed" />
+					<Separator />
+					<MenuItem Icon="🖥" Header="Open Command Line..." Click="MenuItem_OpenCommandLine" />
+					<Separator />
+					<MenuItem Icon="🔐" Header="Nuget Password Clear/Encryption converter" Click="MenuItem_ShowNugetPasswordsManagerDialog" />
+				</MenuItem>
 
-          <DataTemplate x:DataType="local:RepositoriesCollectionMVVM">
-            <Grid RowDefinitions="auto *">
-              <ComboBox Grid.Row="0" x:Name="myRepoSelector" ItemsSource="{Binding}" x:DataType="local:RepositoryMVVM" DisplayMemberBinding="{Binding Name}" />  
-              <local:RepositoryView Grid.Row="1" DataContext="{Binding #myRepoSelector.SelectedValue}" />
-            </Grid>            
-          </DataTemplate>
+				<MenuItem Header="Help">
+					<MenuItem Icon="❓" Header="About..." Click="_MenuItem_About" />
+				</MenuItem>
 
-        </TabControl.DataTemplates>
+			</Menu>
 
-      </TabControl>         
+			<TabControl ItemsSource="{Binding Views}" DisplayMemberBinding="{Binding Key}" >
 
-    </DockPanel>
+				<TabControl.DataTemplates>
 
-    <Panel Grid.Row="1" Background="LightGray">
-      <WrapPanel Orientation="Horizontal" Margin="2">
-        <ProgressBar Width="200" Name="myProgressBar" Height="20" IsVisible="false"  />
-        <Button Content="Cancel" Name="myCancelBtn" />
-      </WrapPanel>
-    </Panel>
+					<DataTemplate x:DataType="local:PackagesGroupMVVM">
+						<local:PackagesList PackagesSource="{Binding Packages}" />
+					</DataTemplate>
 
-  </Grid>
-  
+					<DataTemplate x:DataType="local:RepositoriesCollectionMVVM">
+						<Grid RowDefinitions="auto *">
+							<ComboBox Grid.Row="0" x:Name="myRepoSelector" ItemsSource="{Binding}" x:DataType="local:RepositoryMVVM" DisplayMemberBinding="{Binding Name}" />
+							<local:RepositoryView Grid.Row="1" DataContext="{Binding #myRepoSelector.SelectedValue}" />
+						</Grid>
+				</DataTemplate>
+
+				</TabControl.DataTemplates>
+
+			</TabControl>
+
+		</DockPanel>
+
+		<Panel Grid.Row="1" Background="LightGray">
+			<WrapPanel Orientation="Horizontal" Margin="2">
+				<ProgressBar Width="200" Name="myProgressBar" Height="20" IsVisible="false"  />
+				<Button Content="Cancel" Name="myCancelBtn" />
+			</WrapPanel>
+		</Panel>
+
+	</Grid>
+
 </Window>

@@ -39,7 +39,7 @@ namespace DirectoryPackagesTools
 
         #region data
 
-        private PackagesVersionsProjectMVVM MVVMContext => this.DataContext as PackagesVersionsProjectMVVM;
+        private PackagesVersionsProjectMVVM? MVVMContext => this.DataContext as PackagesVersionsProjectMVVM;
 
         #endregion
 
@@ -135,10 +135,11 @@ namespace DirectoryPackagesTools
 
         #region API        
 
-        [RelayCommand]
-        public async void SelectContextDirectory(Avalonia.Platform.Storage.IStorageFolder[] folders)
+        private async void SelectContextDirectory_Pick(object? sender, Avalonia.Xaml.Interactions.Core.FolderPickerEventArgs e)
         {
-            var dir = folders[0].TryGetLocalPath();
+            var folder = e.Folders.FirstOrDefault();
+            
+            var dir = folder!.TryGetLocalPath();
 
             #if !SUPRESSTRYCATCH
             try {
@@ -158,7 +159,7 @@ namespace DirectoryPackagesTools
                 await this.MessageBox().Show(ex.Message, "Error");
             }
             #endif
-        }
+        }        
 
         private async void MenuItem_Load(object? sender, RoutedEventArgs e)
         {
