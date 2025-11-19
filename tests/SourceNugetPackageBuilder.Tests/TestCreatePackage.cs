@@ -66,8 +66,7 @@ namespace DirectoryPackagesTools
             return new PhysicalPackageFile(m);
         }
 
-        [TestCase("SourcePackageExampleProject/SourcePackageExampleProject.csproj")]
-        [TestCase("D:\\Github\\__Owned__\\__LIBS__\\_GIT\\CodeSugar\\src\\CodeSugar.FileProviders.Sources\\CodeSugar.FileProviders.csproj")]
+        [TestCase("SourcePackageExampleProject/SourcePackageExampleProject.csproj")]        
         public async Task CreateSourcePackageFromProject(string prjPath)
         {
             var prjInfo = ResourceInfo.From(prjPath);

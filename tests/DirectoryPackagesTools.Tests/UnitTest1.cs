@@ -150,6 +150,7 @@ namespace DirectoryPackagesTools
                         }
                     }
 
+                    /*
                     using var package = await r.DownloadPackageToPackageArchiveReaderAsync(pid);
 
                     var frameworks = package.GetFrameworks().ToArray();
@@ -157,10 +158,7 @@ namespace DirectoryPackagesTools
                     foreach (var jj in frameworks)
                     {
                         TestContext.Out.WriteLine($"           {jj}");
-                    }
-
-
-
+                    }*/
 
 
                     /*

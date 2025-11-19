@@ -52,6 +52,13 @@ namespace SourceNugetPackageBuilder
 
         #region arguments
 
+        public void SetArguments(params string[] args)
+        {
+            var root = CreateRootCommand();
+            var result = root.Parse(args);
+            ApplyParseResult(result);
+        }
+
         protected void ApplyParseResult(ParseResult result)
         {
             SourceFiles = result.GetValue(_SourceFiles).ToImmutableArray();
