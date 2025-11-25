@@ -199,7 +199,14 @@ namespace DirectoryPackagesTools
 
             #if !SUPRESSTRYCATCH
             }
-            catch (OperationCanceledException) { await this.MessageBox().Show("Load cancelled."); }
+            catch (OperationCanceledException)
+            {
+                await this.MessageBox().Show("Load cancelled.");
+            }
+            catch (FileLoadException floex)
+            {
+                await this.MessageBox().Show($"Failed to load file {floex.Message}");
+            }
             catch (Exception ex)
             {
                 await this.MessageBox().Show(ex.Message, "Error");

@@ -10,9 +10,9 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' != 'release' ">
     
-    <DefineConstants>TRACE;SUPRESSTRYCATCH</DefineConstants>
+    <DefineConstants>$(DefineConstants);SUPRESSTRYCATCH</DefineConstants>
     
   </PropertyGroup>
 
