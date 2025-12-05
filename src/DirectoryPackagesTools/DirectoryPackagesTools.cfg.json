@@ -23,6 +23,7 @@
 
   "testPackages": [
     "NUnit*",
+    "XUnit*",
     "coverlet*",
     "TestAttachments*",
     "TestImages*",
