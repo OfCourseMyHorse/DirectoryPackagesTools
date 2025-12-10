@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/Publish_SourceNugetPackageBuilder.yml" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DirectoryPackagesTools.Tests/DirectoryPackagesTools.Tests.csproj" />
+    <Project Path="tests/Forensics.AssemblyMetadata.Tests/Forensics.AssemblyMetadata.Tests.csproj" />
+    <Project Path="tests/SourceNugetPackageBuilder.Tests/SourceNugetPackageBuilder.Tests.csproj" />
+  </Folder>
+  <Project Path="src/DirectoryPackagesTools.Avalonia.App/DirectoryPackagesTools.Avalonia.App.csproj" />
+  <Project Path="src/DirectoryPackagesTools/DirectoryPackagesTools.csproj" />
+  <Project Path="src/Forensics.AssemblyMetadata/Forensics.AssemblyMetadata.csproj" />
+  <Project Path="src/SourceNugetPackageBuilder.Tool/SourceNugetPackageBuilder.Tool.csproj" />
+</Solution>
