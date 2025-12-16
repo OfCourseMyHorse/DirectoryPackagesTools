@@ -26,6 +26,8 @@ namespace SourceNugetPackageBuilder
             {
                 if (srcFile.Extension.EndsWith("csproj", StringComparison.OrdinalIgnoreCase)) return new[] { srcFile };
                 if (srcFile.Extension.EndsWith("sln", StringComparison.OrdinalIgnoreCase)) return ProjectEvaluator.GetSolutionProjectFiles(srcFile);
+                if (srcFile.Extension.EndsWith("slnx", StringComparison.OrdinalIgnoreCase)) return ProjectEvaluator.GetSolutionProjectFiles(srcFile);
+
                 return Enumerable.Empty<System.IO.FileInfo>();
             }
 

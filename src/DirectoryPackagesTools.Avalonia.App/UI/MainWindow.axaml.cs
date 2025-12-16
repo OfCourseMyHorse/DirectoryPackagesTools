@@ -241,6 +241,7 @@ namespace DirectoryPackagesTools
             if (dinfo == null) return;
 
             var sln = dinfo.EnumerateFiles("*.sln").FirstOrDefault();
+            sln ??= dinfo.EnumerateFiles("*.slnx").FirstOrDefault();
             if (sln == null) return;
 
             var psi = new System.Diagnostics.ProcessStartInfo(sln.FullName);
