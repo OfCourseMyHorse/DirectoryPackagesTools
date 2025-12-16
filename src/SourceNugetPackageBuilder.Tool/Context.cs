@@ -137,6 +137,7 @@ namespace SourceNugetPackageBuilder
             {
                 var currDir = new System.IO.DirectoryInfo(Environment.CurrentDirectory);
                 var defaultFile = currDir.EnumerateFiles("*.sln").FirstOrDefault();
+                defaultFile ??= currDir.EnumerateFiles("*.slnx").FirstOrDefault();
                 defaultFile ??= currDir.EnumerateFiles("*.csproj").FirstOrDefault();
                 if (defaultFile == null) return;
                 SourceFiles = new[] { defaultFile }.ToImmutableArray();
