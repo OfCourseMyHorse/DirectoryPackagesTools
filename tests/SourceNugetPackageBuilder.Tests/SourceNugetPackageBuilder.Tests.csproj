@@ -3,8 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-  </PropertyGroup>  
+  </PropertyGroup>
 
+	<PropertyGroup>
+		<!-- disable MSBuild locator checks -->
+		<DisableMSBuildAssemblyCopyCheck>true</DisableMSBuildAssemblyCopyCheck>
+	</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
@@ -20,11 +24,13 @@
     </PackageReference>
     <PackageReference Include="TestAttachments.NUnit" Version="4.0.0-Preview-20251201-2057" />
     <PackageReference Include="NuGet.Packaging" Version="7.0.1" />
+		<PackageReference Include="NuGet.Frameworks" Version="7.0.1" ExcludeAssets="runtime" PrivateAssets="all"/>
   </ItemGroup>
 
   <ItemGroup>    
     <ProjectReference Include="..\..\src\SourceNugetPackageBuilder.Tool\SourceNugetPackageBuilder.Tool.csproj" />
   </ItemGroup>
 
+	
 
 </Project>
