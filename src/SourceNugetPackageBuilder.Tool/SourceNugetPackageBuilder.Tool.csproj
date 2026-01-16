@@ -43,7 +43,7 @@
   </PropertyGroup>  
 
   <ItemGroup>    
-		<PackageReference Include="System.CommandLine" Version="2.0.1" />
+		<PackageReference Include="System.CommandLine" Version="2.0.2" />
     <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20251216" PrivateAssets="all" />
   </ItemGroup>
 
