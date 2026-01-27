@@ -46,9 +46,7 @@ namespace SourceNugetPackageBuilder
         private static readonly Option<string> _Version = new Option<string>("--package-version", "-v") { Description = "package version" };
         private static readonly Option<string> _VersionSuffix = new Option<string>("--version-suffix", "-v") { Description = "package prerelease version suffix" };
 
-        private static readonly Option<bool> _DisableSourcesValidation = new Option<bool>("--disable-sources-validation") { Description = "disables validating the sources for common pitfalls" };
-
-        private static readonly Option<bool> _IncludeCompileChecks = new Option<bool>("--include-compile-checks") { Description = "includes a build.targets file that checks for common csproj mistakes" };
+        private static readonly Option<bool> _IncludeCompileChecks = new Option<bool>("--include-compile-checks") { Description = "includes a build.targets file that checks for common csproj mistakes" };        
 
         #endregion
 
@@ -73,7 +71,6 @@ namespace SourceNugetPackageBuilder
             VersionSuffix = result.GetValue(_VersionSuffix)?.TrimStart();
             AltPackageId = result.GetValue(_AltPackageId)?.TrimStart();
             AppendSourceSuffix = result.GetValue(_AppendSourceSuffix);
-            DisableSourcesValidation = result.GetValue(_DisableSourcesValidation);
             IncludeCompileChecks = result.GetValue(_IncludeCompileChecks);
         }
 
@@ -96,9 +93,6 @@ namespace SourceNugetPackageBuilder
 
         // [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package Id")]
         public bool AppendSourceSuffix { get; set; }
-
-        
-        public bool DisableSourcesValidation { get; set; }
 
         // [Option("include-compile-checks", Required = false, HelpText = "includes a build.targets file that checks for common csproj mistakes")]
         public bool IncludeCompileChecks { get; set; }
@@ -165,7 +159,7 @@ namespace SourceNugetPackageBuilder
 
                 var pbh = new PackageBuilHelper(f, this);
                 pbh.AddIcon(f);
-                pbh.AddFiles(f, !DisableSourcesValidation);
+                pbh.AddFiles(f);
                 if (IncludeCompileChecks) pbh.AddCompileChecks();
 
                 pbh.SavePackage();
