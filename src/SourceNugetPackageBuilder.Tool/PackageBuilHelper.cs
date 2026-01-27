@@ -80,7 +80,7 @@ namespace SourceNugetPackageBuilder
             Builder.AddIcon(icon);
         }
 
-        public void AddFiles(ManifestFactory factory)
+        public void AddFiles(ManifestFactory factory, bool validateSourceFiles)
         {
             foreach (var framework in factory.TargetFrameworks)
             {
@@ -93,10 +93,13 @@ namespace SourceNugetPackageBuilder
 
                 // validate
 
-                foreach (var finfo in files)
+                if (validateSourceFiles)
                 {
-                    var ex = SourceCodeValidator.Validate(finfo.ReadAllText());
-                    _Arguments.HandleSourceCodeValidationError(ex, finfo);
+                    foreach (var finfo in files)
+                    {
+                        var ex = SourceCodeValidator.Validate(finfo.ReadAllText());
+                        _Arguments.HandleSourceCodeValidationError(ex, finfo);
+                    }
                 }
 
                 // add to package
