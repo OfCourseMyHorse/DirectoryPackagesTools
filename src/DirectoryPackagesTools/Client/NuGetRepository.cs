@@ -34,7 +34,7 @@ namespace DirectoryPackagesTools.Client
             _Repo = repo;
             _Logger = logger ?? ProgressLogger.Instance;
 
-            _Semaphore = new SemaphoreSlim(1);
+            _Semaphore = new SemaphoreSlim(1, 1);
         }
 
         #endregion
