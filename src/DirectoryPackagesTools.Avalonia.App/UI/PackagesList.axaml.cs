@@ -13,31 +13,7 @@ public partial class PackagesList : UserControl
     #region lifecycle
     public PackagesList()
     {
-        InitializeComponent();
-
-        // myPackages.ContextRequested += MyPackages_ContextRequested;        
-    }
-
-    private void MyPackages_ContextRequested(object? sender, ContextRequestedEventArgs e)
-    {
-        if (sender is DataGrid control)
-        {
-            var contextMenu = new ContextMenu();
-
-            foreach (var column in control.Columns)
-            {
-                var cb = new CheckBox();
-                cb.BindToVisibilityOf(column);
-
-                var item = new MenuItem();
-                item.Icon = cb;
-                item.Header = column.Header;
-                contextMenu.Items.Add(item);
-            }
-
-            contextMenu.Open(control);
-            e.Handled = true;
-        }
+        InitializeComponent();        
     }
 
     #endregion

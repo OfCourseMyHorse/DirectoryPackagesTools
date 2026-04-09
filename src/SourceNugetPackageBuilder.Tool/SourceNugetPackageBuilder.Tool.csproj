@@ -43,12 +43,12 @@
   </PropertyGroup>  
 
   <ItemGroup>    
-		<PackageReference Include="System.CommandLine" Version="2.0.3" />
+		<PackageReference Include="System.CommandLine" Version="2.0.5" />
     <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20251216" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,7 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="18.3.3" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="18.4.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.11.2" />
     <!--
     Build.Locator requires the packages below to be excluded
