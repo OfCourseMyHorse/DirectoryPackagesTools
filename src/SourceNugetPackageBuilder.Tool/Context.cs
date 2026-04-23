@@ -15,7 +15,9 @@ namespace SourceNugetPackageBuilder
     {
         #region command bindings
 
-        // https://learn.microsoft.com/en-us/dotnet/standard/commandline/        
+        // https://learn.microsoft.com/en-us/dotnet/standard/commandline/
+
+        // ToDo: use https://github.com/dotmake-build/command-line
 
         protected static System.CommandLine.RootCommand CreateRootCommand()
         {
@@ -74,27 +76,14 @@ namespace SourceNugetPackageBuilder
             IncludeCompileChecks = result.GetValue(_IncludeCompileChecks);
         }
 
-        // [Value(0, Required = true, HelpText = "Source files, which can be a solution or project files")]
+        
         public ImmutableArray<System.IO.FileInfo> SourceFiles { get; set; }
-
-        public bool DisableErrorValidation { get; set; }
-
-        // [Option('o', "output", Required = false, HelpText = "output directory")]
-        public System.IO.DirectoryInfo OutputDirectory { get; set; }
-
-        // [Option('v', "package-version", Required = false, HelpText = "package version")]
-        public string Version { get; set; }
-
-        // [Option("version-suffix", Required = false, HelpText = "package version suffix")]
-        public string VersionSuffix { get; set; }
-
-        // [Option("package-id", Required = false, HelpText = "Alternative package ID")]
-        public string AltPackageId { get; set; }
-
-        // [Option("append-sources-suffix", Required = false, HelpText = "appends .Sources to package Id")]
-        public bool AppendSourceSuffix { get; set; }
-
-        // [Option("include-compile-checks", Required = false, HelpText = "includes a build.targets file that checks for common csproj mistakes")]
+        public bool DisableErrorValidation { get; set; }        
+        public System.IO.DirectoryInfo OutputDirectory { get; set; }        
+        public string Version { get; set; }        
+        public string VersionSuffix { get; set; }        
+        public string AltPackageId { get; set; }        
+        public bool AppendSourceSuffix { get; set; }        
         public bool IncludeCompileChecks { get; set; }
 
         #endregion
