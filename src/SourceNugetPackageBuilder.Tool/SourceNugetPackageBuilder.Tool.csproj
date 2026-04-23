@@ -43,7 +43,7 @@
   </PropertyGroup>  
 
   <ItemGroup>    
-		<PackageReference Include="System.CommandLine" Version="2.0.5" />
+		<PackageReference Include="System.CommandLine" Version="2.0.7" />
     <PackageReference Include="CodeSugar.Sys.IO.Sources" Version="1.0.0-Prv-20251216" PrivateAssets="all" />
   </ItemGroup>
 
@@ -52,12 +52,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="7.3.0">
+    <PackageReference Include="NuGet.CommandLine" Version="7.3.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuGet.Commands" Version="7.3.0" />
-    <PackageReference Include="NuGet.Packaging" Version="7.3.0" />    
+    <PackageReference Include="NuGet.Commands" Version="7.3.1" />
+    <PackageReference Include="NuGet.Packaging" Version="7.3.1" />    
   </ItemGroup>
 
   <ItemGroup>
@@ -70,7 +70,7 @@
     NuGet.Frameworks and make it available for the rest
     of the app.
     -->
-    <PackageReference Include="NuGet.Frameworks" Version="7.3.0" ExcludeAssets="runtime" PrivateAssets="all">
+    <PackageReference Include="NuGet.Frameworks" Version="7.3.1" ExcludeAssets="runtime" PrivateAssets="all">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>  
