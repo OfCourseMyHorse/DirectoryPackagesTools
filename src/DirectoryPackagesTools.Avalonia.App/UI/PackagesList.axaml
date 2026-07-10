@@ -41,17 +41,28 @@
 
   <DockPanel>
 
-    <DataGrid x:Name="myPackages" x:DataType="local:PackageMVVM"
-              AutoGenerateColumns="False"
+    <TableView x:Name="myPackages"               
               SelectionMode="Single"
               CanUserResizeColumns="True"
-              GridLinesVisibility="All" BorderThickness="1" BorderBrush="Gray" >
+              AutoScrollToSelectedItem="True"
+              BorderThickness="1" BorderBrush="Gray" >
+
+        <TableView.Styles>
+			<!-- Draw a 1px bottom border on each row -->
+            <Style Selector="TableViewRow">
+              <Setter Property="BorderBrush" Value="LightGray"/>
+              <Setter Property="BorderThickness" Value="0,0,0,1"/>
+              <!-- optional: make sure row background is transparent so line is visible -->
+              <Setter Property="Background" Value="Transparent"/>
+            </Style>
+        </TableView.Styles>
 
       <!-- generic code DataGrid code snippet to have a context menu with autohiding columns -->
-      <DataGrid.ContextMenu>
-        <ContextMenu ItemsSource="{Binding $parent[DataGrid].Columns}">
+      <!--
+      <TableView.ContextMenu>
+        <ContextMenu ItemsSource="{Binding $parent[TableView].Columns}">
           <ContextMenu.ItemTemplate>
-            <DataTemplate x:DataType="DataGridColumn">
+            <DataTemplate x:DataType="TableViewColumn">
               <MenuItem Header="{Binding Header}">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding IsVisible}" />
@@ -60,49 +71,42 @@
             </DataTemplate>
           </ContextMenu.ItemTemplate>          
         </ContextMenu>
-      </DataGrid.ContextMenu>
-      <!-- ================================================================================ -->
+      </TableView.ContextMenu>
+      -->
+      <!-- ================================================================================ -->     
 
-      <DataGrid.Columns>
+      <TableView.Columns>          
 
-        <DataGridTextColumn Header="Package" MinWidth="250" Binding="{Binding Name}" IsReadOnly="True" >
-          <!--
-          <DataGridTextColumn.CellStyle>
-            <Style TargetType="DataGridCell">
-              <Setter Property="ContextMenu" Value="{StaticResource myPackageNameMenu}" />
-            </Style>
-          </DataGridTextColumn.CellStyle>
-          -->
-        </DataGridTextColumn>
-        
-        <DataGridTextColumn Header="Version" MinWidth="180" Binding="{Binding Version, Converter={StaticResource asShortText}}" />        
-        <DataGridTemplateColumn Header="Available Versions" Width="450" >
-          <DataGridTemplateColumn.CellTemplate>
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Package" Binding="{Binding Name}" />        
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Version" Binding="{Binding Version, Converter={StaticResource asShortText}}" />
+
+        <TableViewColumn Width="350" Header="Available Versions" >
+          <TableViewColumn.CellTemplate>
             <DataTemplate x:DataType="local:PackageMVVM">
               <local:PackageVersionSelectorView />
             </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
+          </TableViewColumn.CellTemplate>
+        </TableViewColumn>
 
-        <DataGridTemplateColumn IsVisible="false" Header="Used By Projects" MinWidth="150" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
-        <DataGridTextColumn Header="Frameworks" MinWidth="180" Binding="{Binding FrameworksAsync^, FallbackValue=⏳}" />
-        <DataGridTextColumn IsVisible="false" Header="Tags" MinWidth="180" Binding="{Binding Metadata.Tags}" />
-        <DataGridTextColumn IsVisible="false" Header="Summary" MinWidth="600" Binding="{Binding Metadata.Summary}" />
-        <DataGridTextColumn IsVisible="false" Header="Description" MinWidth="600" Binding="{Binding Metadata.Description}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Used By Projects" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Frameworks" Binding="{Binding FrameworksAsync^, FallbackValue=⏳}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Tags" Binding="{Binding Metadata.Tags}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Summary" Binding="{Binding Metadata.Summary}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Description" Binding="{Binding Metadata.Description}" />
 
-        <DataGridTemplateColumn IsVisible="true" Header="Project URL" MinWidth="250" >
-          <DataGridTemplateColumn.CellTemplate>
+        <TableViewColumn Header="Project URL" >
+          <TableViewColumn.CellTemplate>
             <DataTemplate x:DataType="local:PackageMVVM">
               <TextBlock>
                 <HyperlinkButton Content="{Binding Metadata.ProjectUrl}" NavigateUri="{Binding Metadata.ProjectUrl}" />
               </TextBlock>
             </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>        
+          </TableViewColumn.CellTemplate>
+        </TableViewColumn>        
 
-      </DataGrid.Columns>
+      </TableView.Columns>
       
-    </DataGrid>
+    </TableView>
 
   </DockPanel>
   

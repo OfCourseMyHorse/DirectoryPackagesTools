@@ -30,6 +30,7 @@ namespace DirectoryPackagesTools
             control.Bind(Visual.IsVisibleProperty, source2.ToBinding());
         }
 
+        /*
         public static void BindToVisibilityOf(this ToggleButton checkbox, DataGridColumn control)
         {
             // how the heck do we handle two way binding??
@@ -39,7 +40,7 @@ namespace DirectoryPackagesTools
 
             var source2 = checkbox.GetObservable<bool?,bool>(ToggleButton.IsCheckedProperty, a=> a ?? true);
             control.Bind(DataGridColumn.IsVisibleProperty, source2.ToBinding());
-        }
+        }*/
 
         public static bool TryShutDown(this Avalonia.Application app, int exitCode = 0)
         {

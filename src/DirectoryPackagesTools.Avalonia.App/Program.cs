@@ -9,7 +9,7 @@ namespace DirectoryPackagesTools
 {
     internal class Program
     {
-        public static readonly log4net.ILog _Log = log4net.LogManager.GetLogger(typeof(App));
+        // public static readonly log4net.ILog _Log = log4net.LogManager.GetLogger(typeof(App));
 
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -17,8 +17,8 @@ namespace DirectoryPackagesTools
         [STAThread]
         public static void Main(string[] args)
         {
-            _Log.Info("Application start");
-            log4net.LogManager.Flush(1000);
+            // _Log.Info("Application start");
+            // log4net.LogManager.Flush(1000);
 
             #if !SUPRESSTRYCATCH
 
@@ -39,23 +39,23 @@ namespace DirectoryPackagesTools
             #if !SUPRESSTRYCATCH
             } catch(Exception ex)
             {
-                _Log.Fatal(ex.Message, ex);
+                // _Log.Fatal(ex.Message, ex);
             }
             #endif
 
-            _Log.Info("Application shutdown");
-            log4net.LogManager.Shutdown();            
+            // _Log.Info("Application shutdown");
+            // log4net.LogManager.Shutdown();            
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (e.ExceptionObject is Exception ex)
             {
-                _Log.Fatal(ex.Message, ex);
+                // _Log.Fatal(ex.Message, ex);
             }
             else
             {
-                _Log.Fatal("Unhandled Exception");
+                // _Log.Fatal("Unhandled Exception");
             }
 
             

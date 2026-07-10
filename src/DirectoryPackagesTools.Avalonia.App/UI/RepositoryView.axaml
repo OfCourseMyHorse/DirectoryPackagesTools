@@ -28,27 +28,30 @@
     </HeaderedContentControl>
 
     <HeaderedContentControl Grid.Row="2" Header="Packages">
-      <DataGrid ItemsSource="{Binding PackagesAsync^}"
-                AutoGenerateColumns="False"
+      <TableView ItemsSource="{Binding PackagesAsync^}"                
                 SelectionMode="Single"
                 CanUserResizeColumns="True"
-                GridLinesVisibility="All" BorderThickness="1" BorderBrush="Gray">
+                BorderThickness="1" BorderBrush="Gray">
 
-        <DataGrid.Columns>
+        <TableView.Styles>
+		    <!-- Draw a 1px bottom border on each row -->
+            <Style Selector="TableViewRow">
+                <Setter Property="BorderBrush" Value="LightGray"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <!-- optional: make sure row background is transparent so line is visible -->
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+        </TableView.Styles>
 
-          <DataGridTextColumn Header="Package" MinWidth="250" Binding="{Binding Identity.Id}" IsReadOnly="True" />
-
-          <DataGridTextColumn Header="Version" MinWidth="200" Binding="{Binding Identity.Version}" IsReadOnly="True" />
-
-          <DataGridTextColumn Header="Project" MinWidth="250" Binding="{Binding ProjectUrl.OriginalString}" IsReadOnly="True" />
-
-          <DataGridTextColumn Header="Summary" MinWidth="250" Binding="{Binding Summary}" IsReadOnly="True" />
-
-          <DataGridTextColumn Header="tags" MinWidth="100" Binding="{Binding Tags}" IsReadOnly="True" />
-            
-        </DataGrid.Columns>
+        <TableView.Columns>
+          <TableViewColumn Header="Package" Binding="{Binding Identity.Id}" />
+          <TableViewColumn Header="Version" Binding="{Binding Identity.Version}" />
+          <TableViewColumn Header="Project" Binding="{Binding ProjectUrl.OriginalString}" />
+          <TableViewColumn Header="Summary" Binding="{Binding Summary}" />
+          <TableViewColumn Header="tags" Binding="{Binding Tags}" />            
+        </TableView.Columns>
         
-      </DataGrid>
+      </TableView>
     </HeaderedContentControl>    
   </Grid>  
   

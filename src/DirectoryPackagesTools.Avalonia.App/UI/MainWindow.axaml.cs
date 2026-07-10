@@ -57,7 +57,7 @@ namespace DirectoryPackagesTools
         {
             #region diag
 
-            private static readonly log4net.ILog _Log = log4net.LogManager.GetLogger(typeof(_BackgroundTaskMonitor));
+            // private static readonly log4net.ILog _Log = log4net.LogManager.GetLogger(typeof(_BackgroundTaskMonitor));
 
             #endregion
 
@@ -118,7 +118,7 @@ namespace DirectoryPackagesTools
             
             public void Report(Exception value)
             {
-                _Log.Error(value.Message, value);                  
+                // _Log.Error(value.Message, value);                  
                 
                 _Window.MessageBox().Show(value.Message, "Error").GetAwaiter().GetResult();
             }

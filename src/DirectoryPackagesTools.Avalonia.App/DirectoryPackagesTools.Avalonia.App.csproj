@@ -1,39 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
+    <RootNamespace>DirectoryPackagesTools</RootNamespace>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <Nullable>enable</Nullable>
-    <RootNamespace>DirectoryPackagesTools</RootNamespace>
+    <Nullable>enable</Nullable>    
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    
+    <ApplicationManifest>app.manifest</ApplicationManifest>    
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>  
 
-  <PropertyGroup Condition=" '$(Configuration)' != 'release' ">
-    
-    <DefineConstants>$(DefineConstants);SUPRESSTRYCATCH</DefineConstants>
-    
+  <PropertyGroup Condition=" '$(Configuration)' != 'release' ">    
+    <DefineConstants>$(DefineConstants);SUPRESSTRYCATCH</DefineConstants>    
   </PropertyGroup>
 
   <PropertyGroup>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="UI\log4net.config" />
-  </ItemGroup>
+  </PropertyGroup>  
+  
   <ItemGroup>
     <Content Include="icon.ico" />
-    <Content Include="log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="log4net.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>		
-    <PackageReference Include="log4net" Version="3.3.2" />
-    <PackageReference Include="Avalonia" Version="12.1.0" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.0" />
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.0" />    
     <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.0" />
@@ -43,4 +38,9 @@
   <ItemGroup>
     <ProjectReference Include="..\DirectoryPackagesTools\DirectoryPackagesTools.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+  
 </Project>
