@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -50,20 +51,19 @@ namespace DirectoryPackagesTools
             builder.Description = "Your package description";
             builder.Authors.Add("Your Name");
 
-            var pkgFile = CreatePhysicalPackageFileFromText("hello world!");
-            pkgFile.TargetPath = "lib/netstandard2.0/readme.txt";
+            var pkgFile = CreatePhysicalPackageFileFromText("hello world!", "lib/netstandard2.0/readme.txt");
 
             builder.Files.Add(pkgFile);
 
             AttachmentInfo.From(packagePath).WriteToStream(builder.Save);
         }
 
-        public static PhysicalPackageFile CreatePhysicalPackageFileFromText(string textBody)
+        public static PhysicalPackageFile CreatePhysicalPackageFileFromText(string textBody, string targetPath)
         {
             var m = new System.IO.MemoryStream(); // memory leak!!
             using (var w = new System.IO.StreamWriter(m, leaveOpen: true)) { w.Write(textBody); }
             m.Position = 0;
-            return new PhysicalPackageFile(m);
+            return new PhysicalPackageFile(m) { TargetPath = targetPath };
         }
 
         [TestCase("SourcePackageExampleProject/SourcePackageExampleProject.csproj")]        

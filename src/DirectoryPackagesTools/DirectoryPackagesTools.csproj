@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>		
-    <PackageReference Include="NuGet.Commands" Version="7.3.1" />
+    <PackageReference Include="NuGet.Commands" Version="7.6.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />    
   </ItemGroup>
 

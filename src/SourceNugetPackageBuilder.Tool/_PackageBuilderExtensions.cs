@@ -13,12 +13,12 @@ namespace SourceNugetPackageBuilder
     {
         public static void AddIcon(this PackageBuilder builder, System.IO.FileInfo iconFile)
         {
-            if (iconFile == null || !iconFile.Exists) return;
+            if (iconFile == null || !iconFile.Exists) return;            
 
             builder.Icon = iconFile.Name;
-            var pkgFile = new PhysicalPackageFile();
-            pkgFile.SourcePath = iconFile.FullName;
-            pkgFile.TargetPath = iconFile.Name;
+
+            var pkgFile = new PhysicalPackageFile() { TargetPath = iconFile.Name };
+            pkgFile.SourcePath = iconFile.FullName;            
             builder.Files.Add(pkgFile);
         }        
 

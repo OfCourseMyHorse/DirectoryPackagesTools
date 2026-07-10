@@ -33,7 +33,7 @@ namespace SourceNugetPackageBuilder
 
             return sourceFiles
                 .SelectMany(_EvaluateFile)
-                .Distinct(System.IO.MatchCasing.PlatformDefault.GetFullNameComparer<System.IO.FileInfo>())
+                .Distinct(System.IO.MatchCasing.PlatformDefault.GetFullNameEqualityComparer<System.IO.FileInfo>())
                 .Select(Create);
         }
 

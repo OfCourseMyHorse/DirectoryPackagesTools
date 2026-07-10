@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -95,7 +96,7 @@ namespace SourceNugetPackageBuilder
 
                 foreach (var finfo in files)
                 {
-                    var ex = SourceCodeValidator.Validate(finfo.ReadAllText());
+                    var ex = SourceCodeValidator.Validate(finfo.GetReadStreamFunction().ReadAllText());
                     _Arguments.HandleSourceCodeValidationError(ex, finfo);
                 }
 
@@ -113,8 +114,7 @@ namespace SourceNugetPackageBuilder
             var path = new System.IO.DirectoryInfo(AppContext.BaseDirectory).DefineFileInfo("CompileChecks_targets.xml");
             if (!path.Exists) return;
 
-            var f = CreatePhysicalPackageFile(path);
-            f.TargetPath = $"build/CodeSugar.CompileChecks.targets";
+            var f = CreatePhysicalPackageFile(path, $"build/CodeSugar.CompileChecks.targets");
             Builder.Files.Add(f);
         }
 
@@ -173,27 +173,27 @@ namespace SourceNugetPackageBuilder
 
             var frameworkName = framework.GetSanitizedFrameworkMoniker();
 
-            var pkgFile = factory.PackAsInternalSources && MakeInternalRewriter.TryProcess(finfo.ReadAllText(), out var internalText)
-                    ? CreatePhysicalPackageFromText(internalText)
-                    : CreatePhysicalPackageFile(finfo);
+            targetPath = $"contentFiles/cs/{frameworkName}/{targetPath}";
 
-            pkgFile.TargetPath = $"contentFiles/cs/{frameworkName}/{targetPath}";
+            var pkgFile = factory.PackAsInternalSources && MakeInternalRewriter.TryProcess(finfo.GetReadStreamFunction().ReadAllText(), out var internalText)
+                    ? CreatePhysicalPackageFromText(internalText, targetPath)
+                    : CreatePhysicalPackageFile(finfo, targetPath);
+            
             Builder.Files.Add(pkgFile);
 
-            var manifest = new ManifestContentFiles();
-            manifest.Include = pkgFile.TargetPath;
+            var manifest = new ManifestContentFiles { Include = pkgFile.TargetPath };
             manifest.BuildAction = "Compile";
             Builder.ContentFiles.Add(manifest);
         }
 
-        private static PhysicalPackageFile CreatePhysicalPackageFile(FileInfo finfo)
+        private static PhysicalPackageFile CreatePhysicalPackageFile(FileInfo finfo, string targetPath)
         {
-            var pkgFile = new PhysicalPackageFile();
+            var pkgFile = new PhysicalPackageFile { TargetPath = targetPath ?? finfo.Name };
             pkgFile.SourcePath = finfo.FullName;
             return pkgFile;
         }
 
-        private static PhysicalPackageFile CreatePhysicalPackageFromText(string textBody)
+        private static PhysicalPackageFile CreatePhysicalPackageFromText(string textBody, string targetPath)
         {
             var m = new System.IO.MemoryStream(); // memory leak!!
 
@@ -204,7 +204,7 @@ namespace SourceNugetPackageBuilder
 
             m.Position = 0;
 
-            return new PhysicalPackageFile(m);
+            return new PhysicalPackageFile(m) { TargetPath = targetPath };
         }
 
         public void SavePackage()
