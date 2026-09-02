@@ -113,7 +113,7 @@
       <TableView.Columns>          
 
         <TableViewColumn x:DataType="local:PackageMVVM" Header="Package" Binding="{Binding Name}" />        
-        <TableViewColumn x:DataType="local:PackageMVVM" Header="Version" Binding="{Binding Version, Converter={StaticResource asShortText}}" />
+        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Version" Binding="{Binding Version, Converter={StaticResource asShortText}}" />
 
         <TableViewColumn Width="350" Header="Available Versions" >
           <TableViewColumn.CellTemplate>
@@ -123,11 +123,11 @@
           </TableViewColumn.CellTemplate>
         </TableViewColumn>
 
-        <TableViewColumn x:DataType="local:PackageMVVM" Header="Used By Projects" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Used By Projects" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
         <TableViewColumn x:DataType="local:PackageMVVM" Header="Frameworks" Binding="{Binding FrameworksAsync^, FallbackValue=⏳}" />
         <TableViewColumn x:DataType="local:PackageMVVM" Header="Tags" Binding="{Binding Metadata.Tags}" />
-        <TableViewColumn x:DataType="local:PackageMVVM" Header="Summary" Binding="{Binding Metadata.Summary}" />
-        <TableViewColumn x:DataType="local:PackageMVVM" Header="Description" Binding="{Binding Metadata.Description}" />
+        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Summary" Binding="{Binding Metadata.Summary}" />
+        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Description" Binding="{Binding Metadata.Description}" />
 
         <TableViewColumn Header="Project URL" >
           <TableViewColumn.CellTemplate>
