@@ -8,6 +8,8 @@
 
   <UserControl.Resources>
 
+      <local:BoolToColumnWidth x:Key="asColumnWidth" />
+
     <local:VersionRangeShortTextConverter x:Key="asShortText" />
     
     <ContextMenu x:Key="myPackageNameMenu">      
@@ -39,6 +41,14 @@
 
   </UserControl.Resources>
 
+    <UserControl.DataTemplates>
+        
+        <DataTemplate x:DataType="local:TableViewColumnVisibleViewModel">
+            <CheckBox Content="{Binding Header}"  IsChecked="{Binding IsVisible}" />
+        </DataTemplate>
+
+    </UserControl.DataTemplates>
+
   <DockPanel>
 
     <TableView x:Name="myPackages"               
@@ -55,7 +65,32 @@
               <!-- optional: make sure row background is transparent so line is visible -->
               <Setter Property="Background" Value="Transparent"/>
             </Style>
-        </TableView.Styles>
+
+            <!-- it works, but you need to click on the text
+            <Style Selector="TableViewColumnHeader">                
+                <Setter Property="ContextMenu">
+                    <Setter.Value>
+                        <Template>
+                            <ContextMenu>
+                                <MenuItem Header="header" />
+                            </ContextMenu>
+                        </Template>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            -->
+
+            <Style Selector="TableViewColumnHeadersPresenter">                
+                <Setter Property="ContextFlyout">
+                    <Setter.Value>                        
+                        <Flyout>
+                            <ItemsControl x:Name="myVisibility" />
+                        </Flyout>                        
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+        </TableView.Styles>        
 
       <!-- generic code DataGrid code snippet to have a context menu with autohiding columns -->
       <!--
