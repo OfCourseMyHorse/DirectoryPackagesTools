@@ -21,13 +21,8 @@ public partial class PackagesList : UserControl
     {
         InitializeComponent();
 
-        myPackages.Columns.CollectionChanged += (s, e) => _UpdateColumnsVisibility();
-    }
-
-    private void _UpdateColumnsVisibility()
-    {
-        myVisibility.ItemsSource = myPackages.Columns.Select(c => new TableViewColumnVisibleViewModel(c));
-    }
+        
+    }    
 
     #endregion
 
@@ -49,8 +44,7 @@ public partial class PackagesList : UserControl
         {
             if (this.SetAndRaise(PackagesSourceProperty, ref _PackagesSource, value))
             {
-                myPackages.ItemsSource = _PackagesSource;
-                _UpdateColumnsVisibility();
+                myPackages.ItemsSource = _PackagesSource;                
             }
         }
     }
@@ -87,41 +81,13 @@ public class TableViewColumnVisibleViewModel : ObservableObject
 
     public TableViewColumn _Column;
 
-
-    public Object? Header => _Column.Header;
-    
+    public Object? Header => _Column.Header;   
 
     public bool IsVisible
     {
-        get => _Column.Width.IsAuto || _Column.Width.IsStar || _Column.Width.Value > 0f;
-        set
-        {
-            _Column.Width = value ? GridLength.Star : new GridLength(0);
-            OnPropertyChanged(nameof(IsVisible));
-        }
+        get => _Column.IsVisible;
+        set => _Column.IsVisible = value;
     }
 }
 
 
-class BoolToColumnWidth : IValueConverter
-{
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is Boolean vbool)
-        {
-            if (targetType == typeof(GridLength))
-            {
-                return vbool
-                    ? GridLength.Star
-                    : new GridLength(0);
-            }
-        }
-
-        return value;
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}

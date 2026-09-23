@@ -6,9 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="DirectoryPackagesTools.PackagesList">  
 
-  <UserControl.Resources>
-
-      <local:BoolToColumnWidth x:Key="asColumnWidth" />
+  <UserControl.Resources>      
 
     <local:VersionRangeShortTextConverter x:Key="asShortText" />
     
@@ -64,56 +62,32 @@
               <Setter Property="BorderThickness" Value="0,0,0,1"/>
               <!-- optional: make sure row background is transparent so line is visible -->
               <Setter Property="Background" Value="Transparent"/>
-            </Style>
-
-            <!-- it works, but you need to click on the text
-            <Style Selector="TableViewColumnHeader">                
-                <Setter Property="ContextMenu">
-                    <Setter.Value>
-                        <Template>
-                            <ContextMenu>
-                                <MenuItem Header="header" />
-                            </ContextMenu>
-                        </Template>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-            -->
+            </Style>            
 
             <Style Selector="TableViewColumnHeadersPresenter">                
                 <Setter Property="ContextFlyout">
                     <Setter.Value>                        
-                        <Flyout>
-                            <ItemsControl x:Name="myVisibility" />
+                        <Flyout>                            
+                            <ItemsControl ItemsSource="{Binding $parent[TableView].Columns}" >
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="TableViewColumn">
+                                        <CheckBox Content="{Binding Header}" IsChecked="{Binding IsVisible}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Flyout>                        
                     </Setter.Value>
                 </Setter>
             </Style>
 
         </TableView.Styles>        
-
-      <!-- generic code DataGrid code snippet to have a context menu with autohiding columns -->
-      <!--
-      <TableView.ContextMenu>
-        <ContextMenu ItemsSource="{Binding $parent[TableView].Columns}">
-          <ContextMenu.ItemTemplate>
-            <DataTemplate x:DataType="TableViewColumn">
-              <MenuItem Header="{Binding Header}">
-                <MenuItem.Icon>
-                  <CheckBox IsChecked="{Binding IsVisible}" />
-                </MenuItem.Icon>
-              </MenuItem>
-            </DataTemplate>
-          </ContextMenu.ItemTemplate>          
-        </ContextMenu>
-      </TableView.ContextMenu>
-      -->
+      
       <!-- ================================================================================ -->     
 
       <TableView.Columns>          
 
         <TableViewColumn x:DataType="local:PackageMVVM" Header="Package" Binding="{Binding Name}" />        
-        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Version" Binding="{Binding Version, Converter={StaticResource asShortText}}" />
+        <TableViewColumn IsVisible="false" x:DataType="local:PackageMVVM" Header="Version" Binding="{Binding Version, Converter={StaticResource asShortText}}" />
 
         <TableViewColumn Width="350" Header="Available Versions" >
           <TableViewColumn.CellTemplate>
@@ -123,13 +97,13 @@
           </TableViewColumn.CellTemplate>
         </TableViewColumn>
 
-        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Used By Projects" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Used By Projects" CellTemplate="{StaticResource ResourceKey=myDependantProjects}" />
         <TableViewColumn x:DataType="local:PackageMVVM" Header="Frameworks" Binding="{Binding FrameworksAsync^, FallbackValue=⏳}" />
-        <TableViewColumn x:DataType="local:PackageMVVM" Header="Tags" Binding="{Binding Metadata.Tags}" />
-        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Summary" Binding="{Binding Metadata.Summary}" />
-        <TableViewColumn Width="0" x:DataType="local:PackageMVVM" Header="Description" Binding="{Binding Metadata.Description}" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Tags" Binding="{Binding Metadata.Tags}" IsVisible="false" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Summary" Binding="{Binding Metadata.Summary}" IsVisible="false" />
+        <TableViewColumn x:DataType="local:PackageMVVM" Header="Description" Binding="{Binding Metadata.Description}" IsVisible="false" />
 
-        <TableViewColumn Header="Project URL" >
+        <TableViewColumn Header="Project URL" IsVisible="false" >
           <TableViewColumn.CellTemplate>
             <DataTemplate x:DataType="local:PackageMVVM">
               <TextBlock>
